@@ -1,3 +1,2 @@
 aiogram==3.17.0
 aiohttp==3.11.11
-pydantic-core>=2.27.0 --only-binary=:all:
