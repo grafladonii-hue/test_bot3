@@ -165,8 +165,8 @@
         <h2>Mavjud testlar</h2>
         <div class="test-card">
             <div>
-                <strong>Demo-1: Umume'lumiy test</strong>
-                <p style="margin: 5px 0 0; font-size: 13px; color: #666;">3 ta savol • 3 daqiqa</p>
+                <strong>Demo-1: Kuz 2026 (Rus tili va adabiyoti)</strong>
+                <p style="margin: 5px 0 0; font-size: 13px; color: #666;">1 ta savol • 3 daqiqa</p>
             </div>
             <button style="width: auto; padding: 8px 15px;" onclick="startQuiz(1)">Ishlash</button>
         </div>
@@ -227,11 +227,18 @@
     // Test ma'lumotlar bazasi
     const testData = {
         1: {
-            title: "Demo-1",
+            title: "Demo-1 (Kuz 2026)",
             questions: [
-                { question: "1. Айлана узунлигини ҳисоблаш формуласи қайси?", options: ["2 * pi * r", "pi * r^2", "a * b", "4 * a"], correct: 0 },
-                { question: "2. Python дастурлаш тилида экранга маълумот чиқариш функцияси?", options: ["input()", "print()", "scan()", "echo()"], correct: 1 },
-                { question: "3. Ўзбекистоннинг пойтахти қайси шаҳар?", options: ["Самарқанд", "Бухоро", "Тошкент", "Фарғона"], correct: 2 }
+                { 
+                    question: "<b>Заметки о природе (К. Паустовский).</b> Определите, какое утверждение НЕ соответствует содержанию текста.", 
+                    options: [
+                        "A) Нас не оправдают перед будущими поколениями за то, что мы истощили ресурсы планеты, уничтожив их законное наследство.", 
+                        "B) Патриотизм пускает корни в бережном отношении к окружающему миру: защита природы в любом ее проявлении — наш прямой долг перед Родиной.", 
+                        "C) Леса не просто полезны для людей — они служат легкими планеты, поддерживают экобаланс, делая мир по-настоящему живым и прекрасным.", 
+                        "D) Природа не имеет органов речи, но создает языки и сердца, посредством которых говорит и чувствует."
+                    ], 
+                    correct: 3 
+                }
             ]
         },
         2: {
@@ -382,7 +389,6 @@
 
         let earnedPoints = score * 2;
 
-        // Doira ichiga faqat yig'ilgan ball va "ball" so'zi yoziladi (masalan: 6 ball)
         document.getElementById("score-circle").innerText = earnedPoints + " ball";
         document.getElementById("score-text").innerHTML = `Тўғри жавоблар: ${score} та / Нотўғри: ${activeQuestions.length - score} та`;
         document.getElementById("answers-review").innerHTML = reviewHtml;
