@@ -177,14 +177,14 @@
         <div class="test-card">
             <div>
                 <strong>Demo-1: Kuz 2026 (Rus tili va adabiyoti)</strong>
-                <p style="margin: 5px 0 0; font-size: 13px; color: #666;">1 ta savol • 3 daqiqa</p>
+                <p style="margin: 5px 0 0; font-size: 13px; color: #666;">1 ta savol • 90 daqiqa</p>
             </div>
             <button style="width: auto; padding: 8px 15px;" onclick="startQuiz(1)">Ishlash</button>
         </div>
         <div class="test-card">
             <div>
                 <strong>Demo-2: Mantiqiy test</strong>
-                <p style="margin: 5px 0 0; font-size: 13px; color: #666;">3 ta savol • 3 daqiqa</p>
+                <p style="margin: 5px 0 0; font-size: 13px; color: #666;">3 ta savol • 90 daqiqa</p>
             </div>
             <button style="width: auto; padding: 8px 15px;" onclick="startQuiz(2)">Ishlash</button>
         </div>
@@ -194,7 +194,7 @@
     <div id="quiz-page" class="page">
         <div class="header">
             <span id="quiz-title">Test sinovi</span>
-            <div class="timer" id="timer">Вақт: 03:00</div>
+            <div class="timer" id="timer">Вақт: 90:00</div>
         </div>
 
         <div id="quiz-container">
@@ -265,7 +265,7 @@
     let activeQuestions = [];
     let currentQuestion = 0;
     let userAnswers = {}; 
-    let timeLeft = 5400;
+    let timeLeft = 5400; // 90 daqiqa (90 * 60 = 5400 soniya)
     let timerInterval;
 
     function switchTab(tab) {
@@ -290,7 +290,7 @@
         activeQuestions = testData[testId].questions;
         currentQuestion = 0;
         userAnswers = {};
-        timeLeft = 180;
+        timeLeft = 5400; // Har bir test boshlanganda 90 daqiqadan boshlanadi
 
         document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
         document.getElementById('quiz-page').classList.add('active');
