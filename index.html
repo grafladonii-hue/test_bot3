@@ -153,8 +153,11 @@
             justify-content: space-between;
             align-items: center;
         }
-        .hidden {
+        .page {
             display: none;
+        }
+        .page.active {
+            display: block;
         }
     </style>
 </head>
@@ -162,14 +165,14 @@
 
 <div class="container">
     <!-- BOSH SAHIFA -->
-    <div id="home-page">
+    <div id="home-page" class="page active">
         <h2>Baxtiyor Karjabov Demo testlar portali</h2>
         <p>Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
         <button onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
     <!-- TESTLAR RO'YXATI SAHifASI -->
-    <div id="tests-page" class="hidden">
+    <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
         <div class="test-card">
             <div>
@@ -188,7 +191,7 @@
     </div>
 
     <!-- TEST JARAYONI SAHifASI -->
-    <div id="quiz-page" class="hidden">
+    <div id="quiz-page" class="page">
         <div class="header">
             <span id="quiz-title">Test sinovi</span>
             <div class="timer" id="timer">Вақт: 03:00</div>
@@ -202,7 +205,7 @@
             </div>
         </div>
 
-        <div class="result-box" id="result-box">
+        <div class="result-box" id="result-box" style="display: none;">
             <h2>Тест якунланди!</h2>
             <div class="score-circle" id="score-circle">6 ball</div>
             <p id="score-text"></p>
@@ -214,15 +217,15 @@
 
 <!-- PASTKI MENYU -->
 <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('home')">
+    <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
         <div>🏠</div>
         Bosh
     </div>
-    <div class="nav-item" onclick="switchTab('tests')">
+    <div class="nav-item" onclick="switchTab('tests')" id="nav-tests">
         <div>📝</div>
         Testlar
     </div>
-    <div class="nav-item" onclick="switchTab('profile')">
+    <div class="nav-item" onclick="switchTab('profile')" id="nav-profile">
         <div>👤</div>
         Profil
     </div>
@@ -266,19 +269,16 @@
     let timerInterval;
 
     function switchTab(tab) {
-        document.getElementById('home-page').classList.add('hidden');
-        document.getElementById('tests-page').classList.add('hidden');
-        document.getElementById('quiz-page').classList.add('hidden');
-        
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
         if (tab === 'home') {
-            document.getElementById('home-page').classList.remove('hidden');
-            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            document.getElementById('home-page').classList.add('active');
+            document.getElementById('nav-home').classList.add('active');
             clearInterval(timerInterval);
         } else if (tab === 'tests') {
-            document.getElementById('tests-page').classList.remove('hidden');
-            document.querySelectorAll('.nav-item')[1].classList.add('active');
+            document.getElementById('tests-page').classList.add('active');
+            document.getElementById('nav-tests').classList.add('active');
             clearInterval(timerInterval);
         } else if (tab === 'profile') {
             alert("Profil sahifasi tez orada qo'shiladi!");
@@ -292,8 +292,9 @@
         userAnswers = {};
         timeLeft = 180;
 
-        document.getElementById('tests-page').classList.add('hidden');
-        document.getElementById('quiz-page').classList.remove('hidden');
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+        document.getElementById('quiz-page').classList.add('active');
+        
         document.getElementById('quiz-container').style.display = 'block';
         document.getElementById('result-box').style.display = 'none';
         document.getElementById('quiz-title').innerText = testData[testId].title;
