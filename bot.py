@@ -9,8 +9,6 @@ from aiohttp import web
 
 TOKEN = os.environ.get("BOT_TOKEN")
 GROUP_ID = -1003919402335  
-
-# ТЎҒРИЛАНДИ: https:// қўшилди ва тўғри Vercel домени манзили ёзилиши керак
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"  
 
 bot = Bot(token=TOKEN)
@@ -35,7 +33,7 @@ async def cmd_start(message: types.Message):
             inline_keyboard=[
                 [InlineKeyboardButton(text="📝 Testlarni boshlash", web_app=WebAppInfo(url=WEB_APP_URL))]
             ]
-        ]
+        )
         await message.answer(
             "Xush kelibsiz, Baxtiyor Karjabov Demo testlar portaliga! Testlarni ishlash uchun quyidagi tugmani bosing:",
             reply_markup=keyboard
@@ -43,7 +41,7 @@ async def cmd_start(message: types.Message):
     else:
         await message.answer(
             "❌ Kechirasiz, siz bizning yopiq guruhimiz a'zosi emassiz.\n\n"
-            "Testlarni ishlash uchun avval yopiq guruhimizga qo'shiling!"
+            "Testlarni ishlash учун avval yopiq guruhimizga qo'shiling!"
         )
 
 async def handle(request):
