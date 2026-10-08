@@ -9,7 +9,7 @@ from aiohttp import web
 
 TOKEN = os.environ.get("BOT_TOKEN")
 GROUP_ID = -1003919402335  
-WEB_APP_URL = "https://karjabov-baxtiyor.vercel.app"  
+WEB_APP_URL = "test-mini-app-3.vercel.app"  
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
