@@ -34,14 +34,15 @@ async def cmd_start(message: types.Message):
                 [InlineKeyboardButton(text="📝 Testlarni boshlash", web_app=WebAppInfo(url=WEB_APP_URL))]
             ]
         )
+        # "portaliga!" сүзе "platformasiga!"га алыштырылды
         await message.answer(
-            "Xush kelibsiz, Baxtiyor Karjabov Demo testlar portaliga! Testlarni ishlash uchun quyidagi tugmani bosing:",
+            "Xush kelibsiz, Baxtiyor Karjabov Demo testlar platformasiga! Testlarni ishlash uchun quyidagi tugmani bosing:",
             reply_markup=keyboard
         )
     else:
         await message.answer(
             "❌ Kechirasiz, siz bizning yopiq guruhimiz a'zosi emassiz.\n\n"
-            "Testlarni ishlash учун avval yopiq guruhimizga qo'shiling!"
+            "Testlarni ishlash uchun avval yopiq guruhimizga qo'shiling!"
         )
 
 async def handle(request):
