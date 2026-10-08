@@ -50,6 +50,8 @@
             line-height: 1.5;
             max-height: 180px;
             overflow-y: auto;
+            -webkit-user-select: none;
+            user-select: none;
         }
         .options label {
             display: block;
@@ -81,6 +83,8 @@
             cursor: pointer;
             width: 100%;
             transition: 0.2s;
+            position: relative;
+            z-index: 10;
         }
         button.secondary {
             background: #95a5a6;
@@ -134,6 +138,7 @@
             padding: 10px 0;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             border-top: 1px solid #eee;
+            z-index: 100;
         }
         .nav-item {
             text-align: center;
@@ -184,14 +189,14 @@
                 <strong>Demo-1: Kuz 2026 (Rus tili va adabiyoti)</strong>
                 <p style="margin: 5px 0 0; font-size: 13px; color: #666;">1 ta savol • 90 daqiqa</p>
             </div>
-            <button style="width: auto; padding: 8px 15px;" onclick="startQuiz(1)">Ishlash</button>
+            <button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(1)">Ishlash</button>
         </div>
         <div class="test-card">
             <div>
                 <strong>Demo-2: Mantiqiy test</strong>
                 <p style="margin: 5px 0 0; font-size: 13px; color: #666;">3 ta savol • 90 daqiqa</p>
             </div>
-            <button style="width: auto; padding: 8px 15px;" onclick="startQuiz(2)">Ishlash</button>
+            <button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(2)">Ishlash</button>
         </div>
     </div>
 
@@ -205,8 +210,8 @@
         <div id="quiz-container">
             <div class="question-box" id="question-box"></div>
             <div class="btn-group">
-                <button class="secondary" onclick="prevQuestion()" id="prev-btn">Oldingi</button>
-                <button onclick="nextQuestion()" id="next-btn">Keyingi</button>
+                <button type="button" class="secondary" onclick="prevQuestion()" id="prev-btn">Oldingi</button>
+                <button type="button" onclick="nextQuestion()" id="next-btn">Keyingi</button>
             </div>
         </div>
 
@@ -215,7 +220,7 @@
             <div class="score-circle" id="score-circle">6 ball</div>
             <p id="score-text"></p>
             <div id="answers-review"></div>
-            <button style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
+            <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
     </div>
 </div>
@@ -240,19 +245,23 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Скриншот ва экран видеосини тақиқлаш (ҳар эҳтимолга қарши версия текшируви билан)
-    if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
-        tg.disableScreenshots();
-    } else if (tg.disableScreenshots) {
-        tg.disableScreenshots();
+    // Скриншот ва экран видеосини тақиқлаш
+    try {
+        if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+            tg.disableScreenshots();
+        } else if (tg.disableScreenshots) {
+            tg.disableScreenshots();
+        }
+    } catch (e) {
+        console.log("disableScreenshots xatosi:", e);
     }
 
-    // Сичқончанинг ўнг тугмасини блоклаш (контекст меню)
+    // Сичқончанинг ўнг тугмасини тақиқлаш
     document.addEventListener('contextmenu', (event) => event.preventDefault());
 
-    // Горячие клавиши (Ctrl+C, Ctrl+U, Ctrl+S, F12) ни блоклаш
+    // Клавиатура нусхалаш тугмаларини тақиқлаш
     document.addEventListener('keydown', (event) => {
-        if (event.ctrlKey && (event.key === 'c' || event.key === 'u' || event.key === 's' || event.key === 'C' || event.key === 'U' || event.key === 'S')) {
+        if (event.ctrlKey && ['c', 'u', 's', 'C', 'U', 'S'].includes(event.key)) {
             event.preventDefault();
         }
         if (event.key === 'F12') {
@@ -290,7 +299,7 @@
     let activeQuestions = [];
     let currentQuestion = 0;
     let userAnswers = {}; 
-    let timeLeft = 5400; // 90 daqiqa (90 * 60 = 5400 soniya)
+    let timeLeft = 5400; // 90 daqiqa
     let timerInterval;
 
     function switchTab(tab) {
@@ -315,7 +324,7 @@
         activeQuestions = testData[testId].questions;
         currentQuestion = 0;
         userAnswers = {};
-        timeLeft = 5400; // Har bir test boshlanganda 90 daqiqadan boshlanadi
+        timeLeft = 5400;
 
         document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
         document.getElementById('quiz-page').classList.add('active');
