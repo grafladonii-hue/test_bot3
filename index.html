@@ -6,6 +6,7 @@
     <title>Test Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Скриншот ва нусхалашни олдини олиш учун матнни белгилашни тақиқлаш */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -13,6 +14,10 @@
             padding: 20px;
             color: #333;
             padding-bottom: 70px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         .container {
             max-width: 600px;
@@ -166,12 +171,12 @@
 <div class="container">
     <!-- BOSH SAHIFA -->
     <div id="home-page" class="page active">
-        <h2>Baxtiyor Karjabov Demo testlar portali</h2>
+        <h2>Baxtiyor Karjabov Demo testlar platformasi</h2>
         <p>Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
         <button onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
-    <!-- TESTLAR RO'YXATI SAHifASI -->
+    <!-- TESTLAR RO'YXATI SAHIFASI -->
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
         <div class="test-card">
@@ -190,7 +195,7 @@
         </div>
     </div>
 
-    <!-- TEST JARAYONI SAHifASI -->
+    <!-- TEST JARAYONI SAHIFASI -->
     <div id="quiz-page" class="page">
         <div class="header">
             <span id="quiz-title">Test sinovi</span>
@@ -234,6 +239,26 @@
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
+
+    // Скриншот ва экран видеосини тақиқлаш (ҳар эҳтимолга қарши версия текшируви билан)
+    if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+        tg.disableScreenshots();
+    } else if (tg.disableScreenshots) {
+        tg.disableScreenshots();
+    }
+
+    // Сичқончанинг ўнг тугмасини блоклаш (контекст меню)
+    document.addEventListener('contextmenu', (event) => event.preventDefault());
+
+    // Горячие клавиши (Ctrl+C, Ctrl+U, Ctrl+S, F12) ни блоклаш
+    document.addEventListener('keydown', (event) => {
+        if (event.ctrlKey && (event.key === 'c' || event.key === 'u' || event.key === 's' || event.key === 'C' || event.key === 'U' || event.key === 'S')) {
+            event.preventDefault();
+        }
+        if (event.key === 'F12') {
+            event.preventDefault();
+        }
+    });
 
     const testData = {
         1: {
