@@ -8,8 +8,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiohttp import web
 
 TOKEN = os.environ.get("BOT_TOKEN")
-GROUP_ID = -1003919402335  
-WEB_APP_URL = "https://test-mini-app-3.vercel.app"  
+GROUP_ID = -1003919402335
+WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -19,7 +19,8 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
         member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
         if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
             return True
-    except Exception:
+    except Exception as e:
+        logging.error(f"Аъзоликни текширишда xатолик: {e}")
         pass
     return False
 
@@ -34,9 +35,9 @@ async def cmd_start(message: types.Message):
                 [InlineKeyboardButton(text="📝 Testlarni boshlash", web_app=WebAppInfo(url=WEB_APP_URL))]
             ]
         )
-        # "portaliga!" сүзе "platformasiga!"га алыштырылды
         await message.answer(
-            "Xush kelibsiz, Baxtiyor Karjabov Demo testlar platformasiga! Testlarni ishlash uchun quyidagi tugmani bosing:",
+            "Xush kelibsiz, Demotestlar.uz (Baxtiyor Karjabov Demo testlar platformasi)ga!\n\n"
+            "Testlarni ishlash uchun quyidagi tugmani bosing:",
             reply_markup=keyboard
         )
     else:
