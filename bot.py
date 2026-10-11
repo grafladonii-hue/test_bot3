@@ -7,7 +7,8 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiohttp import web
 
-TOKEN = os.environ.get("BOT_TOKEN")
+# Токен тўғридан-тўғри кодингизга қўшилди
+TOKEN = "8788215308:AAHlxPD2fLD-oD_LKad-egagMFzIDgrduk8"
 GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
@@ -20,7 +21,7 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
         if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
             return True
     except Exception as e:
-        logging.error(f"Аъзоликни текширишда xатолик: {e}")
+        logging.error(f"Аъзоликни текширишда хатолик: {e}")
         pass
     return False
 
