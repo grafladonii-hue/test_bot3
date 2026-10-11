@@ -248,7 +248,7 @@
             Siz administratorsiz. Bu yerdan yangi test qo'shishingiz yoki mavjudlarini tahrirlashingiz mumkin.
         </div>
 
-        <!-- MAVJUD TESTLARNI TAHRIRLASH BO'LIMI -->
+        <!-- MAVJUD TESTLARNI BO'LIMI -->
         <h3>📚 Mavjud testlarni boshqarish</h3>
         <div id="admin-tests-list" style="margin-bottom: 25px;">
             <!-- Admin учун тестлар рўйхати -->
@@ -552,7 +552,7 @@
                     </div>
                     <div class="admin-btn-group">
                         <button type="button" class="warning" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="editTestFromAdmin(${id})">✏️ Таҳрирлаш</button>
-                        <button type="button" class="danger" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Очиш</button>
+                        <button type="button" class="danger" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Ўчириш</button>
                     </div>
                 </div>
             `;
@@ -575,7 +575,7 @@
         document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
 
         document.getElementById("form-title").innerText = "✏️ Тестни таҳрирлаш (ID: " + id + ")";
-        document.getElementById("save-test-btn").innerText = "💾 Изгаришларни сақлаш";
+        document.getElementById("save-test-btn").innerText = "💾 Ўзгаришларни сақлаш";
         document.getElementById("cancel-edit-btn").style.display = "block";
 
         window.scrollTo({ top: document.getElementById("form-title").offsetTop - 20, behavior: 'smooth' });
