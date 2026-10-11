@@ -87,6 +87,12 @@
         button.secondary {
             background: #95a5a6;
         }
+        button.danger {
+            background: #e74c3c;
+        }
+        button.warning {
+            background: #f39c12;
+        }
         button:hover {
             opacity: 0.9;
         }
@@ -177,6 +183,20 @@
             box-sizing: border-box;
             font-family: inherit;
         }
+        .admin-test-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-btn-group {
+            display: flex;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -225,10 +245,20 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Bu yerdan yangi test qo'shishingiz mumkin.
+            Siz administratorsiz. Bu yerdan yangi test qo'shishingiz yoki mavjudlarini tahrirlashingiz mumkin.
         </div>
 
+        <!-- MAVJUD TESTLARNI TAHRIRLASH BO'LIMI -->
+        <h3>📚 Mavjud testlarni boshqarish</h3>
+        <div id="admin-tests-list" style="margin-bottom: 25px;">
+            <!-- Admin учун тестлар рўйхати -->
+        </div>
+
+        <!-- TEST QO'SHISH VA TAHRIRLASH FORMASI -->
+        <h3 id="form-title">➕ Yangi test qo'shish</h3>
         <div class="admin-form">
+            <input type="hidden" id="editing-test-id" value="">
+
             <label><b>Test Nomi:</b></label>
             <input type="text" id="admin-test-title" placeholder="Masalan: Demo-3 (Grammatika)">
 
@@ -252,7 +282,10 @@
                 <option value="3">D) Вариант 4</option>
             </select>
 
-            <button type="button" onclick="addTestFromAdmin()" style="margin-top: 10px;">➕ Сақлаш ва эълон қилиш</button>
+            <div class="btn-group" style="margin-top: 10px;">
+                <button type="button" id="save-test-btn" onclick="saveTestFromAdmin()">➕ Сақлаш ва эълон қилиш</button>
+                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()" style="display: none;">Бекор қилиш</button>
+            </div>
         </div>
     </div>
 </div>
@@ -378,6 +411,7 @@
             document.getElementById('nav-tests').classList.add('active');
             clearInterval(timerInterval);
         } else if (tab === 'admin') {
+            renderAdminTestsList();
             document.getElementById('admin-page').classList.add('active');
             document.getElementById('nav-admin').classList.add('active');
             clearInterval(timerInterval);
@@ -505,9 +539,66 @@
     }
 
     // ----------------------------------------------------
-    // 3. АДМИН ИНТЕРФЕЙСИДАН ЯНГИ ТЕСТ ҚЎШИШ
+    // 3. АДМИН ИНТЕРФЕЙСИ: ТЕСТЛАРНИ БОШҚАРИШ ВА ТАҲРИРЛАШ
     // ----------------------------------------------------
-    function addTestFromAdmin() {
+    function renderAdminTestsList() {
+        let html = "";
+        for (let id in testData) {
+            let t = testData[id];
+            html += `
+                <div class="admin-test-item">
+                    <div>
+                        <strong>${t.title}</strong> (${t.questions.length} ta savol)
+                    </div>
+                    <div class="admin-btn-group">
+                        <button type="button" class="warning" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="editTestFromAdmin(${id})">✏️ Таҳрирлаш</button>
+                        <button type="button" class="danger" style="padding: 5px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Очиш</button>
+                    </div>
+                </div>
+            `;
+        }
+        document.getElementById("admin-tests-list").innerHTML = html || "<p style='color:#777;'>Ҳеч қандай тест мавжуд эмас.</p>";
+    }
+
+    function editTestFromAdmin(id) {
+        let t = testData[id];
+        let q = t.questions[0] || {}; // Биринчи саволни юклаш
+
+        document.getElementById("editing-test-id").value = id;
+        document.getElementById("admin-test-title").value = t.title || "";
+        document.getElementById("admin-reading-text").value = q.readingText || "";
+        document.getElementById("admin-question").value = q.question || "";
+        document.getElementById("admin-opt-0").value = q.options && q.options[0] ? q.options[0] : "";
+        document.getElementById("admin-opt-1").value = q.options && q.options[1] ? q.options[1] : "";
+        document.getElementById("admin-opt-2").value = q.options && q.options[2] ? q.options[2] : "";
+        document.getElementById("admin-opt-3").value = q.options && q.options[3] ? q.options[3] : "";
+        document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
+
+        document.getElementById("form-title").innerText = "✏️ Тестни таҳрирлаш (ID: " + id + ")";
+        document.getElementById("save-test-btn").innerText = "💾 Изгаришларни сақлаш";
+        document.getElementById("cancel-edit-btn").style.display = "block";
+
+        window.scrollTo({ top: document.getElementById("form-title").offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function resetAdminForm() {
+        document.getElementById("editing-test-id").value = "";
+        document.getElementById("admin-test-title").value = "";
+        document.getElementById("admin-reading-text").value = "";
+        document.getElementById("admin-question").value = "";
+        document.getElementById("admin-opt-0").value = "";
+        document.getElementById("admin-opt-1").value = "";
+        document.getElementById("admin-opt-2").value = "";
+        document.getElementById("admin-opt-3").value = "";
+        document.getElementById("admin-correct-opt").value = 0;
+
+        document.getElementById("form-title").innerText = "➕ Yangi test qo'shish";
+        document.getElementById("save-test-btn").innerText = "➕ Сақлаш ва эълон қилиш";
+        document.getElementById("cancel-edit-btn").style.display = "none";
+    }
+
+    function saveTestFromAdmin() {
+        let editId = document.getElementById("editing-test-id").value;
         let title = document.getElementById("admin-test-title").value;
         let readingText = document.getElementById("admin-reading-text").value;
         let question = document.getElementById("admin-question").value;
@@ -522,31 +613,40 @@
             return;
         }
 
-        let newId = Object.keys(testData).length + 1;
-        testData[newId] = {
-            title: title,
-            questions: [
-                {
-                    readingText: readingText ? readingText : null,
-                    question: question,
-                    options: [opt0, opt1, opt2, opt3].filter(o => o !== ""),
-                    correct: correct
-                }
-            ]
+        let newQuestionData = {
+            readingText: readingText ? readingText : null,
+            question: question,
+            options: [opt0, opt1, opt2, opt3].filter(o => o !== ""),
+            correct: correct
         };
 
-        alert("Янги тест муваффақиятли қўшилди!");
-        
-        // Формани тозалаш
-        document.getElementById("admin-test-title").value = "";
-        document.getElementById("admin-reading-text").value = "";
-        document.getElementById("admin-question").value = "";
-        document.getElementById("admin-opt-0").value = "";
-        document.getElementById("admin-opt-1").value = "";
-        document.getElementById("admin-opt-2").value = "";
-        document.getElementById("admin-opt-3").value = "";
+        if (editId) {
+            // Мавжуд тестни янгилаш
+            testData[editId].title = title;
+            testData[editId].questions = [newQuestionData];
+            alert("Тест муваффақиятли янгиланди!");
+        } else {
+            // Янги тест қўшиш
+            let newId = Object.keys(testData).length + 1;
+            testData[newId] = {
+                title: title,
+                questions: [newQuestionData]
+            };
+            alert("Янги тест муваффақиятли қўшилди!");
+        }
 
-        switchTab('tests');
+        resetAdminForm();
+        renderAdminTestsList();
+        renderTestsList();
+    }
+
+    function deleteTestFromAdmin(id) {
+        if (confirm("Ростдан ҳам ушбу тестни ўчириб ташламоқчимисиз?")) {
+            delete testData[id];
+            renderAdminTestsList();
+            renderTestsList();
+            alert("Тест ўчирилди!");
+        }
     }
 </script>
 
