@@ -223,7 +223,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish учун Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -266,8 +266,8 @@
             Siz administratorsiz. Bu yerdan yangi test qo'shishingiz yoki mavjudlarini tahrirlashingiz mumkin.
         </div>
 
-        <!-- MAVJUD TESTLARNI BO'LIMI -->
-        <h3>📚 Mavjud testlarni бошқариш</h3>
+        <!-- MAVJUD TESTLARНИ BO'LIMI -->
+        <h3>📚 Mavjud testларни бошқариш</h3>
         <div id="admin-tests-list" style="margin-bottom: 25px;">
             <!-- Admin учун тестлар рўйхати -->
         </div>
@@ -361,9 +361,9 @@
     }
 
     // ----------------------------------------------------
-    // 2. ТЕСТЛАР БАЗАСИ
+    // 2. ТЕСТЛАР БАЗАСИ (localStorage билан)
     // ----------------------------------------------------
-    let testData = {
+    const defaultTestData = {
         1: {
             title: "Demo-1 (Kuz 2026)",
             questions: [
@@ -389,6 +389,13 @@
             ]
         }
     };
+
+    // localStorage'дан юклаш
+    let testData = JSON.parse(localStorage.getItem('demotestlar_data')) || defaultTestData;
+
+    function saveTestDataToStorage() {
+        localStorage.setItem('demotestlar_data', JSON.stringify(testData));
+    }
 
     let activeQuestions = [];
     let currentQuestion = 0;
@@ -420,7 +427,7 @@
                 </div>
             `;
         }
-        document.getElementById("tests-list").innerHTML = html;
+        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha testlar yo'q.</p>";
     }
 
     renderTestsList(); // Ишга тушганда тестларни чиқариш
@@ -447,20 +454,15 @@
     }
 
     function startQuiz(testId) {
-        // Саволларни ва уларнинг вариантларини аралаштириш
         let rawQuestions = testData[testId].questions;
         
         activeQuestions = rawQuestions.map(q => {
-            // Вариантларни индекси билан бирга сақлаймиз
             let indexedOptions = q.options.map((opt, idx) => ({
                 text: opt,
                 isCorrect: (idx === q.correct)
             }));
             
-            // Вариантларни аралаштирамиз
             let shuffledOptions = shuffleArray(indexedOptions);
-            
-            // Янги тўғри жавоб индексини топамиз
             let newCorrectIndex = shuffledOptions.findIndex(o => o.isCorrect);
 
             return {
@@ -471,7 +473,6 @@
             };
         });
 
-        // Саволлар тартибини ҳам тасодифий аралаштириш
         activeQuestions = shuffleArray(activeQuestions);
 
         currentQuestion = 0;
@@ -616,7 +617,7 @@
 
     function editTestFromAdmin(id) {
         let t = testData[id];
-        let q = t.questions[0] || {}; // Биринчи саволни юклаш
+        let q = t.questions[0] || {};
 
         document.getElementById("editing-test-id").value = id;
         document.getElementById("admin-test-title").value = t.title || "";
@@ -658,51 +659,4 @@
         let question = document.getElementById("admin-question").value;
         let opt0 = document.getElementById("admin-opt-0").value;
         let opt1 = document.getElementById("admin-opt-1").value;
-        let opt2 = document.getElementById("admin-opt-2").value;
-        let opt3 = document.getElementById("admin-opt-3").value;
-        let correct = parseInt(document.getElementById("admin-correct-opt").value);
-
-        if (!title || !question || !opt0 || !opt1) {
-            alert("Илтимос, тест номи, савол ва камида 2 та вариантни тўлдиринг!");
-            return;
-        }
-
-        let newQuestionData = {
-            readingText: readingText ? readingText : null,
-            question: question,
-            options: [opt0, opt1, opt2, opt3].filter(o => o !== ""),
-            correct: correct
-        };
-
-        if (editId) {
-            // Мавжуд тестни янгилаш
-            testData[editId].title = title;
-            testData[editId].questions = [newQuestionData];
-            alert("Тест муваффақиятли янгиланди!");
-        } else {
-            // Янги тест қўшиш
-            let newId = Object.keys(testData).length + 1;
-            testData[newId] = {
-                title: title,
-                questions: [newQuestionData]
-            };
-            alert("Янги тест муваффақиятли қўшилди!");
-        }
-
-        resetAdminForm();
-        renderAdminTestsList();
-        renderTestsList();
-    }
-
-    function deleteTestFromAdmin(id) {
-        if (confirm("Ростдан ҳам ушбу тестни ўчириб ташламоқчимисиз?")) {
-            delete testData[id];
-            renderAdminTestsList();
-            renderTestsList();
-            alert("Тест ўчирилди!");
-        }
-    }
-</script>
-
-</body>
-</html>
+        let opt2 = document
