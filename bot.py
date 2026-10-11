@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiohttp import web
 
 # Токен тўғридан-тўғри кодингизга қўшилди
-TOKEN = "8788215308:AAHlxPD2fLD-oD_LKad-egagMFzIDgrduk8"
+TOKEN = "8979824672:AAEJZ3CHylCvNcoaUHdOt_mmxfcroVWpQk0"
 GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
