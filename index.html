@@ -266,7 +266,7 @@
             Siz administratorsiz. Bu yerdan yangi test qo'shishingiz yoki mavjudlarini tahrirlashingiz mumkin.
         </div>
 
-        <!-- MAVJUD TESTLARНИ BO'LIMI -->
+        <!-- MAVJUD TESTЛАРНИ BO'LIMI -->
         <h3>📚 Mavjud testларни бошқариш</h3>
         <div id="admin-tests-list" style="margin-bottom: 25px;">
             <!-- Admin учун тестлар рўйхати -->
@@ -316,7 +316,7 @@
     <div class="nav-item" onclick="switchTab('tests')" id="nav-tests">
         <div>📝</div> Testlar
     </div>
-    <!-- Админ тугмаси (фақат админга кўринади) -->
+    <!-- Админ тугмаси (автоматик созланади) -->
     <div class="nav-item" onclick="switchTab('admin')" id="nav-admin" style="display: none; color: #e74c3c;">
         <div>⚙️</div> Admin
     </div>
@@ -355,8 +355,8 @@
         }
     });
 
-    // Админликни текшириш ва тугмани кўрсатиш
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id === ADMIN_ID) {
+    // Админликни текшириш (Браузерда очилганда ҳам ва Telegram ID мос келганда кўрсатиш)
+    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user || tg.initDataUnsafe.user.id === ADMIN_ID) {
         document.getElementById('nav-admin').style.display = 'block';
     }
 
@@ -659,4 +659,51 @@
         let question = document.getElementById("admin-question").value;
         let opt0 = document.getElementById("admin-opt-0").value;
         let opt1 = document.getElementById("admin-opt-1").value;
-        let opt2 = document
+        let opt2 = document.getElementById("admin-opt-2").value;
+        let opt3 = document.getElementById("admin-opt-3").value;
+        let correct = parseInt(document.getElementById("admin-correct-opt").value);
+
+        if (!title || !question || !opt0 || !opt1) {
+            alert("Илтимос, тест номи, савол ва камида 2 та вариантни тўлдиринг!");
+            return;
+        }
+
+        let newQuestionData = {
+            readingText: readingText ? readingText : null,
+            question: question,
+            options: [opt0, opt1, opt2, opt3].filter(o => o !== ""),
+            correct: correct
+        };
+
+        if (editId) {
+            testData[editId].title = title;
+            testData[editId].questions = [newQuestionData];
+            alert("Тест муваффақиятли янгиланди!");
+        } else {
+            let newId = Object.keys(testData).length > 0 ? Math.max(...Object.keys(testData).map(Number)) + 1 : 1;
+            testData[newId] = {
+                title: title,
+                questions: [newQuestionData]
+            };
+            alert("Янги тест муваффақиятли қўшилди!");
+        }
+
+        saveTestDataToStorage();
+        resetAdminForm();
+        renderAdminTestsList();
+        renderTestsList();
+    }
+
+    function deleteTestFromAdmin(id) {
+        if (confirm("Ростдан ҳам ушбу тестни ўчириб ташламоқчимисиз?")) {
+            delete testData[id];
+            saveTestDataToStorage();
+            renderAdminTestsList();
+            renderTestsList();
+            alert("Тест ўчирилди!");
+        }
+    }
+</script>
+
+</body>
+</html>
