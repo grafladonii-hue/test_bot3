@@ -263,26 +263,30 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Бу ердан саволларни алоҳида таҳрирлашингиз ёки янги савол қўшишингиз мумкин.
+            Siz administratorsiz. Бу ердан савол қўшишингиз ёки мавжудларини таҳрирлашингиз мумкин.
         </div>
 
-        <!-- MAVJUD TESTLARNI BO'LIMI -->
-        <h3>📚 Mavjud testlar va olarga tegishli savollar</h3>
-        <div id="admin-tests-list" style="margin-bottom: 25px;"></div>
+        <button type="button" style="margin-bottom: 20px; background: #2980b9;" onclick="startNewTestCreation()">➕ МУТЛАҚО ЯНГИ ТЕСТ ЯРАТИШ</button>
 
         <!-- TEST VA SAVOL QO'SHISH/TAHRIRLASH FORMASI -->
-        <h3 id="form-title">➕ Yangi savol qo'shish</h3>
-        <div class="admin-form">
+        <div class="admin-form" style="background: #fdfefe; border: 1px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+            <h3 id="form-title" style="margin-top:0;">➕ Янги савол қўшиш</h3>
+            
             <input type="hidden" id="editing-test-id" value="">
             <input type="hidden" id="editing-question-index" value="-1">
 
-            <label><b>Test номи:</b></label>
-            <input type="text" id="admin-test-title" placeholder="Masalan: Demo-1 (Kuz 2026)">
+            <label><b>Кайси тестга савол қўшмоқчисиз?</b></label>
+            <select id="admin-test-select" onchange="onTestSelectChange()">
+                <!-- JS орқали тўлдирилади -->
+            </select>
+
+            <label id="test-title-label" style="display:none;"><b>Янги тест номи:</b></label>
+            <input type="text" id="admin-test-title" placeholder="Masalan: Demo-3 (Grammatika)" style="display:none;">
 
             <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
             <textarea id="admin-reading-text" rows="3" placeholder="Матнни шу ерга киритинг..."></textarea>
 
-            <label><b>Савол:</b></label>
+            <label><b>Савол матни:</b></label>
             <input type="text" id="admin-question" placeholder="Савол матнини киритинг">
 
             <label><b>Вариантлар:</b></label>
@@ -291,7 +295,7 @@
             <input type="text" id="admin-opt-2" placeholder="C) Вариант 3">
             <input type="text" id="admin-opt-3" placeholder="D) Вариант 4">
 
-            <label><b>Тўғри жавоб индекси:</b></label>
+            <label><b>Тўғри жавоб варианти:</b></label>
             <select id="admin-correct-opt">
                 <option value="0">A) Вариант 1</option>
                 <option value="1">B) Вариант 2</option>
@@ -300,11 +304,16 @@
             </select>
 
             <div class="btn-group" style="margin-top: 10px;">
-                <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">➕ Сақлаш ва эълон қилиш</button>
-                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()" style="display: none;">Бекор қилиш</button>
+                <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">💾 Сақлаш ва эълон қилиш</button>
+                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()">Бекор қилиш / Формани тозалаш</button>
             </div>
-            <button type="button" class="danger" style="margin-top: 15px;" onclick="resetToDefaults()">🔄 Базани бошланғич ҳолатга қайтариш</button>
         </div>
+
+        <!-- MAVJUD TESTLARNI BO'LIMI -->
+        <h3>📚 Мавжуд тестлар ва саволлар рўйхати</h3>
+        <div id="admin-tests-list" style="margin-bottom: 25px;"></div>
+
+        <button type="button" class="danger" style="margin-top: 15px;" onclick="resetToDefaults()">🔄 Базани бошланғич ҳолатга қайтариш</button>
     </div>
 </div>
 
@@ -379,15 +388,15 @@
         }
     };
 
-    let testData = JSON.parse(localStorage.getItem('demotestlar_v2_data')) || defaultTestData;
+    let testData = JSON.parse(localStorage.getItem('demotestlar_v3_data')) || defaultTestData;
 
     function saveTestDataToStorage() {
-        localStorage.setItem('demotestlar_v2_data', JSON.stringify(testData));
+        localStorage.setItem('demotestlar_v3_data', JSON.stringify(testData));
     }
 
     function resetToDefaults() {
         if (confirm("Диққат! Барча киритилган ўзгаришлар ўчиб, бошланғич тестлар қайта тикланади. Розимисиз?")) {
-            localStorage.removeItem('demotestlar_v2_data');
+            localStorage.removeItem('demotestlar_v3_data');
             testData = JSON.parse(JSON.stringify(defaultTestData));
             saveTestDataToStorage();
             renderAdminTestsList();
@@ -446,6 +455,7 @@
             clearInterval(timerInterval);
         } else if (tab === 'admin') {
             renderAdminTestsList();
+            populateTestSelect();
             document.getElementById('admin-page').classList.add('active');
             document.getElementById('nav-admin').classList.add('active');
             clearInterval(timerInterval);
@@ -599,6 +609,41 @@
     // ----------------------------------------------------
     // АДМИН ИНТЕРФЕЙСИ
     // ----------------------------------------------------
+    function populateTestSelect() {
+        let select = document.getElementById("admin-test-select");
+        let html = '<option value="new">+ МУТЛАҚО ЯНГИ ТЕСТ ЯРАТИШ</option>';
+        for (let id in testData) {
+            html += `<option value="${id}">${testData[id].title} (${testData[id].questions.length} та савол)</option>`;
+        }
+        select.innerHTML = html;
+        onTestSelectChange();
+    }
+
+    function onTestSelectChange() {
+        let val = document.getElementById("admin-test-select").value;
+        let titleInput = document.getElementById("admin-test-title");
+        let titleLabel = document.getElementById("test-title-label");
+
+        if (val === "new") {
+            titleInput.style.display = "block";
+            titleLabel.style.display = "block";
+            document.getElementById("editing-test-id").value = "";
+            document.getElementById("form-title").innerText = "➕ Янги тест ва биринчи саволни қўшиш";
+        } else {
+            titleInput.style.display = "none";
+            titleLabel.style.display = "none";
+            document.getElementById("editing-test-id").value = val;
+            document.getElementById("form-title").innerText = "➕ Янги савол қўшиш (" + testData[val].title + ")";
+        }
+    }
+
+    function startNewTestCreation() {
+        resetAdminForm();
+        document.getElementById("admin-test-select").value = "new";
+        onTestSelectChange();
+        window.scrollTo({ top: document.getElementById("form-title").offsetTop - 20, behavior: 'smooth' });
+    }
+
     function renderAdminTestsList() {
         let html = "";
         for (let id in testData) {
@@ -608,7 +653,7 @@
             t.questions.forEach((q, qIndex) => {
                 questionsHtml += `
                     <div class="admin-q-item">
-                        <span><b>${qIndex + 1}.</b> ${q.question.substring(0, 45)}...</span>
+                        <span><b>${qIndex + 1}.</b> ${q.question.substring(0, 40)}...</span>
                         <div class="admin-btn-group">
                             <button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(${id}, ${qIndex})">✏️ Таҳрирлаш</button>
                             <button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(${id}, ${qIndex})">🗑 Ўчириш</button>
@@ -622,8 +667,8 @@
                     <div class="admin-test-header">
                         <strong>${t.title}</strong>
                         <div class="admin-btn-group">
-                            <button type="button" style="padding: 4px 10px; font-size: 12px; width: auto; background: #2980b9;" onclick="addNewQuestionToTest(${id})">➕ Савол қўшиш</button>
-                            <button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Тестни ўчириш</button>
+                            <button type="button" style="padding: 4px 10px; font-size: 12px; width: auto; background: #2980b9;" onclick="addQuestionToExistingTest(${id})">➕ Савол қўшиш</button>
+                            <button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Ўчириш</button>
                         </div>
                     </div>
                     <div class="admin-questions-list">
@@ -635,12 +680,10 @@
         document.getElementById("admin-tests-list").innerHTML = html || "<p style='color:#777;'>Ҳеч қандай тест мавжуд эмас.</p>";
     }
 
-    function addNewQuestionToTest(testId) {
+    function addQuestionToExistingTest(testId) {
         resetAdminForm();
-        document.getElementById("editing-test-id").value = testId;
-        document.getElementById("editing-question-index").value = "-1";
-        document.getElementById("admin-test-title").value = testData[testId].title;
-        document.getElementById("form-title").innerText = "➕ Янги савол қўшиш (" + testData[testId].title + ")";
+        document.getElementById("admin-test-select").value = testId;
+        onTestSelectChange();
         window.scrollTo({ top: document.getElementById("form-title").offsetTop - 20, behavior: 'smooth' });
     }
 
@@ -648,9 +691,11 @@
         let t = testData[testId];
         let q = t.questions[qIndex];
 
+        document.getElementById("admin-test-select").value = testId;
+        onTestSelectChange();
+
         document.getElementById("editing-test-id").value = testId;
         document.getElementById("editing-question-index").value = qIndex;
-        document.getElementById("admin-test-title").value = t.title || "";
         document.getElementById("admin-reading-text").value = q.readingText || "";
         document.getElementById("admin-question").value = q.question || "";
         document.getElementById("admin-opt-0").value = q.options && q.options[0] ? q.options[0] : "";
@@ -660,9 +705,6 @@
         document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
 
         document.getElementById("form-title").innerText = "✏️ Саволни таҳрирлаш (№" + (qIndex + 1) + ")";
-        document.getElementById("save-test-btn").innerText = "💾 Ўзгаришларни сақлаш";
-        document.getElementById("cancel-edit-btn").style.display = "block";
-
         window.scrollTo({ top: document.getElementById("form-title").offsetTop - 20, behavior: 'smooth' });
     }
 
@@ -677,15 +719,15 @@
         document.getElementById("admin-opt-2").value = "";
         document.getElementById("admin-opt-3").value = "";
         document.getElementById("admin-correct-opt").value = 0;
-
-        document.getElementById("form-title").innerText = "➕ Yangi savol qo'shish";
-        document.getElementById("save-test-btn").innerText = "➕ Сақлаш ва эълон қилиш";
-        document.getElementById("cancel-edit-btn").style.display = "none";
+        
+        populateTestSelect();
     }
 
     function saveQuestionFromAdmin() {
+        let selectVal = document.getElementById("admin-test-select").value;
         let testId = document.getElementById("editing-test-id").value;
         let qIndex = parseInt(document.getElementById("editing-question-index").value);
+        
         let title = document.getElementById("admin-test-title").value.trim();
         let readingText = document.getElementById("admin-reading-text").value.trim();
         let question = document.getElementById("admin-question").value.trim();
@@ -695,8 +737,8 @@
         let opt3 = document.getElementById("admin-opt-3").value.trim();
         let correct = parseInt(document.getElementById("admin-correct-opt").value);
 
-        if (!title || !question || !opt0 || !opt1) {
-            alert("Илтимос, тест номи, савол ва камида 2 та вариантни тўлдиринг!");
+        if (!question || !opt0 || !opt1) {
+            alert("Илтимос, савол ва камида 2 та вариантни тўлдиринг!");
             return;
         }
 
@@ -707,22 +749,25 @@
             correct: correct
         };
 
-        if (testId && testData[testId]) {
-            testData[testId].title = title;
-            if (qIndex >= 0) {
-                testData[testId].questions[qIndex] = newQuestionData;
-                alert("Савол муваффақиятли янгиланди!");
-            } else {
-                testData[testId].questions.push(newQuestionData);
-                alert("Янги савол тестга қўшилди!");
+        if (selectVal === "new") {
+            if (!title) {
+                alert("Илтимос, янги тест номини киритинг!");
+                return;
             }
-        } else {
             let newId = Object.keys(testData).length > 0 ? Math.max(...Object.keys(testData).map(Number)) + 1 : 1;
             testData[newId] = {
                 title: title,
                 questions: [newQuestionData]
             };
-            alert("Янги тест ва савол яратилди!");
+            alert("Янги тест ва биринчи савол муваффақиятли яратилди!");
+        } else if (testData[selectVal]) {
+            if (qIndex >= 0) {
+                testData[selectVal].questions[qIndex] = newQuestionData;
+                alert("Савол муваффақиятли янгиланди!");
+            } else {
+                testData[selectVal].questions.push(newQuestionData);
+                alert("Янги савол тестга қўшилди!");
+            }
         }
 
         saveTestDataToStorage();
@@ -737,6 +782,7 @@
             saveTestDataToStorage();
             renderAdminTestsList();
             renderTestsList();
+            populateTestSelect();
             alert("Савол ўчирилди!");
         }
     }
@@ -747,6 +793,7 @@
             saveTestDataToStorage();
             renderAdminTestsList();
             renderTestsList();
+            populateTestSelect();
             alert("Бутун тест ўчирилди!");
         }
     }
