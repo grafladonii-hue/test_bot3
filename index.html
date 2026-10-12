@@ -369,6 +369,7 @@
 
 <script>
     const ADMIN_ID = 644092713;
+    const API_URL = "https://test-bot3-1.onrender.com/api/tests";
 
     let tg = window.Telegram.WebApp;
     tg.expand();
@@ -774,22 +775,53 @@
         }
     };
 
-    // Обновленный ключ версии хранилища для гарантированного обновления у всех пользователей
-    let testData = JSON.parse(localStorage.getItem('demotestlar_v6_data')) || defaultTestData;
+    let testData = defaultTestData;
 
-    function saveTestDataToStorage() {
-        localStorage.setItem('demotestlar_v6_data', JSON.stringify(testData));
+    async function fetchTestData() {
+        try {
+            let response = await fetch(API_URL);
+            if (response.ok) {
+                let data = await response.json();
+                if (data && Object.keys(data).length > 0) {
+                    testData = data;
+                } else {
+                    testData = defaultTestData;
+                }
+            } else {
+                testData = defaultTestData;
+            }
+        } catch (e) {
+            console.error("Сервердан юклашда хатолик:", e);
+            testData = defaultTestData;
+        }
+        renderTestsList();
+    }
+
+    async function saveTestDataToStorage() {
+        try {
+            let response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(testData)
+            });
+            if (response.ok) {
+                alert("Савол Render серверига сақланди! Энди телефонда ҳам кўринади.");
+            } else {
+                alert("Серверга сақлашда хатолик юз берди!");
+            }
+        } catch (e) {
+            alert("Серверга уланишда хатолик юз берди!");
+            console.error(e);
+        }
     }
 
     function resetToDefaults() {
         if (confirm("Диққат! Барча киритилган ўзгаришлар ўчиб, бошланғич тестлар қайта тикланади. Розимисиз?")) {
-            localStorage.removeItem('demotestlar_v6_data');
             testData = JSON.parse(JSON.stringify(defaultTestData));
             saveTestDataToStorage();
             renderAdminTestsList();
             renderTestsList();
             resetAdminForm();
-            alert("База қайта тикланди!");
         }
     }
 
@@ -816,7 +848,7 @@
                 <div class="test-card">
                     <div>
                         <strong>${t.title}</strong>
-                        <p style="margin: 5px 0 0; font-size: 13px; color: #666;">${t.questions.length} ta savol • 90 daqiqa</p>
+                        <p style="margin: 5px 0 0; font-size: 13px; color: #666;">${t.questions ? t.questions.length : 0} ta savol • 90 daqiqa</p>
                     </div>
                     <button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(${id})">Ishlash</button>
                 </div>
@@ -824,8 +856,6 @@
         }
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha testlar yo'q.</p>";
     }
-
-    renderTestsList();
 
     function switchTab(tab) {
         document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -1042,7 +1072,7 @@
         let select = document.getElementById("admin-test-select");
         let html = '<option value="new">➕ Мутлақо янги тест яратиш</option>';
         for (let id in testData) {
-            html += `<option value="${id}">${testData[id].title} (${testData[id].questions.length} та савол)</option>`;
+            html += `<option value="${id}">${testData[id].title} (${testData[id].questions ? testData[id].questions.length : 0} та савол)</option>`;
         }
         select.innerHTML = html;
     }
@@ -1073,25 +1103,27 @@
             let t = testData[id];
             let questionsHtml = "";
 
-            t.questions.forEach((q, qIndex) => {
-                let imgIcon = q.imageUrl ? "🖼 " : "";
-                questionsHtml += `
-                    <div class="admin-q-item">
-                        <span><b>${qIndex + 1}.</b> ${imgIcon}${q.question.substring(0, 35)}...</span>
-                        <div class="admin-btn-group">
-                            <button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(${id}, ${qIndex})">✏️ Таҳрирлаш</button>
-                            <button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(${id}, ${qIndex})">🗑 Ўчириш</button>
+            if (t.questions) {
+                t.questions.forEach((q, qIndex) => {
+                    let imgIcon = q.imageUrl ? "🖼 " : "";
+                    questionsHtml += `
+                        <div class="admin-q-item">
+                            <span><b>${qIndex + 1}.</b> ${imgIcon}${q.question.substring(0, 35)}...</span>
+                            <div class="admin-btn-group">
+                                <button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(${id}, ${qIndex})">✏️ Таҳрирлаш</button>
+                                <button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(${id}, ${qIndex})">🗑 Ўчириш</button>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
 
             html += `
                 <div class="admin-test-item">
                     <div class="admin-test-header">
                         <div>
                             <strong>${t.title}</strong>
-                            <span class="badge" style="margin-left: 8px;">${t.questions.length} та савол</span>
+                            <span class="badge" style="margin-left: 8px;">${t.questions ? t.questions.length : 0} та савол</span>
                         </div>
                         <div class="admin-btn-group">
                             <button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(${id})">➕ Янги савол қўшиш</button>
@@ -1194,14 +1226,14 @@
                 title: title,
                 questions: [newQuestionData]
             };
-            alert("Янги тест ва биринчи савол муваффақиятли яратилди!");
         } else if (testData[selectVal]) {
+            if (!testData[selectVal].questions) {
+                testData[selectVal].questions = [];
+            }
             if (qIndex >= 0) {
                 testData[selectVal].questions[qIndex] = newQuestionData;
-                alert("Савол муваффақиятли янгиланди!");
             } else {
                 testData[selectVal].questions.push(newQuestionData);
-                alert("Янги савол ушбу тестга муваффақиятли қўшилди!");
             }
         }
 
@@ -1218,7 +1250,6 @@
             renderAdminTestsList();
             renderTestsList();
             populateTestSelect();
-            alert("Савол ўчирилди!");
         }
     }
 
@@ -1229,9 +1260,12 @@
             renderAdminTestsList();
             renderTestsList();
             populateTestSelect();
-            alert("Бутун тест ўчирилди!");
         }
     }
+
+    window.onload = function() {
+        fetchTestData();
+    };
 </script>
 
 </body>
