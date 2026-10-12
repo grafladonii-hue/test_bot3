@@ -50,6 +50,14 @@
             max-height: 180px;
             overflow-y: auto;
         }
+        .question-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: block;
+            border: 1px solid #ddd;
+        }
         .options label {
             display: block;
             background: #f9f9f9;
@@ -225,6 +233,14 @@
             font-size: 12px;
             font-weight: bold;
         }
+        .img-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: none;
+            border: 1px dashed #27ae60;
+        }
     </style>
 </head>
 <body>
@@ -274,7 +290,7 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Бу ердан мавжуд тестларга янги савол қўшишингиз ёки саволларни таҳрирлашингиз мумкин.
+            Siz administratorsiz. Бу ердан расмли ёки матнли саволларни осон қўшишингиз мумкин.
         </div>
 
         <!-- TAHRIRLASH VA QO'SHISH FORMASI -->
@@ -283,6 +299,7 @@
             
             <input type="hidden" id="editing-test-id" value="">
             <input type="hidden" id="editing-question-index" value="-1">
+            <input type="hidden" id="admin-img-data" value="">
 
             <label><b>Кайси тестга савол тегишли?</b></label>
             <select id="admin-test-select" onchange="onTestSelectChange()">
@@ -296,6 +313,13 @@
 
             <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
             <textarea id="admin-reading-text" rows="3" placeholder="Матнни шу ерга киритинг..."></textarea>
+
+            <!-- RASM QO'SHISH BO'LIMI -->
+            <label><b>📷 Саволга расм қўшиш (Ихтиёрий):</b></label>
+            <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)">
+            <input type="text" id="admin-img-url" placeholder="Ёки расмнинг интернет ҳаволаси (URL)ни киритинг" onchange="handleUrlImage(this.value)">
+            <img id="img-preview" class="img-preview" alt="Расм кўриниши">
+            <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-bottom: 10px; width: auto;" onclick="removeImage()">🗑 Расмни ўчириш</button>
 
             <label><b>Савол матни:</b></label>
             <input type="text" id="admin-question" placeholder="Савол матнини киритинг">
@@ -378,6 +402,7 @@
             questions: [
                 { 
                     readingText: "<b>Заметки о природе (К. Паустовский)</b><br><br>(1) Каждый любит природу по-своему...",
+                    imageUrl: "",
                     question: "Определите, какое утверждение НЕ соответствует содержанию текста.", 
                     options: [
                         "A) Нас не оправдают перед будущими поколениями...", 
@@ -399,15 +424,15 @@
         }
     };
 
-    let testData = JSON.parse(localStorage.getItem('demotestlar_v4_data')) || defaultTestData;
+    let testData = JSON.parse(localStorage.getItem('demotestlar_v5_data')) || defaultTestData;
 
     function saveTestDataToStorage() {
-        localStorage.setItem('demotestlar_v4_data', JSON.stringify(testData));
+        localStorage.setItem('demotestlar_v5_data', JSON.stringify(testData));
     }
 
     function resetToDefaults() {
         if (confirm("Диққат! Барча киритилган ўзгаришлар ўчиб, бошланғич тестлар қайта тикланади. Розимисиз?")) {
-            localStorage.removeItem('demotestlar_v4_data');
+            localStorage.removeItem('demotestlar_v5_data');
             testData = JSON.parse(JSON.stringify(defaultTestData));
             saveTestDataToStorage();
             renderAdminTestsList();
@@ -491,6 +516,7 @@
 
             return {
                 readingText: q.readingText,
+                imageUrl: q.imageUrl,
                 question: q.question,
                 options: shuffledOptions.map(o => o.text),
                 correct: newCorrectIndex
@@ -539,9 +565,11 @@
         });
 
         let textBlockHtml = q.readingText ? `<div class="text-box">${q.readingText}</div>` : "";
+        let imgBlockHtml = q.imageUrl ? `<img src="${q.imageUrl}" class="question-img" alt="Расмли савол">` : "";
 
         document.getElementById("question-box").innerHTML = `
             ${textBlockHtml}
+            ${imgBlockHtml}
             <h3>${q.question}</h3>
             <div class="options">${optionsHtml}</div>
         `;
@@ -618,6 +646,51 @@
     }
 
     // ----------------------------------------------------
+    // RASMLAR BILAN ISHLASH (BASE64 VA URL)
+    // ----------------------------------------------------
+    function handleImageUpload(event) {
+        let file = event.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let base64 = e.target.result;
+                document.getElementById("admin-img-data").value = base64;
+                document.getElementById("admin-img-url").value = "";
+                showImagePreview(base64);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleUrlImage(url) {
+        if (url.trim() !== "") {
+            document.getElementById("admin-img-data").value = url.trim();
+            document.getElementById("admin-img-file").value = "";
+            showImagePreview(url.trim());
+        }
+    }
+
+    function showImagePreview(src) {
+        let preview = document.getElementById("img-preview");
+        let removeBtn = document.getElementById("remove-img-btn");
+        if (src) {
+            preview.src = src;
+            preview.style.display = "block";
+            removeBtn.style.display = "inline-block";
+        } else {
+            preview.style.display = "none";
+            removeBtn.style.display = "none";
+        }
+    }
+
+    function removeImage() {
+        document.getElementById("admin-img-data").value = "";
+        document.getElementById("admin-img-file").value = "";
+        document.getElementById("admin-img-url").value = "";
+        showImagePreview("");
+    }
+
+    // ----------------------------------------------------
     // АДМИН ИНТЕРФЕЙСИ
     // ----------------------------------------------------
     function populateTestSelect() {
@@ -656,9 +729,10 @@
             let questionsHtml = "";
 
             t.questions.forEach((q, qIndex) => {
+                let imgIcon = q.imageUrl ? "🖼 " : "";
                 questionsHtml += `
                     <div class="admin-q-item">
-                        <span><b>${qIndex + 1}.</b> ${q.question.substring(0, 40)}...</span>
+                        <span><b>${qIndex + 1}.</b> ${imgIcon}${q.question.substring(0, 35)}...</span>
                         <div class="admin-btn-group">
                             <button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(${id}, ${qIndex})">✏️ Таҳрирлаш</button>
                             <button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(${id}, ${qIndex})">🗑 Ўчириш</button>
@@ -713,6 +787,10 @@
         document.getElementById("admin-opt-3").value = q.options && q.options[3] ? q.options[3] : "";
         document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
 
+        let imgUrl = q.imageUrl || "";
+        document.getElementById("admin-img-data").value = imgUrl;
+        showImagePreview(imgUrl);
+
         onTestSelectChange();
         window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
     }
@@ -729,6 +807,7 @@
         document.getElementById("admin-opt-3").value = "";
         document.getElementById("admin-correct-opt").value = 0;
         
+        removeImage();
         populateTestSelect();
         onTestSelectChange();
     }
@@ -739,6 +818,7 @@
         
         let title = document.getElementById("admin-test-title").value.trim();
         let readingText = document.getElementById("admin-reading-text").value.trim();
+        let imageUrl = document.getElementById("admin-img-data").value.trim();
         let question = document.getElementById("admin-question").value.trim();
         let opt0 = document.getElementById("admin-opt-0").value.trim();
         let opt1 = document.getElementById("admin-opt-1").value.trim();
@@ -753,6 +833,7 @@
 
         let newQuestionData = {
             readingText: readingText ? readingText : null,
+            imageUrl: imageUrl ? imageUrl : null,
             question: question,
             options: [opt0, opt1, opt2, opt3].filter(o => o !== ""),
             correct: correct
