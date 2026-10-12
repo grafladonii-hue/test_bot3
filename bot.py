@@ -1,19 +1,18 @@
-import asyncio
-import logging
 import os
+import logging
+from fastapi import FastAPI, Request
 from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from aiohttp import web
 
-# Токен тўғридан-тўғри кодингизга қўшилди
 TOKEN = "8979824672:AAEJZ3CHylCvNcoaUHdOt_mmxfcroVWpQk0"
-GROUP_ID = -1003919402335
+GROUP_ID = -1003919402335  # Гуруҳ ID-сини қайта текшириб олинг
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+app = FastAPI()
 
 async def check_membership(user_id: int, bot: Bot) -> bool:
     try:
@@ -22,7 +21,7 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
             return True
     except Exception as e:
         logging.error(f"Аъзоликни текширишда хатолик: {e}")
-        pass
+        return False
     return False
 
 @dp.message(Command("start"))
@@ -47,25 +46,12 @@ async def cmd_start(message: types.Message):
             "Testlarni ishlash uchun avval yopiq guruhimizga qo'shiling!"
         )
 
-async def handle(request):
-    return web.Response(text="Bot ishlayapti!")
+@app.post("/")
+async def bot_webhook(request: Request):
+    update = types.Update.model_validate(await request.json(), context={"bot": bot})
+    await dp.feed_update(bot, update)
+    return {"ok": True}
 
-async def web_server():
-    app = web.Application()
-    app.router.add_get("/", handle)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    port = int(os.environ.get("PORT", 10000))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-
-async def main():
-    logging.basicConfig(level=logging.INFO)
-    print("Bot va veb-server ishga tushdi...")
-    await asyncio.gather(
-        web_server(),
-        dp.start_polling(bot)
-    )
-
-if __name__ == "__main__":
-    asyncio.run(main())
+@app.get("/")
+async def root():
+    return {"status": "Bot ishlamoqda"}
