@@ -6,7 +6,6 @@
     <title>Demotestlar.uz</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Скриншот ва нусхалашни олдини олиш учун матнни белгилашни тақиқлаш */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -84,18 +83,10 @@
             position: relative;
             z-index: 10;
         }
-        button.secondary {
-            background: #95a5a6;
-        }
-        button.danger {
-            background: #e74c3c;
-        }
-        button.warning {
-            background: #f39c12;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
+        button.secondary { background: #95a5a6; }
+        button.danger { background: #e74c3c; }
+        button.warning { background: #f39c12; }
+        button:hover { opacity: 0.9; }
         .result-box {
             display: none;
             text-align: center;
@@ -154,9 +145,7 @@
             color: #27ae60;
             font-weight: bold;
         }
-        .nav-item div {
-            font-size: 18px;
-        }
+        .nav-item div { font-size: 18px; }
         .test-card {
             background: #f9f9f9;
             border: 1px solid #e1e1e1;
@@ -167,12 +156,8 @@
             justify-content: space-between;
             align-items: center;
         }
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
+        .page { display: none; }
+        .page.active { display: block; }
         .brand-header {
             text-align: center;
             margin-bottom: 20px;
@@ -278,7 +263,7 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Bu yerdan mavjud testларни, саволларни таҳрирлашингиз ва янгиларини қўшишингиз мумкин.
+            Siz administratorsiz. Бу ердан саволларни алоҳида таҳрирлашингиз ёки янги савол қўшишингиз мумкин.
         </div>
 
         <!-- MAVJUD TESTLARNI BO'LIMI -->
@@ -289,9 +274,9 @@
         <h3 id="form-title">➕ Yangi savol qo'shish</h3>
         <div class="admin-form">
             <input type="hidden" id="editing-test-id" value="">
-            <input type="hidden" id="editing-question-index" value="">
+            <input type="hidden" id="editing-question-index" value="-1">
 
-            <label><b>Testни танланг ёки янги ном киритинг:</b></label>
+            <label><b>Test номи:</b></label>
             <input type="text" id="admin-test-title" placeholder="Masalan: Demo-1 (Kuz 2026)">
 
             <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
@@ -318,6 +303,7 @@
                 <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">➕ Сақлаш ва эълон қилиш</button>
                 <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()" style="display: none;">Бекор қилиш</button>
             </div>
+            <button type="button" class="danger" style="margin-top: 15px;" onclick="resetToDefaults()">🔄 Базани бошланғич ҳолатга қайтариш</button>
         </div>
     </div>
 </div>
@@ -393,10 +379,22 @@
         }
     };
 
-    let testData = JSON.parse(localStorage.getItem('demotestlar_data')) || defaultTestData;
+    let testData = JSON.parse(localStorage.getItem('demotestlar_v2_data')) || defaultTestData;
 
     function saveTestDataToStorage() {
-        localStorage.setItem('demotestlar_data', JSON.stringify(testData));
+        localStorage.setItem('demotestlar_v2_data', JSON.stringify(testData));
+    }
+
+    function resetToDefaults() {
+        if (confirm("Диққат! Барча киритилган ўзгаришлар ўчиб, бошланғич тестлар қайта тикланади. Розимисиз?")) {
+            localStorage.removeItem('demotestlar_v2_data');
+            testData = JSON.parse(JSON.stringify(defaultTestData));
+            saveTestDataToStorage();
+            renderAdminTestsList();
+            renderTestsList();
+            resetAdminForm();
+            alert("База қайта тикланди!");
+        }
     }
 
     let activeQuestions = [];
@@ -456,6 +454,10 @@
 
     function startQuiz(testId) {
         let rawQuestions = testData[testId].questions;
+        if (!rawQuestions || rawQuestions.length === 0) {
+            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
+            return;
+        }
         
         activeQuestions = rawQuestions.map(q => {
             let indexedOptions = q.options.map((opt, idx) => ({
@@ -595,7 +597,7 @@
     }
 
     // ----------------------------------------------------
-    // АДМИН ИНТЕРФЕЙСИ: ТЕСТЛАР ВА САВОЛЛАРНИ АЛОҲИДА БОШҚАРИШ
+    // АДМИН ИНТЕРФЕЙСИ
     // ----------------------------------------------------
     function renderAdminTestsList() {
         let html = "";
@@ -608,8 +610,8 @@
                     <div class="admin-q-item">
                         <span><b>${qIndex + 1}.</b> ${q.question.substring(0, 45)}...</span>
                         <div class="admin-btn-group">
-                            <button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(${id}, ${qIndex})">✏️</button>
-                            <button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(${id}, ${qIndex})">🗑</button>
+                            <button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(${id}, ${qIndex})">✏️ Таҳрирлаш</button>
+                            <button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(${id}, ${qIndex})">🗑 Ўчириш</button>
                         </div>
                     </div>
                 `;
@@ -621,7 +623,7 @@
                         <strong>${t.title}</strong>
                         <div class="admin-btn-group">
                             <button type="button" style="padding: 4px 10px; font-size: 12px; width: auto; background: #2980b9;" onclick="addNewQuestionToTest(${id})">➕ Савол қўшиш</button>
-                            <button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Бутун тестни ўчириш</button>
+                            <button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(${id})">🗑 Тестни ўчириш</button>
                         </div>
                     </div>
                     <div class="admin-questions-list">
@@ -636,8 +638,9 @@
     function addNewQuestionToTest(testId) {
         resetAdminForm();
         document.getElementById("editing-test-id").value = testId;
+        document.getElementById("editing-question-index").value = "-1";
         document.getElementById("admin-test-title").value = testData[testId].title;
-        document.getElementById("form-title").innerText = "➕ Yangi savol qo'shish (" + testData[testId].title + ")";
+        document.getElementById("form-title").innerText = "➕ Янги савол қўшиш (" + testData[testId].title + ")";
         window.scrollTo({ top: document.getElementById("form-title").offsetTop - 20, behavior: 'smooth' });
     }
 
@@ -656,7 +659,7 @@
         document.getElementById("admin-opt-3").value = q.options && q.options[3] ? q.options[3] : "";
         document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
 
-        document.getElementById("form-title").innerText = "✏️ Саволни таҳрирлаш (Савол №" + (qIndex + 1) + ")";
+        document.getElementById("form-title").innerText = "✏️ Саволни таҳрирлаш (№" + (qIndex + 1) + ")";
         document.getElementById("save-test-btn").innerText = "💾 Ўзгаришларни сақлаш";
         document.getElementById("cancel-edit-btn").style.display = "block";
 
@@ -665,7 +668,7 @@
 
     function resetAdminForm() {
         document.getElementById("editing-test-id").value = "";
-        document.getElementById("editing-question-index").value = "";
+        document.getElementById("editing-question-index").value = "-1";
         document.getElementById("admin-test-title").value = "";
         document.getElementById("admin-reading-text").value = "";
         document.getElementById("admin-question").value = "";
@@ -682,14 +685,14 @@
 
     function saveQuestionFromAdmin() {
         let testId = document.getElementById("editing-test-id").value;
-        let qIndex = document.getElementById("editing-question-index").value;
-        let title = document.getElementById("admin-test-title").value;
-        let readingText = document.getElementById("admin-reading-text").value;
-        let question = document.getElementById("admin-question").value;
-        let opt0 = document.getElementById("admin-opt-0").value;
-        let opt1 = document.getElementById("admin-opt-1").value;
-        let opt2 = document.getElementById("admin-opt-2").value;
-        let opt3 = document.getElementById("admin-opt-3").value;
+        let qIndex = parseInt(document.getElementById("editing-question-index").value);
+        let title = document.getElementById("admin-test-title").value.trim();
+        let readingText = document.getElementById("admin-reading-text").value.trim();
+        let question = document.getElementById("admin-question").value.trim();
+        let opt0 = document.getElementById("admin-opt-0").value.trim();
+        let opt1 = document.getElementById("admin-opt-1").value.trim();
+        let opt2 = document.getElementById("admin-opt-2").value.trim();
+        let opt3 = document.getElementById("admin-opt-3").value.trim();
         let correct = parseInt(document.getElementById("admin-correct-opt").value);
 
         if (!title || !question || !opt0 || !opt1) {
@@ -706,7 +709,7 @@
 
         if (testId && testData[testId]) {
             testData[testId].title = title;
-            if (qIndex !== "") {
+            if (qIndex >= 0) {
                 testData[testId].questions[qIndex] = newQuestionData;
                 alert("Савол муваффақиятли янгиланди!");
             } else {
@@ -719,7 +722,7 @@
                 title: title,
                 questions: [newQuestionData]
             };
-            alert("Янги тест ва савол муваффақиятли яратилди!");
+            alert("Янги тест ва савол яратилди!");
         }
 
         saveTestDataToStorage();
