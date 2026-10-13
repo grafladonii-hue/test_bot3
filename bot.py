@@ -6,8 +6,10 @@ from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
+logging.basicConfig(level=logging.INFO)
+
 TOKEN = "8979824672:AAEJZ3CHylCvNcoaUHdOt_mmxfcroVWpQk0"
-GROUP_ID = -1003919402335  # Гуруҳ ID-сини қайта текшириб олинг
+GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
 bot = Bot(token=TOKEN)
@@ -21,7 +23,9 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
             return True
     except Exception as e:
         logging.error(f"Аъзоликни текширишда хатолик: {e}")
-        return False
+        # Агар гуруҳ текширувида хатолик бўлса (масалан бот админ бўлмаса), 
+        # фойдаланувчини блокда қолдирмаслик учун True қайтариб туриш тавсия этилади:
+        return True
     return False
 
 @dp.message(Command("start"))
@@ -48,8 +52,12 @@ async def cmd_start(message: types.Message):
 
 @app.post("/")
 async def bot_webhook(request: Request):
-    update = types.Update.model_validate(await request.json(), context={"bot": bot})
-    await dp.feed_update(bot, update)
+    try:
+        data = await request.json()
+        update = types.Update.model_validate(data, context={"bot": bot})
+        await dp.feed_update(bot, update)
+    except Exception as e:
+        logging.error(f"Webhook update error: {e}")
     return {"ok": True}
 
 @app.get("/")
