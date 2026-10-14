@@ -75,7 +75,8 @@ async def cmd_start(message: types.Message):
             "Testlarni ishlash uchun avval yopiq guruhimizga qo'shiling!"
         )
 
-@app.post("/")
+# Webhook манзилини /api/webhook га ажратдик:
+@app.post("/api/webhook")
 async def bot_webhook(request: Request):
     try:
         data = await request.json()
@@ -85,6 +86,7 @@ async def bot_webhook(request: Request):
         logging.error(f"Webhook update error: {e}")
     return {"ok": True}
 
+# Асосий саҳифага кирилганда index.html очилади:
 @app.get("/")
 async def root():
     return FileResponse("index.html")
