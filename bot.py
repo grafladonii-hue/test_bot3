@@ -1,8 +1,9 @@
 import os
 import json
 import logging
+from pathlib import Path
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
@@ -14,20 +15,25 @@ TOKEN = "8979824672:AAEJZ3CHylCvNcoaUHdOt_mmxfcroVWpQk0"
 GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
+BASE_DIR = Path(__file__).resolve().parent
+
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
 # --- TESTLAR BAZASI БЎЛИМИ ---
-DATA_FILE = "questions.json"
+DATA_FILE = BASE_DIR / "questions.json"
 
 if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump({}, f, ensure_ascii=False, indent=2)
 
 def load_data():
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -66,16 +72,15 @@ async def cmd_start(message: types.Message):
         )
         await message.answer(
             "Xush kelibsiz, Demotestlar.uz (Baxtiyor Karjabov Demo testlar platformasi)ga!\n\n"
-            "Testlarni ishlash uchun quyidagi tugmani bosing:",
+            "Testlarni ishlash учун қуйидаги тугмани босинг:",
             reply_markup=keyboard
         )
     else:
         await message.answer(
             "❌ Kechirasiz, siz bizning yopiq guruhimiz a'zosi emassiz.\n\n"
-            "Testlarni ishlash uchun avval yopiq guruhimizga qo'shiling!"
+            "Testlarni ishlash учун аввал ёпиқ гуруҳимизга қўшилинг!"
         )
 
-# Webhook манзилини /api/webhook га ажратдик:
 @app.post("/api/webhook")
 async def bot_webhook(request: Request):
     try:
@@ -86,7 +91,9 @@ async def bot_webhook(request: Request):
         logging.error(f"Webhook update error: {e}")
     return {"ok": True}
 
-# Асосий саҳифага кирилганда index.html очилади:
 @app.get("/")
 async def root():
-    return FileResponse("index.html")
+    html_path = BASE_DIR / "index.html"
+    if html_path.exists():
+        return FileResponse(html_path)
+    return JSONResponse({"error": "index.html топилмади"}, status_code=404)
