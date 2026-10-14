@@ -21,23 +21,17 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
-# --- TESTLAR BAZASI БЎЛИМИ ---
+# --- TESTLAR BAZASI (Serverless учун хавфсиз хотира) ---
 DATA_FILE = BASE_DIR / "questions.json"
 
-if not os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump({}, f, ensure_ascii=False, indent=2)
-
 def load_data():
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    if DATA_FILE.exists():
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error(f"Файлни ўқишда хатолик: {e}")
+    return {}
 
 @app.get("/api/tests")
 def get_tests():
@@ -45,7 +39,12 @@ def get_tests():
 
 @app.post("/api/tests")
 def update_tests(data: dict):
-    save_data(data)
+    # Vercel Serverless муҳитида файлга қайта ёзишда хатолик чиқмаслиги учун:
+    try:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.error(f"Файлга ёзишда хатолик: {e}")
     return {"status": "ok"}
 
 # --- TELEGRAM BOT БЎЛИМИ ---
@@ -81,7 +80,10 @@ async def cmd_start(message: types.Message):
             "Testlarni ishlash учун аввал ёпиқ гуруҳимизга қўшилинг!"
         )
 
+# Webhook учун универсал эндпоинтлар:
 @app.post("/api/webhook")
+@app.post("/webhook")
+@app.post("/")
 async def bot_webhook(request: Request):
     try:
         data = await request.json()
@@ -96,4 +98,4 @@ async def root():
     html_path = BASE_DIR / "index.html"
     if html_path.exists():
         return FileResponse(html_path)
-    return JSONResponse({"error": "index.html топилмади"}, status_code=404)
+    return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
