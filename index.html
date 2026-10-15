@@ -39,10 +39,7 @@
             margin-bottom: 20px;
             font-weight: bold;
         }
-        .timer {
-            color: #e74c3c;
-            font-size: 16px;
-        }
+        .timer { color: #e74c3c; font-size: 16px; }
         .question-box { margin-bottom: 20px; }
         .text-box {
             background: #f8f9fa;
@@ -93,6 +90,7 @@
         button.warning { background: #f39c12; }
         button.info { background: #2980b9; }
         button:hover { opacity: 0.9; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
         .result-box { display: none; text-align: center; }
         .score-circle {
             width: 130px;
@@ -130,12 +128,7 @@
             border-top: 1px solid #eee;
             z-index: 100;
         }
-        .nav-item {
-            text-align: center;
-            cursor: pointer;
-            color: #666;
-            font-size: 12px;
-        }
+        .nav-item { text-align: center; cursor: pointer; color: #666; font-size: 12px; }
         .nav-item.active { color: #27ae60; font-weight: bold; }
         .nav-item div { font-size: 18px; }
         .test-card {
@@ -402,20 +395,38 @@
 
     async function saveTestDataToStorage(silent) {
         if (silent === undefined) silent = false;
-        try {
-            const res = await supabaseClient
-                .from('tests')
-                .upsert({ id: 'main_tests', data: testData });
+        var saveBtn = document.getElementById('save-test-btn');
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "⏳ Сақланмоқда..."; }
 
-            if (res.error) {
-                console.error("Supabase'га сақлашда хатолик:", res.error);
-                if (!silent) alert("Базага сақлашда хатолик: " + res.error.message);
-            } else {
-                if (!silent) alert("Савол Supabase булутли базасига сақланди! Энди у ҳеч қачон ўчиб кетмайди.");
+        var success = false;
+        var lastError = null;
+
+        for (var attempt = 1; attempt <= 3; attempt++) {
+            try {
+                const res = await supabaseClient
+                    .from('tests')
+                    .upsert({ id: 'main_tests', data: testData }, { onConflict: 'id' });
+
+                if (!res.error) {
+                    success = true;
+                    break;
+                } else {
+                    lastError = res.error;
+                    console.warn("Аттемпт " + attempt + " хатоси:", res.error);
+                }
+            } catch (e) {
+                lastError = e;
+                console.warn("Аттемпт " + attempt + " кач хатоси:", e);
             }
-        } catch (e) {
-            console.error(e);
-            if (!silent) alert("Базага уланишда хатолик юз берди!");
+        }
+
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "💾 Сақлаш"; }
+
+        if (success) {
+            if (!silent) alert("Савол Supabase булутли базасига муваффақиятли сақланди!");
+        } else {
+            console.error("Сақлаш муваффақиятсиз бўлди:", lastError);
+            if (!silent) alert("Базага сақлашда хатолик: " + (lastError ? (lastError.message || JSON.stringify(lastError)) : "Таймаут"));
         }
     }
 
@@ -615,10 +626,26 @@
         if (file) {
             var reader = new FileReader();
             reader.onload = function(e) {
-                var base64 = e.target.result;
-                document.getElementById("admin-img-data").value = base64;
-                document.getElementById("admin-img-url").value = "";
-                showImagePreview(base64);
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    var maxWidth = 800;
+                    var scale = maxWidth / img.width;
+                    if (scale < 1) {
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scale;
+                    } else {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById("admin-img-data").value = compressedBase64;
+                    document.getElementById("admin-img-url").value = "";
+                    showImagePreview(compressedBase64);
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
