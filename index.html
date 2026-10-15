@@ -11,7 +11,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
 
     <style>
         body {
@@ -220,7 +219,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish учун Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -332,6 +331,8 @@
     var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     var tg = window.Telegram ? window.Telegram.WebApp : null;
+    var currentUserId = null;
+
     if (tg) {
         tg.expand();
         try {
@@ -343,6 +344,10 @@
         } catch (e) {
             console.log("disableScreenshots xatosi:", e);
         }
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            currentUserId = tg.initDataUnsafe.user.id;
+        }
     }
 
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
@@ -351,14 +356,15 @@
         if (e.key === 'F12') e.preventDefault();
     });
 
-    if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user || tg.initDataUnsafe.user.id === ADMIN_ID) {
+    // ФАҚАТ СИЗНИНГ TELEGRAM ID (644092713) БЎЛГАНДАГИНА АДМИН МЕНЮ ВА ERUDA ЧИҚАДИ:
+    if (currentUserId === ADMIN_ID) {
         var adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.style.display = 'block';
+        if (window.eruda) eruda.init();
     }
 
     var testData = {};
 
-    // Охирги қўшилганлари энг тепада чиқиши учун саралаш (Камайиш тартибида)
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
             var titleA = testData[a] ? (testData[a].title || "") : "";
@@ -370,7 +376,7 @@
             var numA = matchA ? parseInt(matchA[0], 10) : 0;
             var numB = matchB ? parseInt(matchB[0], 10) : 0;
 
-            return numB - numA; // Камайиш тартиби: Катта рақамли (охирги) тест тепада бўлади
+            return numB - numA;
         });
     }
 
