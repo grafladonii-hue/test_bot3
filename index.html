@@ -3,879 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>Demotestlar.uz</title>
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
-
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            padding-bottom: 70px;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        .timer { color: #e74c3c; font-size: 16px; }
-        .question-box { margin-bottom: 20px; }
-        .text-box {
-            background: #f8f9fa;
-            border-left: 4px solid #27ae60;
-            padding: 12px;
-            margin-bottom: 15px;
-            font-size: 13px;
-            line-height: 1.5;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .question-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: block;
-            border: 1px solid #ddd;
-        }
-        .options label {
-            display: block;
-            background: #f9f9f9;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            border: 1px solid #ddd;
-            transition: 0.2s;
-        }
-        .options label:hover { background: #eef2f7; }
-        .options input { margin-right: 10px; }
-        .btn-group { display: flex; gap: 10px; }
-        button {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
-            position: relative;
-            z-index: 10;
-        }
-        button.secondary { background: #95a5a6; }
-        button.danger { background: #e74c3c; }
-        button.warning { background: #f39c12; }
-        button.info { background: #2980b9; }
-        button:hover { opacity: 0.9; }
-        button:disabled { background: #bdc3c7; cursor: not-allowed; }
-        .result-box { display: none; text-align: center; }
-        .score-circle {
-            width: 130px;
-            height: 130px;
-            border: 6px solid #27ae60;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px auto;
-            font-size: 24px;
-            font-weight: bold;
-            color: #27ae60;
-            background: #f4f9f4;
-        }
-        .result-item {
-            text-align: left;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #fff;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            border-top: 1px solid #eee;
-            z-index: 100;
-        }
-        .nav-item { text-align: center; cursor: pointer; color: #666; font-size: 12px; }
-        .nav-item.active { color: #27ae60; font-weight: bold; }
-        .nav-item div { font-size: 18px; }
-        .test-card {
-            background: #f9f9f9;
-            border: 1px solid #e1e1e1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .page { display: none; }
-        .page.active { display: block; }
-        .brand-header { text-align: center; margin-bottom: 20px; }
-        .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
-        .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
-        .admin-form input, .admin-form textarea, .admin-form select {
-            width: 100%;
-            padding: 10px;
-            margin: 6px 0 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-        .admin-test-item {
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-        .admin-test-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        .admin-questions-list {
-            margin-top: 10px;
-            padding-left: 10px;
-            border-left: 3px solid #27ae60;
-        }
-        .admin-q-item {
-            background: #f8f9fa;
-            border: 1px solid #eee;
-            padding: 8px 10px;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-        .admin-btn-group { display: flex; gap: 5px; }
-        .badge {
-            background: #e8f8f5;
-            color: #27ae60;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .img-preview {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            display: none;
-            border: 1px dashed #27ae60;
-        }
-        .img-upload-section {
-            background: #f0f7f4;
-            border: 1px dashed #27ae60;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-        }
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; }
+        .admin-form input, .admin-form textarea, .admin-form select { width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background: #27ae60; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:disabled { background: #bdc3c7; }
+        .img-preview { max-width: 100%; max-height: 150px; display: none; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="home-page" class="page active">
-        <div class="brand-header">
-            <h2>Demotestlar.uz</h2>
-            <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
-        </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
-        <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
-    </div>
+    <h2>⚙️ Янги савол қўшиш</h2>
+    <div class="admin-form">
+        <label><b>Тест номи:</b></label>
+        <select id="test-select">
+            <option value="demo_5">Demo-5 (kuz 2026)</option>
+            <option value="demo_6">Demo-6 (kuz 2026)</option>
+        </select>
 
-    <div id="tests-page" class="page">
-        <h2>Mavjud testlar</h2>
-        <div id="tests-list"></div>
-    </div>
+        <label><b>Матн (Ихтиёрий):</b></label>
+        <textarea id="reading-text" rows="2" placeholder="Матнни киритинг..."></textarea>
 
-    <div id="quiz-page" class="page">
-        <div class="header">
-            <span id="quiz-title">Test sinovi</span>
-            <div class="timer" id="timer">Вақт: 90:00</div>
-        </div>
+        <label><b>Расм (Ихтиёрий):</b></label>
+        <input type="file" id="img-file" accept="image/*" onchange="handleImg(event)">
+        <img id="img-preview" class="img-preview">
 
-        <div id="quiz-container">
-            <div class="question-box" id="question-box"></div>
-            <div class="btn-group">
-                <button type="button" class="secondary" onclick="prevQuestion()" id="prev-btn">Oldingi</button>
-                <button type="button" onclick="nextQuestion()" id="next-btn">Keyingi</button>
-            </div>
-        </div>
+        <label><b>Савол матни:</b></label>
+        <input type="text" id="question" placeholder="Саволни киритинг">
 
-        <div class="result-box" id="result-box">
-            <h2>Тест якунланди!</h2>
-            <div class="score-circle" id="score-circle">0 ball</div>
-            <p id="score-text"></p>
-            <div id="answers-review"></div>
-            <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga қайтиш</button>
-        </div>
-    </div>
+        <label><b>Вариантлар:</b></label>
+        <input type="text" id="opt-0" placeholder="A) Вариант 1">
+        <input type="text" id="opt-1" placeholder="B) Вариант 2">
+        <input type="text" id="opt-2" placeholder="C) Вариант 3">
+        <input type="text" id="opt-3" placeholder="D) Вариант 4">
 
-    <div id="admin-page" class="page">
-        <h2>⚙️ Boshqaruv paneli (Admin)</h2>
-        <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Расмли савол қўшиш ва сақлаш имконияти мавжуд.
-        </div>
+        <label><b>Тўғри жавоб:</b></label>
+        <select id="correct-opt">
+            <option value="0">A</option>
+            <option value="1">B</option>
+            <option value="2">C</option>
+            <option value="3">D</option>
+        </select>
 
-        <div class="admin-form" id="admin-form-box" style="background: #fdfefe; border: 2px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 id="form-title" style="margin-top:0; color:#2c3e50;">➕ Янги савол қўшиш</h3>
-            
-            <input type="hidden" id="editing-test-id" value="">
-            <input type="hidden" id="editing-question-index" value="-1">
-            <input type="hidden" id="admin-img-data" value="">
-
-            <label><b>Кайси тестга савол тегишли?</b></label>
-            <select id="admin-test-select" onchange="onTestSelectChange()"></select>
-
-            <div id="new-test-title-box" style="display:none;">
-                <label><b>Янги тест номини киритинг:</b></label>
-                <input type="text" id="admin-test-title" placeholder="Masalan: Demo-5 (kuz 2026)">
-            </div>
-
-            <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
-            <textarea id="admin-reading-text" rows="3" placeholder="Матнни шу ерга киритинг..."></textarea>
-
-            <div class="img-upload-section">
-                <label style="color:#27ae60;"><b>🖼 Саволга расм қўшиш (Ихтиёрий):</b></label>
-                <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
-                <input type="text" id="admin-img-url" placeholder="Ёки расмнинг интернет URL ҳаволасини киритинг" onchange="handleUrlImage(this.value)">
-                <img id="img-preview" class="img-preview" alt="Расм кўриниши">
-                <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Расмни ўчириш</button>
-            </div>
-
-            <label><b>Савол матни:</b></label>
-            <input type="text" id="admin-question" placeholder="Савол матнини киритинг">
-
-            <label><b>Вариантлар:</b></label>
-            <input type="text" id="admin-opt-0" placeholder="A) Вариант 1">
-            <input type="text" id="admin-opt-1" placeholder="B) Вариант 2">
-            <input type="text" id="admin-opt-2" placeholder="C) Вариант 3">
-            <input type="text" id="admin-opt-3" placeholder="D) Вариант 4">
-
-            <label><b>Тўғри жавоб варианти:</b></label>
-            <select id="admin-correct-opt">
-                <option value="0">A) Вариант 1</option>
-                <option value="1">B) Вариант 2</option>
-                <option value="2">C) Вариант 3</option>
-                <option value="3">D) Вариант 4</option>
-            </select>
-
-            <div class="btn-group" style="margin-top: 10px;">
-                <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">💾 Сақлаш</button>
-                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()">Тозалаш</button>
-            </div>
-        </div>
-
-        <h3>📚 Мавжуд тестлар ва уларнинг саволлари</h3>
-        <div id="admin-tests-list" style="margin-bottom: 25px;"></div>
-    </div>
-</div>
-
-<div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
-        <div>🏠</div> Bosh
-    </div>
-    <div class="nav-item" onclick="switchTab('tests')" id="nav-tests">
-        <div>📝</div> Testlar
-    </div>
-    <div class="nav-item" onclick="switchTab('admin')" id="nav-admin" style="display: none; color: #e74c3c;">
-        <div>⚙️</div> Admin
+        <button type="button" id="save-btn" onclick="saveQuestion()">💾 Сақлаш</button>
     </div>
 </div>
 
 <script>
-    const ADMIN_ID = 644092713;
     const SUPABASE_URL = 'https://pudegdogypbxytbdizow.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KOhS1ubVAnOu1PM8r2IP3Q_KF8t0Te1';
-    var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    var tg = window.Telegram ? window.Telegram.WebApp : null;
-    if (tg) {
-        tg.expand();
-        try {
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
-                tg.disableScreenshots();
-            } else if (tg.disableScreenshots) {
-                tg.disableScreenshots();
-            }
-        } catch (e) {
-            console.log("disableScreenshots xatosi:", e);
-        }
-    }
+    let compressedImg = null;
 
-    document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && ['c', 'u', 's', 'C', 'U', 'S'].includes(e.key)) e.preventDefault();
-        if (e.key === 'F12') e.preventDefault();
-    });
-
-    if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user || tg.initDataUnsafe.user.id === ADMIN_ID) {
-        var adminNav = document.getElementById('nav-admin');
-        if (adminNav) adminNav.style.display = 'block';
-    }
-
-    var testData = {};
-
-    function getSortedTestKeys() {
-        return Object.keys(testData).sort(function(a, b) {
-            var numA = parseInt((testData[a].title || "").replace(/\D/g, '')) || parseInt(a) || 0;
-            var numB = parseInt((testData[b].title || "").replace(/\D/g, '')) || parseInt(b) || 0;
-            return numA - numB;
-        });
-    }
-
-    async function fetchTestData() {
-        try {
-            const res = await supabaseClient.from('tests').select('*');
-
-            if (res.data && res.data.length > 0) {
-                testData = {};
-                res.data.forEach(function(row) {
-                    if (row.id !== 'main_tests' && row.data) {
-                        testData[row.id] = row.data;
-                    }
-                });
-            }
-            if (Object.keys(testData).length === 0) {
-                testData = {
-                    "demo_5": { title: "Demo-5 (kuz 2026)", questions: [] }
-                };
-            }
-        } catch (e) {
-            console.error("Supabase юклашда хатолик:", e);
-        }
-        renderTestsList();
-    }
-
-    async function saveSingleTestToStorage(testId, singleTestData, silent) {
-        if (silent === undefined) silent = false;
-        var saveBtn = document.getElementById('save-test-btn');
-        if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "⏳ Сақланмоқда..."; }
-
-        var success = false;
-        var lastError = null;
-
-        try {
-            const res = await supabaseClient
-                .from('tests')
-                .upsert({ id: String(testId), data: singleTestData }, { onConflict: 'id' });
-
-            if (!res.error) {
-                success = true;
-            } else {
-                lastError = res.error;
-            }
-        } catch (e) {
-            lastError = e;
-        }
-
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "💾 Сақлаш"; }
-
-        if (success) {
-            if (!silent) alert("Савол муваффақиятли сақланди!");
-        } else {
-            console.error("Сақлашда хатолик:", lastError);
-            if (!silent) alert("Базага сақлашда хатолик: " + (lastError ? (lastError.message || JSON.stringify(lastError)) : "Таймаут"));
-        }
-    }
-
-    async function deleteTestFromStorage(testId) {
-        try {
-            await supabaseClient.from('tests').delete().eq('id', String(testId));
-        } catch (e) {
-            console.error("Ўчиришда хатолик:", e);
-        }
-    }
-
-    var activeQuestions = [];
-    var currentQuestion = 0;
-    var userAnswers = {}; 
-    var timeLeft = 5400;
-    var timerInterval;
-
-    function shuffleArray(array) {
-        var arr = array.slice();
-        for (var i = arr.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
-        }
-        return arr;
-    }
-
-    function renderTestsList() {
-        var html = "";
-        var sortedKeys = getSortedTestKeys();
-        
-        sortedKeys.forEach(function(id) {
-            var t = testData[id];
-            if (!t) return;
-            html += '<div class="test-card">' +
-                    '<div><strong>' + t.title + '</strong>' +
-                    '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
-                    '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\')">Ishlash</button>' +
-                    '</div>';
-        });
-        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha testlar yo'q.</p>";
-    }
-
-    function switchTab(tab) {
-        document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-        document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
-
-        if (tab === 'home') {
-            document.getElementById('home-page').classList.add('active');
-            document.getElementById('nav-home').classList.add('active');
-            clearInterval(timerInterval);
-        } else if (tab === 'tests') {
-            renderTestsList();
-            document.getElementById('tests-page').classList.add('active');
-            document.getElementById('nav-tests').classList.add('active');
-            clearInterval(timerInterval);
-        } else if (tab === 'admin') {
-            renderAdminTestsList();
-            populateTestSelect();
-            document.getElementById('admin-page').classList.add('active');
-            document.getElementById('nav-admin').classList.add('active');
-            clearInterval(timerInterval);
-        }
-    }
-
-    function startQuiz(testId) {
-        var rawQuestions = testData[testId] ? testData[testId].questions : [];
-        if (!rawQuestions || rawQuestions.length === 0) {
-            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
-            return;
-        }
-        
-        activeQuestions = rawQuestions.map(function(q) {
-            var indexedOptions = q.options.map(function(opt, idx) {
-                return { text: opt, isCorrect: (idx === q.correct) };
-            });
-            
-            var shuffledOptions = shuffleArray(indexedOptions);
-            var newCorrectIndex = shuffledOptions.findIndex(function(o) { return o.isCorrect; });
-
-            return {
-                readingText: q.readingText,
-                imageUrl: q.imageUrl,
-                question: q.question,
-                options: shuffledOptions.map(function(o) { return o.text; }),
-                correct: newCorrectIndex
+    function handleImg(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const scale = 300 / img.width;
+                canvas.width = 300;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                compressedImg = canvas.toDataURL('image/jpeg', 0.3);
+                document.getElementById('img-preview').src = compressedImg;
+                document.getElementById('img-preview').style.display = 'block';
             };
-        });
-
-        activeQuestions = shuffleArray(activeQuestions);
-        currentQuestion = 0;
-        userAnswers = {};
-        timeLeft = 5400;
-
-        document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-        document.getElementById('quiz-page').classList.add('active');
-        
-        document.getElementById('quiz-container').style.display = 'block';
-        document.getElementById('result-box').style.display = 'none';
-        document.getElementById('quiz-title').innerText = testData[testId].title;
-
-        loadQuestion();
-        startTimer();
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
-    function startTimer() {
-        clearInterval(timerInterval);
-        timerInterval = setInterval(function() {
-            var minutes = Math.floor(timeLeft / 60);
-            var seconds = timeLeft % 60;
-            document.getElementById("timer").innerText = "Вақт: " + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-            
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                finishQuiz();
-            }
-            timeLeft--;
-        }, 1000);
-    }
+    async function saveQuestion() {
+        const btn = document.getElementById('save-btn');
+        const qText = document.getElementById('question').value.trim();
+        const o0 = document.getElementById('opt-0').value.trim();
+        const o1 = document.getElementById('opt-1').value.trim();
+        const o2 = document.getElementById('opt-2').value.trim();
+        const o3 = document.getElementById('opt-3').value.trim();
 
-    function loadQuestion() {
-        var q = activeQuestions[currentQuestion];
-        var optionsHtml = "";
-        
-        q.options.forEach(function(opt, index) {
-            var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + '> ' + opt + '</label>';
-        });
-
-        var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
-        var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол">' : "";
-
-        document.getElementById("question-box").innerHTML = 
-            textBlockHtml + imgBlockHtml + '<h3>' + q.question + '</h3><div class="options">' + optionsHtml + '</div>';
-
-        document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
-        document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
-    }
-
-    function saveCurrentAnswer() {
-        var selectedOption = document.querySelector('input[name="option"]:checked');
-        if (selectedOption) {
-            userAnswers[currentQuestion] = parseInt(selectedOption.value);
-        }
-    }
-
-    function nextQuestion() {
-        saveCurrentAnswer();
-        if (userAnswers[currentQuestion] === undefined) {
-            alert("Илтимос, жавобни белгиланг!");
+        if (!qText || !o0 || !o1) {
+            alert('Савол ва вариантларни тўлдиринг!');
             return;
         }
 
-        if (currentQuestion < activeQuestions.length - 1) {
-            currentQuestion++;
-            loadQuestion();
-        } else {
-            finishQuiz();
-        }
-    }
+        btn.disabled = true;
+        btn.innerText = '⏳ Сақланмоқда...';
 
-    function prevQuestion() {
-        saveCurrentAnswer();
-        if (currentQuestion > 0) {
-            currentQuestion--;
-            loadQuestion();
-        }
-    }
-
-    function finishQuiz() {
-        saveCurrentAnswer();
-        clearInterval(timerInterval);
-        
-        document.getElementById("quiz-container").style.display = "none";
-        document.getElementById("result-box").style.display = "block";
-
-        var score = 0;
-        var reviewHtml = "<h3>Жавоблар таҳлили:</h3>";
-
-        activeQuestions.forEach(function(q, index) {
-            var selected = userAnswers[index];
-            var isCorrect = (selected === q.correct);
-            if (isCorrect) score++;
-
-            var className = isCorrect ? "correct" : "incorrect";
-            var icon = isCorrect ? "🟢" : "🔴";
-            var pointsText = isCorrect ? "(+2 балл)" : "(0 балл)";
-            var userOptText = (selected !== undefined) ? q.options[selected] : "Belgilanmagan";
-
-            reviewHtml += '<div class="result-item ' + className + '">' +
-                icon + ' <b>Савол ' + (index + 1) + ':</b> ' + q.question + ' ' + pointsText + '<br>' +
-                'Сизнинг жавобингиз: ' + userOptText + '<br>' +
-                (!isCorrect ? 'Тўғри жавоб: <b>' + q.options[q.correct] + '</b>' : '') +
-                '</div>';
-        });
-
-        var earnedPoints = score * 2;
-        document.getElementById("score-circle").innerText = earnedPoints + " ball";
-        document.getElementById("score-text").innerHTML = "Тўғри жавоблар: " + score + " та / Нотўғри: " + (activeQuestions.length - score) + " та";
-        document.getElementById("answers-review").innerHTML = reviewHtml;
-    }
-
-    function handleImageUpload(event) {
-        var file = event.target.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var img = new Image();
-                img.onload = function() {
-                    var canvas = document.createElement('canvas');
-                    var ctx = canvas.getContext('2d');
-                    var maxWidth = 350; 
-                    var scale = maxWidth / img.width;
-                    if (scale < 1) {
-                        canvas.width = maxWidth;
-                        canvas.height = img.height * scale;
-                    } else {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.3);
-                    document.getElementById("admin-img-data").value = compressedBase64;
-                    document.getElementById("admin-img-url").value = "";
-                    showImagePreview(compressedBase64);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function handleUrlImage(url) {
-        if (url.trim() !== "") {
-            document.getElementById("admin-img-data").value = url.trim();
-            document.getElementById("admin-img-file").value = "";
-            showImagePreview(url.trim());
-        }
-    }
-
-    function showImagePreview(src) {
-        var preview = document.getElementById("img-preview");
-        var removeBtn = document.getElementById("remove-img-btn");
-        if (src) {
-            preview.src = src;
-            preview.style.display = "block";
-            removeBtn.style.display = "inline-block";
-        } else {
-            preview.style.display = "none";
-            removeBtn.style.display = "none";
-        }
-    }
-
-    function removeImage() {
-        document.getElementById("admin-img-data").value = "";
-        document.getElementById("admin-img-file").value = "";
-        document.getElementById("admin-img-url").value = "";
-        showImagePreview("");
-    }
-
-    function populateTestSelect() {
-        var select = document.getElementById("admin-test-select");
-        var html = '<option value="new">➕ Мутлақо янги тест яратиш</option>';
-        var sortedKeys = getSortedTestKeys();
-
-        sortedKeys.forEach(function(id) {
-            if (testData[id]) {
-                html += '<option value="' + id + '">' + testData[id].title + ' (' + (testData[id].questions ? testData[id].questions.length : 0) + ' та савол)</option>';
-            }
-        });
-        select.innerHTML = html;
-    }
-
-    function onTestSelectChange() {
-        var val = document.getElementById("admin-test-select").value;
-        var titleBox = document.getElementById("new-test-title-box");
-
-        if (val === "new") {
-            titleBox.style.display = "block";
-            document.getElementById("editing-test-id").value = "";
-            document.getElementById("form-title").innerText = "➕ Янги тест яратиш ва биринчи саволни қўшиш";
-        } else {
-            titleBox.style.display = "none";
-            document.getElementById("editing-test-id").value = val;
-            var qIndex = parseInt(document.getElementById("editing-question-index").value);
-            if (qIndex >= 0) {
-                document.getElementById("form-title").innerText = "✏️ " + testData[val].title + " — Саволни таҳрирлаш (№" + (qIndex + 1) + ")";
-            } else {
-                document.getElementById("form-title").innerText = "➕ " + testData[val].title + " тестига янги савол қўшиш";
-            }
-        }
-    }
-
-    function renderAdminTestsList() {
-        var html = "";
-        var sortedKeys = getSortedTestKeys();
-
-        sortedKeys.forEach(function(id) {
-            var t = testData[id];
-            if (!t) return;
-            var questionsHtml = "";
-
-            if (t.questions) {
-                t.questions.forEach(function(q, qIndex) {
-                    var imgIcon = q.imageUrl ? "🖼 " : "";
-                    questionsHtml += '<div class="admin-q-item">' +
-                        '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
-                        '<div class="admin-btn-group">' +
-                        '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Таҳрирлаш</button>' +
-                        '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 Ўчириш</button>' +
-                        '</div></div>';
-                });
-            }
-
-            html += '<div class="admin-test-item">' +
-                '<div class="admin-test-header">' +
-                '<div><strong>' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span></div>' +
-                '<div class="admin-btn-group">' +
-                '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Янги савол қўшиш</button>' +
-                '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
-                '</div></div>' +
-                '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Ҳозирча саволлар йўқ.</p>") + '</div>' +
-                '</div>';
-        });
-        document.getElementById("admin-tests-list").innerHTML = html || "<p style='color:#777;'>Ҳеч қандай тест мавжуд эмас.</p>";
-    }
-
-    function addNewQuestionToTest(testId) {
-        resetAdminForm();
-        document.getElementById("admin-test-select").value = testId;
-        document.getElementById("editing-test-id").value = testId;
-        document.getElementById("editing-question-index").value = "-1";
-        onTestSelectChange();
-        window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
-    }
-
-    function editQuestionFromAdmin(testId, qIndex) {
-        var t = testData[testId];
-        var q = t.questions[qIndex];
-
-        document.getElementById("admin-test-select").value = testId;
-        document.getElementById("editing-test-id").value = testId;
-        document.getElementById("editing-question-index").value = qIndex;
-
-        document.getElementById("admin-reading-text").value = q.readingText || "";
-        document.getElementById("admin-question").value = q.question || "";
-        document.getElementById("admin-opt-0").value = q.options && q.options[0] ? q.options[0] : "";
-        document.getElementById("admin-opt-1").value = q.options && q.options[1] ? q.options[1] : "";
-        document.getElementById("admin-opt-2").value = q.options && q.options[2] ? q.options[2] : "";
-        document.getElementById("admin-opt-3").value = q.options && q.options[3] ? q.options[3] : "";
-        document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
-
-        var imgUrl = q.imageUrl || "";
-        document.getElementById("admin-img-data").value = imgUrl;
-        showImagePreview(imgUrl);
-
-        onTestSelectChange();
-        window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
-    }
-
-    function resetAdminForm() {
-        document.getElementById("editing-test-id").value = "";
-        document.getElementById("editing-question-index").value = "-1";
-        document.getElementById("admin-test-title").value = "";
-        document.getElementById("admin-reading-text").value = "";
-        document.getElementById("admin-question").value = "";
-        document.getElementById("admin-opt-0").value = "";
-        document.getElementById("admin-opt-1").value = "";
-        document.getElementById("admin-opt-2").value = "";
-        document.getElementById("admin-opt-3").value = "";
-        document.getElementById("admin-correct-opt").value = 0;
-        
-        removeImage();
-        populateTestSelect();
-        onTestSelectChange();
-    }
-
-    async function saveQuestionFromAdmin() {
-        var selectVal = document.getElementById("admin-test-select").value;
-        var qIndex = parseInt(document.getElementById("editing-question-index").value);
-        
-        var title = document.getElementById("admin-test-title").value.trim();
-        var readingText = document.getElementById("admin-reading-text").value.trim();
-        var imageUrl = document.getElementById("admin-img-data").value.trim();
-        var question = document.getElementById("admin-question").value.trim();
-        var opt0 = document.getElementById("admin-opt-0").value.trim();
-        var opt1 = document.getElementById("admin-opt-1").value.trim();
-        var opt2 = document.getElementById("admin-opt-2").value.trim();
-        var opt3 = document.getElementById("admin-opt-3").value.trim();
-        var correct = parseInt(document.getElementById("admin-correct-opt").value);
-
-        if (!question || !opt0 || !opt1) {
-            alert("Илтимос, савол ва камида 2 та вариантни тўлдиринг!");
-            return;
-        }
-
-        var newQuestionData = {
-            readingText: readingText ? readingText : null,
-            imageUrl: imageUrl ? imageUrl : null,
-            question: question,
-            options: [opt0, opt1, opt2, opt3].filter(function(o) { return o !== ""; }),
-            correct: correct
+        const payload = {
+            test_id: document.getElementById('test-select').value,
+            reading_text: document.getElementById('reading-text').value.trim() || null,
+            image_url: compressedImg,
+            question: qText,
+            options: [o0, o1, o2, o3].filter(Boolean),
+            correct: parseInt(document.getElementById('correct-opt').value)
         };
 
-        var targetId = selectVal;
+        const { error } = await supabaseClient.from('questions').insert([payload]);
 
-        if (selectVal === "new") {
-            if (!title) {
-                alert("Илтимос, янги тест номини киритинг!");
-                return;
-            }
-            targetId = "demo_" + Date.now();
-            testData[targetId] = {
-                title: title,
-                questions: [newQuestionData]
-            };
-        } else if (testData[selectVal]) {
-            if (!testData[selectVal].questions) {
-                testData[selectVal].questions = [];
-            }
-            if (qIndex >= 0) {
-                testData[selectVal].questions[qIndex] = newQuestionData;
-            } else {
-                testData[selectVal].questions.push(newQuestionData);
-            }
-        }
+        btn.disabled = false;
+        btn.innerText = '💾 Сақлаш';
 
-        await saveSingleTestToStorage(targetId, testData[targetId]);
-        
-        resetAdminForm();
-        renderAdminTestsList();
-        renderTestsList();
-    }
-
-    async function deleteQuestionFromAdmin(testId, qIndex) {
-        if (confirm("Ростдан ҳам ушбу саволни ўчириб ташламоқчимисиз?")) {
-            testData[testId].questions.splice(qIndex, 1);
-            await saveSingleTestToStorage(testId, testData[testId]);
-            renderAdminTestsList();
-            renderTestsList();
-            populateTestSelect();
+        if (error) {
+            alert('Хатолик: ' + error.message);
+        } else {
+            alert('Муваффақиятли сақланди!');
+            document.getElementById('question').value = '';
+            document.getElementById('opt-0').value = '';
+            document.getElementById('opt-1').value = '';
+            document.getElementById('opt-2').value = '';
+            document.getElementById('opt-3').value = '';
+            document.getElementById('img-preview').style.display = 'none';
+            compressedImg = null;
         }
     }
-
-    async function deleteTestFromAdmin(id) {
-        if (confirm("Ростдан ҳам ушбу бутун тестни ва ундаги барча саволларни ўчириб ташламоқчимисиз?")) {
-            delete testData[id];
-            await deleteTestFromStorage(id);
-            renderAdminTestsList();
-            renderTestsList();
-            populateTestSelect();
-        }
-    }
-
-    window.onload = function() {
-        fetchTestData();
-    };
 </script>
-
 </body>
 </html>
