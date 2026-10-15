@@ -220,7 +220,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish учун Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -358,6 +358,7 @@
 
     var testData = {};
 
+    // Охирги қўшилганлари энг тепада чиқиши учун саралаш (Камайиш тартибида)
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
             var titleA = testData[a] ? (testData[a].title || "") : "";
@@ -366,16 +367,16 @@
             var matchA = titleA.match(/\d+/);
             var matchB = titleB.match(/\d+/);
 
-            var numA = matchA ? parseInt(matchA[0], 10) : 999;
-            var numB = matchB ? parseInt(matchB[0], 10) : 999;
+            var numA = matchA ? parseInt(matchA[0], 10) : 0;
+            var numB = matchB ? parseInt(matchB[0], 10) : 0;
 
-            return numA - numB;
+            return numB - numA; // Камайиш тартиби: Катта рақамли (охирги) тест тепада бўлади
         });
     }
 
     async function fetchTestData() {
         try {
-            testData = {}; // Динамик тарзда фақат базадаги бор тестларни юклаш
+            testData = {};
 
             const qRes = await supabaseClient.from('questions').select('*');
             if (qRes.data && qRes.data.length > 0) {
