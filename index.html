@@ -220,7 +220,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish учун Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -248,7 +248,7 @@
             <div class="score-circle" id="score-circle">0 ball</div>
             <p id="score-text"></p>
             <div id="answers-review"></div>
-            <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga қайтиш</button>
+            <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga қайтish</button>
         </div>
     </div>
 
@@ -367,9 +367,7 @@
 
     async function fetchTestData() {
         try {
-            const res = await supabaseClient
-                .from('tests')
-                .select('*');
+            const res = await supabaseClient.from('tests').select('*');
 
             if (res.data && res.data.length > 0) {
                 testData = {};
@@ -382,12 +380,12 @@
                 });
             } else {
                 testData = {
-                    "1": { title: "Demo-1 (Kuz 2026)", questions: [] }
+                    "6": { title: "Demo-6 (kuz 2026)", questions: [] }
                 };
-                await saveSingleTestToStorage("1", testData["1"], true);
+                await saveSingleTestToStorage("6", testData["6"], true);
             }
         } catch (e) {
-            console.error("Supabase базасидан юклашда хатолик:", e);
+            console.error("Supabase юклашда хатолик:", e);
         }
         renderTestsList();
     }
@@ -636,7 +634,7 @@
                 img.onload = function() {
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
-                    var maxWidth = 450; 
+                    var maxWidth = 400; 
                     var scale = maxWidth / img.width;
                     if (scale < 1) {
                         canvas.width = maxWidth;
@@ -646,7 +644,7 @@
                         canvas.height = img.height;
                     }
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.4);
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
