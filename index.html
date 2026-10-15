@@ -359,34 +359,32 @@
 
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
-            var numA = parseInt(testData[a].title.replace(/\D/g, '')) || parseInt(a) || 0;
-            var numB = parseInt(testData[b].title.replace(/\D/g, '')) || parseInt(b) || 0;
+            var numA = parseInt((testData[a].title || "").replace(/\D/g, '')) || parseInt(a) || 0;
+            var numB = parseInt((testData[b].title || "").replace(/\D/g, '')) || parseInt(b) || 0;
             return numA - numB;
         });
     }
 
     async function fetchTestData() {
         try {
-            // Базадан барча тестларни алоҳида қатор сифатида тортиб олиш
             const res = await supabaseClient
                 .from('tests')
                 .select('*');
 
             if (res.data && res.data.length > 0) {
                 testData = {};
-                res.data.forEach(row => {
-                    // Агар эски 'main_tests' қатори бўлса, уни ўқиб олиш
+                res.data.forEach(function(row) {
                     if (row.id === 'main_tests' && row.data) {
                         Object.assign(testData, row.data);
-                    } else {
-                        testData[row.id] = row.data || { title: row.title || ("Test #" + row.id), questions: [] };
+                    } else if (row.data) {
+                        testData[row.id] = row.data;
                     }
                 });
             } else {
                 testData = {
-                    1: { title: "Demo-1 (Kuz 2026)", questions: [] }
+                    "1": { title: "Demo-1 (Kuz 2026)", questions: [] }
                 };
-                await saveSingleTestToStorage('1', testData[1], true);
+                await saveSingleTestToStorage("1", testData["1"], true);
             }
         } catch (e) {
             console.error("Supabase базасидан юклашда хатолик:", e);
@@ -394,7 +392,6 @@
         renderTestsList();
     }
 
-    // ТАЛАБ: Бутун базани эмас, ФАКАТ БИТТА ўзгартирилган тестни сақлаш
     async function saveSingleTestToStorage(testId, singleTestData, silent) {
         if (silent === undefined) silent = false;
         var saveBtn = document.getElementById('save-test-btn');
@@ -639,7 +636,7 @@
                 img.onload = function() {
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
-                    var maxWidth = 600;
+                    var maxWidth = 450; 
                     var scale = maxWidth / img.width;
                     if (scale < 1) {
                         canvas.width = maxWidth;
@@ -649,7 +646,7 @@
                         canvas.height = img.height;
                     }
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
@@ -855,7 +852,6 @@
             }
         }
 
-        // Фақат битта тест маълумотини Supabase'га сақлаймиз
         await saveSingleTestToStorage(targetId, testData[targetId]);
         
         resetAdminForm();
