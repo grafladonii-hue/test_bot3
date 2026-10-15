@@ -355,14 +355,7 @@
         if (adminNav) adminNav.style.display = 'block';
     }
 
-    var defaultTestData = {
-        1: {
-            title: "Demo-1 (Kuz 2026)",
-            questions: []
-        }
-    };
-
-    var testData = defaultTestData;
+    var testData = {};
 
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
@@ -374,26 +367,35 @@
 
     async function fetchTestData() {
         try {
+            // Базадан барча тестларни алоҳида қатор сифатида тортиб олиш
             const res = await supabaseClient
                 .from('tests')
-                .select('data')
-                .eq('id', 'main_tests')
-                .single();
+                .select('*');
 
-            if (res.data && res.data.data && Object.keys(res.data.data).length > 0) {
-                testData = res.data.data;
+            if (res.data && res.data.length > 0) {
+                testData = {};
+                res.data.forEach(row => {
+                    // Агар эски 'main_tests' қатори бўлса, уни ўқиб олиш
+                    if (row.id === 'main_tests' && row.data) {
+                        Object.assign(testData, row.data);
+                    } else {
+                        testData[row.id] = row.data || { title: row.title || ("Test #" + row.id), questions: [] };
+                    }
+                });
             } else {
-                testData = defaultTestData;
-                await saveTestDataToStorage(true);
+                testData = {
+                    1: { title: "Demo-1 (Kuz 2026)", questions: [] }
+                };
+                await saveSingleTestToStorage('1', testData[1], true);
             }
         } catch (e) {
             console.error("Supabase базасидан юклашда хатолик:", e);
-            testData = defaultTestData;
         }
         renderTestsList();
     }
 
-    async function saveTestDataToStorage(silent) {
+    // ТАЛАБ: Бутун базани эмас, ФАКАТ БИТТА ўзгартирилган тестни сақлаш
+    async function saveSingleTestToStorage(testId, singleTestData, silent) {
         if (silent === undefined) silent = false;
         var saveBtn = document.getElementById('save-test-btn');
         if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "⏳ Сақланмоқда..."; }
@@ -405,28 +407,34 @@
             try {
                 const res = await supabaseClient
                     .from('tests')
-                    .upsert({ id: 'main_tests', data: testData }, { onConflict: 'id' });
+                    .upsert({ id: String(testId), data: singleTestData }, { onConflict: 'id' });
 
                 if (!res.error) {
                     success = true;
                     break;
                 } else {
                     lastError = res.error;
-                    console.warn("Аттемпт " + attempt + " хатоси:", res.error);
                 }
             } catch (e) {
                 lastError = e;
-                console.warn("Аттемпт " + attempt + " кач хатоси:", e);
             }
         }
 
         if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "💾 Сақлаш"; }
 
         if (success) {
-            if (!silent) alert("Савол Supabase булутли базасига муваффақиятли сақланди!");
+            if (!silent) alert("Савол муваффақиятли сақланди!");
         } else {
-            console.error("Сақлаш муваффақиятсиз бўлди:", lastError);
+            console.error("Сақлашда хатолик:", lastError);
             if (!silent) alert("Базага сақлашда хатолик: " + (lastError ? (lastError.message || JSON.stringify(lastError)) : "Таймаут"));
+        }
+    }
+
+    async function deleteTestFromStorage(testId) {
+        try {
+            await supabaseClient.from('tests').delete().eq('id', String(testId));
+        } catch (e) {
+            console.error("Ўчиришда хатолик:", e);
         }
     }
 
@@ -453,10 +461,11 @@
         
         sortedKeys.forEach(function(id) {
             var t = testData[id];
+            if (!t) return;
             html += '<div class="test-card">' +
                     '<div><strong>' + t.title + '</strong>' +
                     '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
-                    '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(' + id + ')">Ishlash</button>' +
+                    '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\')">Ishlash</button>' +
                     '</div>';
         });
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha testlar yo'q.</p>";
@@ -485,7 +494,7 @@
     }
 
     function startQuiz(testId) {
-        var rawQuestions = testData[testId].questions;
+        var rawQuestions = testData[testId] ? testData[testId].questions : [];
         if (!rawQuestions || rawQuestions.length === 0) {
             alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
             return;
@@ -630,7 +639,7 @@
                 img.onload = function() {
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
-                    var maxWidth = 800;
+                    var maxWidth = 600;
                     var scale = maxWidth / img.width;
                     if (scale < 1) {
                         canvas.width = maxWidth;
@@ -640,7 +649,7 @@
                         canvas.height = img.height;
                     }
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
@@ -685,7 +694,9 @@
         var sortedKeys = getSortedTestKeys();
 
         sortedKeys.forEach(function(id) {
-            html += '<option value="' + id + '">' + testData[id].title + ' (' + (testData[id].questions ? testData[id].questions.length : 0) + ' та савол)</option>';
+            if (testData[id]) {
+                html += '<option value="' + id + '">' + testData[id].title + ' (' + (testData[id].questions ? testData[id].questions.length : 0) + ' та савол)</option>';
+            }
         });
         select.innerHTML = html;
     }
@@ -716,6 +727,7 @@
 
         sortedKeys.forEach(function(id) {
             var t = testData[id];
+            if (!t) return;
             var questionsHtml = "";
 
             if (t.questions) {
@@ -724,8 +736,8 @@
                     questionsHtml += '<div class="admin-q-item">' +
                         '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
                         '<div class="admin-btn-group">' +
-                        '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(' + id + ', ' + qIndex + ')">✏️ Таҳрирлаш</button>' +
-                        '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(' + id + ', ' + qIndex + ')">🗑 Ўчириш</button>' +
+                        '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Таҳрирлаш</button>' +
+                        '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 Ўчириш</button>' +
                         '</div></div>';
                 });
             }
@@ -734,8 +746,8 @@
                 '<div class="admin-test-header">' +
                 '<div><strong>' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span></div>' +
                 '<div class="admin-btn-group">' +
-                '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(' + id + ')">➕ Янги савол қўшиш</button>' +
-                '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(' + id + ')">🗑 Ўчириш</button>' +
+                '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Янги савол қўшиш</button>' +
+                '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
                 '</div></div>' +
                 '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Ҳозирча саволлар йўқ.</p>") + '</div>' +
                 '</div>';
@@ -793,7 +805,7 @@
         onTestSelectChange();
     }
 
-    function saveQuestionFromAdmin() {
+    async function saveQuestionFromAdmin() {
         var selectVal = document.getElementById("admin-test-select").value;
         var qIndex = parseInt(document.getElementById("editing-question-index").value);
         
@@ -820,13 +832,15 @@
             correct: correct
         };
 
+        var targetId = selectVal;
+
         if (selectVal === "new") {
             if (!title) {
                 alert("Илтимос, янги тест номини киритинг!");
                 return;
             }
-            var newId = Object.keys(testData).length > 0 ? Math.max.apply(null, Object.keys(testData).map(Number)) + 1 : 1;
-            testData[newId] = {
+            targetId = Object.keys(testData).length > 0 ? String(Math.max.apply(null, Object.keys(testData).map(Number)) + 1) : "1";
+            testData[targetId] = {
                 title: title,
                 questions: [newQuestionData]
             };
@@ -841,26 +855,28 @@
             }
         }
 
-        saveTestDataToStorage();
+        // Фақат битта тест маълумотини Supabase'га сақлаймиз
+        await saveSingleTestToStorage(targetId, testData[targetId]);
+        
         resetAdminForm();
         renderAdminTestsList();
         renderTestsList();
     }
 
-    function deleteQuestionFromAdmin(testId, qIndex) {
+    async function deleteQuestionFromAdmin(testId, qIndex) {
         if (confirm("Ростдан ҳам ушбу саволни ўчириб ташламоқчимисиз?")) {
             testData[testId].questions.splice(qIndex, 1);
-            saveTestDataToStorage();
+            await saveSingleTestToStorage(testId, testData[testId]);
             renderAdminTestsList();
             renderTestsList();
             populateTestSelect();
         }
     }
 
-    function deleteTestFromAdmin(id) {
+    async function deleteTestFromAdmin(id) {
         if (confirm("Ростдан ҳам ушбу бутун тестни ва ундаги барча саволларни ўчириб ташламоқчимисиз?")) {
             delete testData[id];
-            saveTestDataToStorage();
+            await deleteTestFromStorage(id);
             renderAdminTestsList();
             renderTestsList();
             populateTestSelect();
