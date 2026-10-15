@@ -220,7 +220,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish учун Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -271,7 +271,7 @@
 
             <div id="new-test-title-box" style="display:block; margin-top: 10px;">
                 <label style="color:#27ae60;"><b>Янги тест номини киритинг:</b></label>
-                <input type="text" id="admin-test-title" placeholder="Masalan: Demo-4 (kuz 2026)">
+                <input type="text" id="admin-test-title" placeholder="Masalan: Demo-1 (kuz 2026)">
             </div>
 
             <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
@@ -358,7 +358,6 @@
 
     var testData = {};
 
-    // Аниқ рақамлар тартиби бўйича саралаш (Demo-1, Demo-2, Demo-3...)
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
             var titleA = testData[a] ? (testData[a].title || "") : "";
@@ -376,15 +375,14 @@
 
     async function fetchTestData() {
         try {
-            testData = {
-                "demo_5": { title: "Demo-5 (kuz 2026)", questions: [] },
-                "demo_6": { title: "Demo-6 (kuz 2026)", questions: [] }
-            };
+            testData = {}; // Динамик тарзда фақат базадаги бор тестларни юклаш
 
             const qRes = await supabaseClient.from('questions').select('*');
             if (qRes.data && qRes.data.length > 0) {
                 qRes.data.forEach(q => {
-                    const tId = q.test_id || 'demo_5';
+                    const tId = q.test_id;
+                    if (!tId) return;
+
                     if (!testData[tId]) {
                         testData[tId] = {
                             title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(),
@@ -490,7 +488,6 @@
             };
         });
 
-        // Саволларни аралаштириш (рандом)
         activeQuestions = shuffleArray(activeQuestions);
         currentQuestion = 0;
         userAnswers = {};
