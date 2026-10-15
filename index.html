@@ -220,7 +220,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish учун Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -271,7 +271,7 @@
 
             <div id="new-test-title-box" style="display:block; margin-top: 10px;">
                 <label style="color:#27ae60;"><b>Янги тест номини киритинг:</b></label>
-                <input type="text" id="admin-test-title" placeholder="Masalan: Demo-7 (kuz 2026)">
+                <input type="text" id="admin-test-title" placeholder="Masalan: Demo-4 (kuz 2026)">
             </div>
 
             <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
@@ -358,10 +358,18 @@
 
     var testData = {};
 
+    // Аниқ рақамлар тартиби бўйича саралаш (Demo-1, Demo-2, Demo-3...)
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
-            var numA = parseInt((testData[a].title || "").replace(/\D/g, '')) || 0;
-            var numB = parseInt((testData[b].title || "").replace(/\D/g, '')) || 0;
+            var titleA = testData[a] ? (testData[a].title || "") : "";
+            var titleB = testData[b] ? (testData[b].title || "") : "";
+
+            var matchA = titleA.match(/\d+/);
+            var matchB = titleB.match(/\d+/);
+
+            var numA = matchA ? parseInt(matchA[0], 10) : 999;
+            var numB = matchB ? parseInt(matchB[0], 10) : 999;
+
             return numA - numB;
         });
     }
@@ -379,10 +387,13 @@
                     const tId = q.test_id || 'demo_5';
                     if (!testData[tId]) {
                         testData[tId] = {
-                            title: tId.replace('_', '-').toUpperCase(),
+                            title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(),
                             questions: []
                         };
+                    } else if (q.test_title) {
+                        testData[tId].title = q.test_title;
                     }
+
                     if (!testData[tId].questions) testData[tId].questions = [];
                     testData[tId].questions.push({
                         db_id: q.id,
@@ -479,6 +490,7 @@
             };
         });
 
+        // Саволларни аралаштириш (рандом)
         activeQuestions = shuffleArray(activeQuestions);
         currentQuestion = 0;
         userAnswers = {};
@@ -795,6 +807,8 @@
         saveBtn.innerText = "⏳ Сақланмоқда...";
 
         var targetId = selectVal;
+        var testTitleToSave = title;
+
         if (selectVal === "new") {
             if (!title) {
                 alert("Илтимос, янги тест номини киритинг!");
@@ -803,10 +817,13 @@
                 return;
             }
             targetId = "demo_" + Date.now();
+        } else if (testData[selectVal]) {
+            testTitleToSave = testData[selectVal].title;
         }
 
         var payload = {
             test_id: targetId,
+            test_title: testTitleToSave,
             reading_text: readingText || null,
             image_url: imageUrl || null,
             question: question,
