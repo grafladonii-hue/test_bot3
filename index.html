@@ -64,7 +64,6 @@
             opacity: 0.95;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-        /* Расмни катталаштириб кўрсатиш учун модал ойна стили (Янгиланган) */
         .image-modal {
             display: none;
             position: fixed;
@@ -196,25 +195,35 @@
         .admin-test-item {
             background: #fff;
             border: 1px solid #ddd;
-            padding: 12px;
             border-radius: 6px;
             margin-bottom: 15px;
+            overflow: hidden;
         }
         .admin-test-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #eee;
+            padding: 12px;
+            background: #fdfefe;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+        }
+        .admin-test-header:hover {
+            background: #f4f6f6;
         }
         .admin-questions-list {
-            margin-top: 10px;
-            padding-left: 10px;
-            border-left: 3px solid #27ae60;
+            display: none; /* Бошида ёпиқ туради */
+            margin-top: 0;
+            padding: 10px;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+        }
+        .admin-test-item.open .admin-questions-list {
+            display: block; /* Очилганда кўринади */
         }
         .admin-q-item {
-            background: #f8f9fa;
+            background: #fff;
             border: 1px solid #eee;
             padding: 8px 10px;
             border-radius: 4px;
@@ -759,6 +768,12 @@
         }
     }
 
+    // Тест блок элементларини очиб/ёпиб турувчи функция (Акордеон)
+    function toggleTestAccordion(headerElement) {
+        var parentItem = headerElement.closest('.admin-test-item');
+        parentItem.classList.toggle('open');
+    }
+
     function renderAdminTestsList() {
         var html = "";
         var sortedKeys = getSortedTestKeys();
@@ -780,11 +795,12 @@
                 });
             }
 
+            // admin-test-header босилганда очиладиган/ёпиладиган қилиб ўзгартирилди
             html += '<div class="admin-test-item">' +
-                '<div class="admin-test-header">' +
-                '<div><strong>' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span></div>' +
-                '<div class="admin-btn-group">' +
-                '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Янги савол қўшиш</button>' +
+                '<div class="admin-test-header" onclick="toggleTestAccordion(this)">' +
+                '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span> <span style="font-size: 11px; color:#27ae60; margin-left: 5px;">(Очиш учун босинг 🔽)</span></div>' +
+                '<div class="admin-btn-group" onclick="event.stopPropagation()">' + // Кнопкалар босилганда акордеон ёпилиб кетмаслиги учун
+                '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Савол қўшиш</button>' +
                 '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
                 '</div></div>' +
                 '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Ҳозирча саволлар йўқ.</p>") + '</div>' +
@@ -854,7 +870,7 @@
         var title = document.getElementById("admin-test-title").value.trim();
         var readingText = document.getElementById("admin-reading-text").value.trim();
         var imageUrl = document.getElementById("admin-img-data").value.trim();
-        var question = document.getElementById("admin-question").value.trim();
+        var question = document.getElementById("admin-question"].value.trim();
         var opt0 = document.getElementById("admin-opt-0").value.trim();
         var opt1 = document.getElementById("admin-opt-1").value.trim();
         var opt2 = document.getElementById("admin-opt-2").value.trim();
@@ -875,7 +891,7 @@
         if (selectVal === "new") {
             if (!title) {
                 alert("Илтимос, янги тест номини киритинг!");
-                saveBtn.disabled = false;
+                saveBtn.disabled, saveBtn.disabled = false;
                 saveBtn.innerText = "💾 Сақлаш";
                 return;
             }
