@@ -356,7 +356,6 @@
         if (e.key === 'F12') e.preventDefault();
     });
 
-    // ФАҚАТ СИЗНИНГ TELEGRAM ID (644092713) БЎЛГАНДАГИНА АДМИН МЕНЮ ВА ERUDA ЧИҚАДИ:
     if (currentUserId === ADMIN_ID) {
         var adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.style.display = 'block';
@@ -608,6 +607,7 @@
         document.getElementById("answers-review").innerHTML = reviewHtml;
     }
 
+    // Янгиланган расм юклаш ва сифатини яхшилаш функцияси:
     function handleImageUpload(event) {
         var file = event.target.files[0];
         if (file) {
@@ -617,8 +617,10 @@
                 img.onload = function() {
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
-                    var maxWidth = 300; 
+                    
+                    var maxWidth = 1000; // Кенглик 1000 пикселга оширилди
                     var scale = maxWidth / img.width;
+                    
                     if (scale < 1) {
                         canvas.width = maxWidth;
                         canvas.height = img.height * scale;
@@ -626,8 +628,10 @@
                         canvas.width = img.width;
                         canvas.height = img.height;
                     }
+                    
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.3);
+                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9); // Сифат 90% га қўйилди
+                    
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
