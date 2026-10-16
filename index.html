@@ -57,6 +57,43 @@
             margin-bottom: 15px;
             display: block;
             border: 1px solid #ddd;
+            cursor: pointer; /* Қўлча шаклига келади */
+            transition: 0.2s;
+        }
+        .question-img:hover {
+            opacity: 0.95;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        /* Расмни катталаштириб кўрсатиш учун модал ойна стили */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .image-modal img {
+            max-width: 95%;
+            max-height: 95%;
+            border-radius: 8px;
+            object-fit: contain;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #fff;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
         }
         .options label {
             display: block;
@@ -312,6 +349,12 @@
     </div>
 </div>
 
+<!-- Расмни катталаштириб кўрсатиш учун Модал Ойна -->
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <span class="image-modal-close">&times;</span>
+    <img id="modalImg" alt="Катталаштирилган расм">
+</div>
+
 <div class="nav-bar">
     <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
         <div>🏠</div> Bosh
@@ -535,13 +578,27 @@
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
-        var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол">' : "";
+        
+        // Расмнинг устига босганда катталашадиган функция (openImageModal) қўшилди
+        var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Катталаштириш учун босинг">' : "";
 
         document.getElementById("question-box").innerHTML = 
             textBlockHtml + imgBlockHtml + '<h3>' + q.question + '</h3><div class="options">' + optionsHtml + '</div>';
 
         document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
+    }
+
+    // Расмни катта қилиб очувчи функциялар
+    function openImageModal(imgSrc) {
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("modalImg");
+        modal.style.display = "flex";
+        modalImg.src = imgSrc;
+    }
+
+    function closeImageModal() {
+        document.getElementById("imageModal").style.display = "none";
     }
 
     function saveCurrentAnswer() {
@@ -607,7 +664,6 @@
         document.getElementById("answers-review").innerHTML = reviewHtml;
     }
 
-    // Янгиланган расм юклаш ва сифатини яхшилаш функцияси:
     function handleImageUpload(event) {
         var file = event.target.files[0];
         if (file) {
@@ -618,7 +674,7 @@
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
                     
-                    var maxWidth = 1000; // Кенглик 1000 пикселга оширилди
+                    var maxWidth = 1000;
                     var scale = maxWidth / img.width;
                     
                     if (scale < 1) {
@@ -630,7 +686,7 @@
                     }
                     
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9); // Сифат 90% га қўйилди
+                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9);
                     
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
@@ -851,15 +907,7 @@
         saveBtn.disabled = false;
         saveBtn.innerText = "💾 Сақлаш";
 
-        if (err) {
-            alert("Сақлашда хатолик: " + err.message);
-        } else {
-            alert("Муваффақиятли сақланди!");
-            resetAdminForm();
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-        }
+        (err) ? alert("Сақлашда хатолик: " + err.message) : (alert("Муваффақиятли сақланди!"), resetAdminForm(), await fetchTestData(), renderAdminTestsList(), renderTestsList());
     }
 
     async function deleteQuestionFromAdmin(testId, qIndex) {
