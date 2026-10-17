@@ -4,10 +4,13 @@ import logging
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from google import genai
+from PIL import Image
+import io
 
 logging.basicConfig(level=logging.INFO)
 
@@ -15,13 +18,20 @@ TOKEN = "8979824672:AAEJZ3CHylCvNcoaUHdOt_mmxfcroVWpQk0"
 GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
+# API калитни энди кодга ёзмаймиз, у Vercel'даги Environment Variables орқали олинади:
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+REQUIRED_AMOUNT = 50000  # Талаб қилинган тўлов суммаси (сўмда)
+
+# Gemini мижозини ишга туширамиз
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
 BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
-# --- TESTLAR BAZASI (Serverless учун хавфсиз хотира) ---
+# --- TESTLAR BAZASI ---
 DATA_FILE = BASE_DIR / "questions.json"
 
 def load_data():
@@ -39,7 +49,6 @@ def get_tests():
 
 @app.post("/api/tests")
 def update_tests(data: dict):
-    # Vercel Serverless муҳитида файлга қайта ёзишда хатолик чиқмаслиги учун:
     try:
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -47,7 +56,8 @@ def update_tests(data: dict):
         logging.error(f"Файлга ёзишда хатолик: {e}")
     return {"status": "ok"}
 
-# --- TELEGRAM BOT БЎЛИМИ ---
+# --- TELEGRAM БОТ ВА ТЕКШИРУВ МАНТИҚИ ---
+
 async def check_membership(user_id: int, bot: Bot) -> bool:
     try:
         member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
@@ -55,7 +65,6 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
             return True
     except Exception as e:
         logging.error(f"Аъзоликни текширишда хатолик: {e}")
-        return True
     return False
 
 @dp.message(Command("start"))
@@ -71,13 +80,90 @@ async def cmd_start(message: types.Message):
         )
         await message.answer(
             "Xush kelibsiz, Demotestlar.uz (Baxtiyor Karjabov Demo testlar platformasi)ga!\n\n"
-            "Testlarni ishlash учун қуйидаги тугмани босинг:",
+            "Сиз ёпиқ гуруҳ аъзосисиз. Testlarni ishlash учун қуйидаги тугмани босинг:",
             reply_markup=keyboard
         )
     else:
         await message.answer(
-            "❌ Kechirasiz, siz bizning yopiq guruhimiz a'zosi emassiz.\n\n"
-            "Testlarni ishlash учун аввал ёпиқ гуруҳимизга қўшилинг!"
+            "❌ Kechirasiz, siz bizning yopiق guruhimiz a'zosi emassiz.\n\n"
+            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, чек скриншотини шу ботга юборинг:\n\n"
+            "💳 **Карта рақами:** **9860120155197128**\n"
+            "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
+            "Чек юборилгач, сунъий интеллект уни автоматик равишда текшириб, мини-аппни очиб беради."
+        )
+
+# --- ЧЕКНИ AI (GEMINI) ОРҚАЛИ АВТОМАТИК ТЕКШИРИШ ҚИСМИ ---
+@dp.message(F.photo)
+async def handle_payment_screenshot(message: types.Message):
+    user_id = message.from_user.id
+    
+    if await check_membership(user_id, bot):
+        await message.answer("Сиз аллақачон ёпиқ гуруҳ аъзосисиз ва мини-аппдан бепул фойдалана оласиз!")
+        return
+
+    photo = message.photo[-1]
+    file_id = photo.file_id
+    
+    processing_msg = await message.answer("🤖 Сунъий интеллект чекни текширмоқда, илтимос кутиб туринг...")
+    
+    try:
+        file_info = await bot.get_file(file_id)
+        downloaded_file = await bot.download_file(file_info.file_path)
+        image = Image.open(downloaded_file)
+
+        prompt = """
+        Sen moliyaviy cheklarni o'qydigan yordamchisan. Ushbu chek rasmini tahlil qil va faqat JSON formatida quyidagi ma'lumotlarni qaytar:
+        {
+          "amount": (chekdagi raqam ko'rinishidagi summa, masalan: 50000),
+          "is_valid_receipt": (agar bu haqiqiy to'lov cheki yoki kvitansiya bo'lsa true, aks holda false)
+        }
+        Faqatgina toza JSON javob ber, boshqa matn yozma.
+        """
+
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[image, prompt]
+        )
+        
+        text_response = response.text.strip()
+        if text_response.startswith("```json"):
+            text_response = text_response[7:-3].strip()
+        elif text_response.startswith("```"):
+            text_response = text_response[3:-3].strip()
+
+        data = json.loads(text_response)
+        extracted_amount = float(data.get("amount", 0))
+        is_valid = data.get("is_valid_receipt", False)
+
+        if is_valid and extracted_amount >= REQUIRED_AMOUNT:
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="🚀 Testlarni boshlash", web_app=WebAppInfo(url=WEB_APP_URL))]
+                ]
+            )
+            await bot.edit_message_text(
+                text=f"✅ **To'lov tasdiqlandi!**\n\n💰 Aniqlangan summa: `{int(extracted_amount)} so'm`\n🎉 Сизга мини-аппдан фойдаланиш ҳуқуқи берилди!",
+                chat_id=message.chat.id,
+                message_id=processing_msg.message_id,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+        else:
+            await bot.edit_message_text(
+                text=f"❌ **To'lov summasi yetarli emas yoki чек хато!**\n\n"
+                     f"🔍 Chekдан топилган сумма: `{int(extracted_amount)} so'm`\n"
+                     f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} so'm`\n\n"
+                     f"Илтимос, тўғри чекни қайtadan юборинг.",
+                chat_id=message.chat.id,
+                message_id=processing_msg.message_id,
+                parse_mode="Markdown"
+            )
+    except Exception as e:
+        logging.error(f"AI чекни ўқишда хатолик: {e}")
+        await bot.edit_message_text(
+            text="❌ Чекни ўқишда хатолик юз берди. Илтимос, қайта уриниб кўринг ёки администраторга мурожаат қилинг.",
+            chat_id=message.chat.id,
+            message_id=processing_msg.message_id
         )
 
 # Webhook учун универсал эндпоинтлар:
