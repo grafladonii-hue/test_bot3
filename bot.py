@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from aiogram import Bot, Dispatcher, types, F
@@ -14,23 +15,32 @@ import io
 
 logging.basicConfig(level=logging.INFO)
 
-# Токенни тўғридан-тўғри ёзамиз (ҳатолик чиқмаслиги учун)
-TOKEN = "8788215308:AAFcuI_L5ZnhMzh-KoLcpfcAk4nRyHwJqzk"
+# Янги токен ва манзиллар
+TOKEN = "8788215308:AAHc0btjQsQj2MUYSbD1F5iyblTE_iKuDHs"
 GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
+WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
-# API калит Vercel'даги Environment Variables орқали олинади:
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000  # Талаб қилинган тўлов суммаси (сўмда)
 
-# Gemini мижозини ишга туширамиз
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-
 BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-app = FastAPI()
+
+# FastAPI lifespan (автоматик вебхук ўрнатиш учун)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        await bot.set_webhook(WEBHOOK_URL)
+        logging.info(f"Webhook муваффақиятли ўрнатилди: {WEBHOOK_URL}")
+    except Exception as e:
+        logging.error(f"Webhook ўрнатишда хатолик: {e}")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # --- TESTLAR BAZASI ---
 DATA_FILE = BASE_DIR / "questions.json"
@@ -86,7 +96,7 @@ async def cmd_start(message: types.Message):
         )
     else:
         await message.answer(
-            "❌ Kechirasiz, siz bizning yopiқ guruhimiz a'zosi emassiz.\n\n"
+            "❌ Kechirasiz, siz bizning yopiق guruhimiz a'zosi emassiz.\n\n"
             "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, чек скриншотини шу ботга юборинг:\n\n"
             "💳 **Карта рақами:** **9860120155197128**\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
@@ -188,4 +198,4 @@ async def root():
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
 ```[cite: 5, 6]
 
-Кодни GitHub'га жойлаштириб сақлаганингиздан сўнг, ботингиз дарҳол ишлай бошлайди!
+Шу кодни GitHub'га сақлаб қўйинг, у FastAPI'нинг янги стандартларига тўлиқ мослаштирилган ва вебхукни автоматик улайди.
