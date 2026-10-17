@@ -197,5 +197,3 @@ async def root():
         return FileResponse(html_path)
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
 ```[cite: 5, 6]
-
-Шу кодни GitHub'га сақлаб қўйинг, у FastAPI'нинг янги стандартларига тўлиқ мослаштирилган ва вебхукни автоматик улайди.
