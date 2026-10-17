@@ -11,20 +11,17 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 import google.generativeai as genai
 from PIL import Image
-import io
 
 logging.basicConfig(level=logging.INFO)
 
-# Янги токен ва манзиллар
 TOKEN = "8788215308:AAHc0btjQsQj2MUYSbD1F5iyblTE_iKuDHs"
-GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
+GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 50000  # Талаб қилинган тўлов суммаси (сўмда)
+REQUIRED_AMOUNT = 50000
 
-# Google Generative AI ни созлаш
 genai.configure(api_key=GEMINI_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -33,7 +30,6 @@ BASE_DIR = Path(__file__).resolve().parent
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# FastAPI lifespan (автоматик вебхук ўрнатиш учун)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -45,7 +41,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# --- TESTLAR BAZASI ---
 DATA_FILE = BASE_DIR / "questions.json"
 
 def load_data():
@@ -69,8 +64,6 @@ def update_tests(data: dict):
     except Exception as e:
         logging.error(f"Файлга ёзишда хатолик: {e}")
     return {"status": "ok"}
-
-# --- TELEGRAM БОТ ВА ТЕКШИРУВ МАНТИҚИ ---
 
 async def check_membership(user_id: int, bot: Bot) -> bool:
     try:
@@ -106,7 +99,6 @@ async def cmd_start(message: types.Message):
             "Чек юборилгач Demotestlar.uz да тест ишлашингиз мумкин бўлади!"
         )
 
-# --- ЧЕКНИ AI (GEMINI) ОРҚАЛИ АВТОМАТИК ТЕКШИРИШ ҚИСМИ ---
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
     user_id = message.from_user.id
@@ -125,22 +117,18 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
-        prompt = """
-        Sen moliyaviy cheklarni o'qydigan yordamchisan. Ushbu chek rasmini tahlil qil va faqat JSON formatida quyidagi ma'lumotlarni qaytar:
-        {
-          "amount": (chekdagi raqam ko'rinishidagi summa, masalan: 50000),
-          "is_valid_receipt": (agar bu haqiqiy to'lov cheki yoki kvitansiya bo'lsa true, aks holda false)
-        }
-        Faqatgina toza JSON javob ber, boshqa matn yozma.
-        """
+        prompt = (
+            "Look at this payment receipt. Extract the numeric payment amount "
+            "and determine if it is a valid receipt. "
+            "Reply strictly in this JSON format without any markdown or extra text: "
+            "{\"amount\": 50000, \"is_valid_receipt\": true}"
+        )
 
         response = gemini_model.generate_content([image, prompt])
         text_response = response.text.strip()
         
-        if text_response.startswith("```json"):
-            text_response = text_response[7:-3].strip()
-        elif text_response.startswith("```"):
-            text_response = text_response[3:-3].strip()
+        if "```" in text_response:
+            text_response = text_response.replace("```json", "").replace("```", "").strip()
 
         data = json.loads(text_response)
         extracted_amount = float(data.get("amount", 0))
@@ -171,13 +159,13 @@ async def handle_payment_screenshot(message: types.Message):
             )
     except Exception as e:
         logging.error(f"AI чекни ўқишда хатолик: {e}")
+        # Аниқ хатони кўриш учун chiqarib beramiz
         await bot.edit_message_text(
-            text="❌ Чекни ўқишда хатолик юз берди. Илтимос, қайта уриниб кўринг ёки администраторга мурожаат қилинг.",
+            text=f"❌ Чекни ўқишда хатолик: {str(e)[:100]}",
             chat_id=message.chat.id,
             message_id=processing_msg.message_id
         )
 
-# Webhook учун универсал эндпоинтлар:
 @app.post("/api/webhook")
 @app.post("/webhook")
 @app.post("/")
