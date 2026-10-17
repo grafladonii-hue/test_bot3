@@ -196,4 +196,3 @@ async def root():
     if html_path.exists():
         return FileResponse(html_path)
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
-```[cite: 5, 6]
