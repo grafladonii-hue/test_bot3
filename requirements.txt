@@ -1,5 +1,7 @@
-aiogram>=3.0
 fastapi
 uvicorn
-google-genai
+aiogram
+google-generativeai
 pillow
+pydantic
+requests
