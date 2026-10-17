@@ -14,11 +14,12 @@ import io
 
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = "8979824672:AAEJZ3CHylCvNcoaUHdOt_mmxfcroVWpQk0"
+# Токен энди Vercel'даги Environment Variables орқали олинади
+TOKEN = os.getenv("TOKEN")
 GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
-# API калитни энди кодга ёзмаймиз, у Vercel'даги Environment Variables орқали олинади:
+# API калит Vercel'даги Environment Variables орқали олинади:
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000  # Талаб қилинган тўлов суммаси (сўмда)
 
@@ -85,7 +86,7 @@ async def cmd_start(message: types.Message):
         )
     else:
         await message.answer(
-            "❌ Kechirasiz, siz bizning yopiق guruhimiz a'zosi emassiz.\n\n"
+            "❌ Kechirasiz, siz bizning yopiқ guruhimiz a'zosi emassiz.\n\n"
             "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, чек скриншотини шу ботга юборинг:\n\n"
             "💳 **Карта рақами:** **9860120155197128**\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
