@@ -23,7 +23,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000
 
 genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-pro')
+# Энг тўғри ва ҳозирги кунда ишлайдиган модель номи
+gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -118,10 +119,10 @@ async def handle_payment_screenshot(message: types.Message):
         image = Image.open(downloaded_file)
 
         prompt = (
-            "Look at this payment receipt. Extract the numeric payment amount "
+            "Analyze this payment receipt image. Extract the numeric payment amount "
             "and determine if it is a valid receipt. "
-            "Reply strictly in this JSON format without any markdown or extra text: "
-            "{\"amount\": 50000, \"is_valid_receipt\": true}"
+            "Return ONLY a raw JSON object with keys: amount (number) and is_valid_receipt (boolean). "
+            "No markdown, no backticks, no extra text."
         )
 
         response = gemini_model.generate_content([image, prompt])
@@ -159,7 +160,6 @@ async def handle_payment_screenshot(message: types.Message):
             )
     except Exception as e:
         logging.error(f"AI чекни ўқишда хатолик: {e}")
-        # Аниқ хатони кўриш учун chiqarib beramiz
         await bot.edit_message_text(
             text=f"❌ Чекни ўқишда хатолик: {str(e)[:100]}",
             chat_id=message.chat.id,
