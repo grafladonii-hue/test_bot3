@@ -9,7 +9,7 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-import google.generativeai as genai
+from google import genai
 from PIL import Image
 
 logging.basicConfig(level=logging.INFO)
@@ -22,9 +22,8 @@ WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000
 
-genai.configure(api_key=GEMINI_API_KEY)
-# Энг тўғри ва ҳозирги кунда ишлайдиган модель номи
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+# Замонавий Google GenAI клиенти
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -125,11 +124,17 @@ async def handle_payment_screenshot(message: types.Message):
             "No markdown, no backticks, no extra text."
         )
 
-        response = gemini_model.generate_content([image, prompt])
-        text_response = response.text.strip()
+        # Замонавий SDK орқали сўров юбориш
+        response = gemini_client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=[image, prompt]
+        )
         
-        if "```" in text_response:
-            text_response = text_response.replace("```json", "").replace("```", "").strip()
+        text_response = response.text.strip()
+        if text_response.startswith("```json"):
+            text_response = text_response[7:-3].strip()
+        elif text_response.startswith("```"):
+            text_response = text_response[3:-3].strip()
 
         data = json.loads(text_response)
         extracted_amount = float(data.get("amount", 0))
