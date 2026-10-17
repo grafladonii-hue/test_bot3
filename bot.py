@@ -9,7 +9,7 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from google import genai
+import google.generativeai as genai
 from PIL import Image
 import io
 
@@ -24,7 +24,10 @@ WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000  # Талаб қилинган тўлов суммаси (сўмда)
 
-gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+# Google Generative AI ни созлаш
+genai.configure(api_key=GEMINI_API_KEY)
+gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
 BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
@@ -86,12 +89,12 @@ async def cmd_start(message: types.Message):
     if is_member:
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="📝 Testlarni boshlash", web_app=WebAppInfo(url=WEB_APP_URL))]
+                [InlineKeyboardButton(text="📝 Тестларни бошлаш", web_app=WebAppInfo(url=WEB_APP_URL))]
             ]
         )
         await message.answer(
-            "Xush kelibsiz, Demotestlar.uz (Baxtiyor Karjabov Demo testlar platformasi)ga!\n\n"
-            "Сиз ёпиқ гуруҳ аъзосисиз. Testlarni ishlash учун қуйидаги тугмани босинг:",
+            "Хуш келибсиз, Demotestlar.uz (Бахтиёр Каржабов Демо тестлар платформаси)га!\n\n"
+            "Сиз ёпиқ гуруҳ аъзосисиз. Тестларни ишлаш учун қуйидаги тугмани босинг:",
             reply_markup=keyboard
         )
     else:
@@ -131,12 +134,9 @@ async def handle_payment_screenshot(message: types.Message):
         Faqatgina toza JSON javob ber, boshqa matn yozma.
         """
 
-        response = gemini_client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=[image, prompt]
-        )
-        
+        response = gemini_model.generate_content([image, prompt])
         text_response = response.text.strip()
+        
         if text_response.startswith("```json"):
             text_response = text_response[7:-3].strip()
         elif text_response.startswith("```"):
@@ -149,11 +149,11 @@ async def handle_payment_screenshot(message: types.Message):
         if is_valid and extracted_amount >= REQUIRED_AMOUNT:
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(text="🚀 Testlarni boshlash", web_app=WebAppInfo(url=WEB_APP_URL))]
+                    [InlineKeyboardButton(text="🚀 Тестларни бошлаш", web_app=WebAppInfo(url=WEB_APP_URL))]
                 ]
             )
             await bot.edit_message_text(
-                text=f"✅ **To'lov tasdiqlandi!**\n\n💰 Aniqlangan summa: `{int(extracted_amount)} so'm`\n🎉 Сизга мини-аппдан фойдаланиш ҳуқуқи берилди!",
+                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Аниқланган сумма: `{int(extracted_amount)} сўм`\n🎉 Сизга мини-аппдан фойдаланиш ҳуқуқи берилди!",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 reply_markup=keyboard,
@@ -161,9 +161,9 @@ async def handle_payment_screenshot(message: types.Message):
             )
         else:
             await bot.edit_message_text(
-                text=f"❌ **To'lov summasi yetarli emas yoki чек хато!**\n\n"
-                     f"🔍 Chekдан топилган сумма: `{int(extracted_amount)} so'm`\n"
-                     f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} so'm`\n\n"
+                text=f"❌ **Тўлов суммаси етарли эмас ёки чек хато!**\n\n"
+                     f"🔍 Чекдан топилган сумма: `{int(extracted_amount)} сўм`\n"
+                     f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} сўм`\n\n"
                      f"Илтимос, тўғри чекни қайtadan юборинг.",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
