@@ -14,8 +14,8 @@ import io
 
 logging.basicConfig(level=logging.INFO)
 
-# Токен энди Vercel'даги Environment Variables орқали олинади
-TOKEN = os.getenv("TOKEN")
+# Токенни тўғридан-тўғри ёзамиз (ҳатолик чиқмаслиги учун)
+TOKEN = "8788215308:AAFcuI_L5ZnhMzh-KoLcpfcAk4nRyHwJqzk"
 GROUP_ID = -1003919402335  # Бот ушбу гуруҳда алоҳида АДМИН бўлиши шарт!
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
@@ -186,3 +186,6 @@ async def root():
     if html_path.exists():
         return FileResponse(html_path)
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
+```[cite: 5, 6]
+
+Кодни GitHub'га жойлаштириб сақлаганингиздан сўнг, ботингиз дарҳол ишлай бошлайди!
