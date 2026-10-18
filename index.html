@@ -183,6 +183,22 @@
         .brand-header { text-align: center; margin-bottom: 20px; }
         .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
         .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
+        
+        /* Рейтинг стиллари */
+        .leaderboard-item {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .leaderboard-item.top-1 { background: #fef9e7; border-color: #f39c12; }
+        .leaderboard-item.top-2 { background: #f4f6f6; border-color: #bdc3c7; }
+        .leaderboard-item.top-3 { background: #fbf5ee; border-color: #d35400; }
+
         .admin-form input, .admin-form textarea, .admin-form select {
             width: 100%;
             padding: 10px;
@@ -209,9 +225,7 @@
             user-select: none;
             transition: 0.2s;
         }
-        .admin-test-header:hover {
-            background: #f4f6f6;
-        }
+        .admin-test-header:hover { background: #f4f6f6; }
         .admin-questions-list {
             display: none;
             margin-top: 0;
@@ -219,9 +233,7 @@
             border-top: 1px solid #eee;
             background: #fafafa;
         }
-        .admin-test-item.open .admin-questions-list {
-            display: block;
-        }
+        .admin-test-item.open .admin-questions-list { display: block; }
         .admin-q-item {
             background: #fff;
             border: 1px solid #eee;
@@ -257,7 +269,6 @@
             border-radius: 6px;
             margin-bottom: 12px;
         }
-        /* Категориялар учун стиллар */
         .category-header {
             background: #f1f8f5;
             border-left: 4px solid #27ae60;
@@ -273,13 +284,8 @@
             user-select: none;
             transition: 0.2s;
         }
-        .category-header:hover {
-            background: #e1f3ec;
-        }
-        .category-content {
-            display: block;
-            margin-top: 8px;
-        }
+        .category-header:hover { background: #e1f3ec; }
+        .category-content { display: block; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -297,6 +303,15 @@
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
         <div id="tests-list"></div>
+    </div>
+
+    <!-- Рейтинг саҳифаси -->
+    <div id="rating-page" class="page">
+        <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
+        <p style="color: #666; font-size: 13px;">Testlarni муваффақиятли топширган қатнашчилар натижалари:</p>
+        <div id="leaderboard-list" style="margin-top: 15px;">
+            <p style="text-align: center; color: #888;">Юкланмоқда...</p>
+        </div>
     </div>
 
     <div id="quiz-page" class="page">
@@ -388,12 +403,16 @@
     <img id="modalImg" alt="Катталаштирилган расм">
 </div>
 
+<!-- Пастки меню -->
 <div class="nav-bar">
     <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
         <div>🏠</div> Bosh
     </div>
     <div class="nav-item" onclick="switchTab('tests')" id="nav-tests">
         <div>📝</div> Testlar
+    </div>
+    <div class="nav-item" onclick="switchTab('rating')" id="nav-rating">
+        <div>🏆</div> Reyting
     </div>
     <div class="nav-item" onclick="switchTab('admin')" id="nav-admin" style="display: none; color: #e74c3c;">
         <div>⚙️</div> Admin
@@ -408,6 +427,7 @@
 
     var tg = window.Telegram ? window.Telegram.WebApp : null;
     var currentUserId = null;
+    var currentUserFullName = "Foydalanuvchi";
 
     if (tg) {
         tg.expand();
@@ -423,6 +443,9 @@
 
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             currentUserId = tg.initDataUnsafe.user.id;
+            var u = tg.initDataUnsafe.user;
+            currentUserFullName = (u.first_name || "") + (u.last_name ? " " + u.last_name : "");
+            if (!currentUserFullName.trim()) currentUserFullName = "ID: " + u.id;
         }
     }
 
@@ -458,7 +481,6 @@
     async function fetchTestData() {
         try {
             testData = {};
-
             const qRes = await supabaseClient.from('questions').select('*');
             if (qRes.data && qRes.data.length > 0) {
                 qRes.data.forEach(q => {
@@ -489,6 +511,45 @@
             console.error("Юклашда хатолик:", e);
         }
         renderTestsList();
+    }
+
+    async function fetchLeaderboard() {
+        var listContainer = document.getElementById("leaderboard-list");
+        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Юкланмоқда...</p>";
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('leaderboard')
+                .select('*')
+                .order('score', { ascending: false })
+                .limit(20);
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишон!</p>";
+                return;
+            }
+
+            var html = "";
+            data.forEach((item, index) => {
+                var rankClass = "";
+                var medal = "<b>" + (index + 1) + ".</b>";
+                if (index === 0) { rankClass = "top-1"; medal = "👑 1"; }
+                else if (index === 1) { rankClass = "top-2"; medal = "🥈 2"; }
+                else if (index === 2) { rankClass = "top-3"; medal = "🥉 3"; }
+
+                html += '<div class="leaderboard-item ' + rankClass + '">' +
+                    '<div>' + medal + ' &nbsp; <b>' + item.full_name + '</b>' +
+                    '<div style="font-size: 11px; color: #666; margin-top: 2px;">Vaqt: ' + (item.time_spent || 'Aniqlanmagan') + '</div></div>' +
+                    '<div style="font-weight: bold; color: #27ae60; font-size: 16px;">' + item.score + ' ball</div>' +
+                    '</div>';
+            });
+            listContainer.innerHTML = html;
+        } catch (err) {
+            console.error("Reytingni olishda xato:", err);
+            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
+        }
     }
 
     var activeQuestions = [];
@@ -535,7 +596,6 @@
         });
 
         var html = "";
-        
         if (kuzHtml) {
             html += '<div class="category-section">' +
                     '<div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>🔽</span></div>' +
@@ -583,6 +643,11 @@
             document.getElementById('tests-page').classList.add('active');
             document.getElementById('nav-tests').classList.add('active');
             clearInterval(timerInterval);
+        } else if (tab === 'rating') {
+            fetchLeaderboard();
+            document.getElementById('rating-page').classList.add('active');
+            document.getElementById('nav-rating').classList.add('active');
+            clearInterval(timerInterval);
         } else if (tab === 'admin') {
             renderAdminTestsList();
             populateTestSelect();
@@ -603,7 +668,6 @@
             var indexedOptions = q.options.map(function(opt, idx) {
                 return { text: opt, isCorrect: (idx === q.correct) };
             });
-            
             var shuffledOptions = shuffleArray(indexedOptions);
             var newCorrectIndex = shuffledOptions.findIndex(function(o) { return o.isCorrect; });
 
@@ -707,7 +771,7 @@
         }
     }
 
-    function finishQuiz() {
+    async function finishQuiz() {
         saveCurrentAnswer();
         clearInterval(timerInterval);
         
@@ -738,6 +802,23 @@
         document.getElementById("score-circle").innerText = earnedPoints + " ball";
         document.getElementById("score-text").innerHTML = "Тўғри жавоблар: " + score + " та / Нотўғри: " + (activeQuestions.length - score) + " та";
         document.getElementById("answers-review").innerHTML = reviewHtml;
+
+        var secondsSpent = 5400 - timeLeft;
+        var spentMinutes = Math.floor(secondsSpent / 60);
+        var spentSecs = secondsSpent % 60;
+        var timeSpentStr = spentMinutes + " daq " + spentSecs + " son";
+
+        // Натижани Supabase базасига сақлаш
+        try {
+            await supabaseClient.from('leaderboard').insert([{
+                user_id: currentUserId || 0,
+                full_name: currentUserFullName,
+                score: earnedPoints,
+                time_spent: timeSpentStr
+            }]);
+        } catch (e) {
+            console.error("Natijani saqlashda xato:", e);
+        }
     }
 
     function handleImageUpload(event) {
@@ -749,10 +830,8 @@
                 img.onload = function() {
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
-                    
                     var maxWidth = 1000;
                     var scale = maxWidth / img.width;
-                    
                     if (scale < 1) {
                         canvas.width = maxWidth;
                         canvas.height = img.height * scale;
@@ -760,10 +839,8 @@
                         canvas.width = img.width;
                         canvas.height = img.height;
                     }
-                    
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9);
-                    
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
