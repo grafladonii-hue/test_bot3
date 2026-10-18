@@ -257,6 +257,29 @@
             border-radius: 6px;
             margin-bottom: 12px;
         }
+        /* Категориялар учун стиллар */
+        .category-header {
+            background: #f1f8f5;
+            border-left: 4px solid #27ae60;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #2c3e50;
+            user-select: none;
+            transition: 0.2s;
+        }
+        .category-header:hover {
+            background: #e1f3ec;
+        }
+        .category-content {
+            display: block;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
@@ -486,19 +509,65 @@
     }
 
     function renderTestsList() {
-        var html = "";
         var sortedKeys = getSortedTestKeys();
-        
+        var kuzHtml = "";
+        var bahorHtml = "";
+        var boshqaHtml = "";
+
         sortedKeys.forEach(function(id) {
             var t = testData[id];
             if (!t) return;
-            html += '<div class="test-card">' +
+            
+            var titleLower = t.title.toLowerCase();
+            var cardHtml = '<div class="test-card">' +
                     '<div><strong>' + t.title + '</strong>' +
                     '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
                     '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\')">Ishlash</button>' +
                     '</div>';
+
+            if (titleLower.includes('kuz') || titleLower.includes('куз')) {
+                kuzHtml += cardHtml;
+            } else if (titleLower.includes('bahor') || titleLower.includes('баҳор')) {
+                bahorHtml += cardHtml;
+            } else {
+                boshqaHtml += cardHtml;
+            }
         });
+
+        var html = "";
+        
+        if (kuzHtml) {
+            html += '<div class="category-section">' +
+                    '<div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz)</span><span>🔽</span></div>' +
+                    '<div class="category-content">' + kuzHtml + '</div>' +
+                    '</div>';
+        }
+        if (bahorHtml) {
+            html += '<div class="category-section">' +
+                    '<div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor)</span><span>🔽</span></div>' +
+                    '<div class="category-content">' + bahorHtml + '</div>' +
+                    '</div>';
+        }
+        if (boshqaHtml) {
+            html += '<div class="category-section">' +
+                    '<div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa тестлар</span><span>🔽</span></div>' +
+                    '<div class="category-content">' + boshqaHtml + '</div>' +
+                    '</div>';
+        }
+
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha testlar yo'q.</p>";
+    }
+
+    function toggleCategory(headerEl) {
+        var content = headerEl.nextElementSibling;
+        var arrowSpan = headerEl.lastElementChild;
+        if (content.style.display === "none") {
+            content.style.display = "block";
+            arrowSpan.innerText = "🔽";
+        } else {
+            content.style.display = "none";
+            arrowSpan.innerText = "▶️";
+        }
     }
 
     function switchTab(tab) {
