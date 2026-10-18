@@ -101,6 +101,10 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
+    # Фақат шахсий чатда (личкада) ишлайди
+    if message.chat.type != "private":
+        return
+
     user_id = message.from_user.id
     is_member = await check_membership(user_id, bot)
     is_allowed = is_user_approved(user_id)
@@ -127,6 +131,10 @@ async def cmd_start(message: types.Message):
 
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
+    # Фақат шахсий чатда (личкада) фотони қабул қилади ва текширади
+    if message.chat.type != "private":
+        return
+
     user_id = message.from_user.id
     
     if await check_membership(user_id, bot) or is_user_approved(user_id):
@@ -136,7 +144,6 @@ async def handle_payment_screenshot(message: types.Message):
     photo = message.photo[-1]
     file_id = photo.file_id
     
-    # Тўғриланган ёзув
     processing_msg = await message.answer("⏳ Сиз юборган чек текширилмоқда, илтимос кутиб туринг...")
     
     try:
