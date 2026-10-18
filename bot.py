@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from pathlib import Path
+from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -20,7 +21,7 @@ WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 50000
+REQUIRED_AMOUNT = 100000  # Сумма 100 000 сўмга тўғриланди
 
 # Замонавий Google GenAI клиенти
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -29,6 +30,31 @@ BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+# Тасдиқланган фойдаланувчилар сақланадиган файл
+APPROVED_USERS_FILE = BASE_DIR / "approved_users.json"
+
+def load_approved_users() -> list:
+    if APPROVED_USERS_FILE.exists():
+        try:
+            with open(APPROVED_USERS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error(f"Тасдиқланган фойдаланувчиларни ўқишда хатолик: {e}")
+    return []
+
+def save_approved_user(user_id: int):
+    users = load_approved_users()
+    if user_id not in users:
+        users.append(user_id)
+        try:
+            with open(APPROVED_USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump(users, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logging.error(f"Фойдаланувчини сақлашда хатолик: {e}")
+
+def is_user_approved(user_id: int) -> bool:
+    return user_id in load_approved_users()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -78,8 +104,9 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
 async def cmd_start(message: types.Message):
     user_id = message.from_user.id
     is_member = await check_membership(user_id, bot)
+    is_allowed = is_user_approved(user_id)
     
-    if is_member:
+    if is_member or is_allowed:
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text="📝 Тестларни бошлаш", web_app=WebAppInfo(url=WEB_APP_URL))]
@@ -87,7 +114,7 @@ async def cmd_start(message: types.Message):
         )
         await message.answer(
             "Хуш келибсиз, Demotestlar.uz (Бахтиёр Каржабов Демо тестлар платформаси)га!\n\n"
-            "Сиз ёпиқ гуруҳ аъзосисиз. Тестларни ишлаш учун қуйидаги тугмани босинг:",
+            "Сизда мини-аппдан фойдаланиш ҳуқуқи мавжуд. Тестларни ишлаш учун қуйидаги тугмани босинг:",
             reply_markup=keyboard
         )
     else:
@@ -103,8 +130,8 @@ async def cmd_start(message: types.Message):
 async def handle_payment_screenshot(message: types.Message):
     user_id = message.from_user.id
     
-    if await check_membership(user_id, bot):
-        await message.answer("Сиз аллақачон ёпиқ гуруҳ аъзосисиз ва мини-аппдан бепул фойдалана оласиз!")
+    if await check_membership(user_id, bot) or is_user_approved(user_id):
+        await message.answer("Сиз аллақачон мини-аппдан фойдаланиш ҳуқуқига эгасиз!")
         return
 
     photo = message.photo[-1]
@@ -117,14 +144,17 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
+        current_date_str = datetime.now().strftime("%Y-%m-%d")
+
         prompt = (
-            "Analyze this payment receipt image. Extract the numeric payment amount "
-            "and determine if it is a valid receipt. "
-            "Return ONLY a raw JSON object with keys: amount (number) and is_valid_receipt (boolean). "
+            f"Analyze this payment receipt image. Today's date is {current_date_str}. "
+            "Extract the numeric payment amount, verify if it is a genuine bank/payment app receipt, "
+            "and check if the receipt date is recent (not extremely old). "
+            "Return ONLY a raw JSON object with keys: "
+            "amount (number), is_valid_receipt (boolean), and reason (string describing why if invalid). "
             "No markdown, no backticks, no extra text."
         )
 
-        # Замонавий SDK орқали сўров юбориш (gemini-3.5-flash-lite модели)
         response = gemini_client.models.generate_content(
             model='gemini-3.5-flash-lite',
             contents=[image, prompt]
@@ -141,6 +171,8 @@ async def handle_payment_screenshot(message: types.Message):
         is_valid = data.get("is_valid_receipt", False)
 
         if is_valid and extracted_amount >= REQUIRED_AMOUNT:
+            save_approved_user(user_id)  # Фойдаланувчини базага сақлаймиз
+            
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [InlineKeyboardButton(text="🚀 Тестларни бошлаш", web_app=WebAppInfo(url=WEB_APP_URL))]
@@ -154,11 +186,13 @@ async def handle_payment_screenshot(message: types.Message):
                 parse_mode="Markdown"
             )
         else:
+            reason = data.get("reason", "Сумма етарли эмас ёки чек ҳақиқий эмас.")
             await bot.edit_message_text(
-                text=f"❌ **Тўлов суммаси етарли эмас ёки чек хато!**\n\n"
+                text=f"❌ **Тўлов қабул қилинмади!**\n\n"
                      f"🔍 Чекдан топилган сумма: `{int(extracted_amount)} сўм`\n"
-                     f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} сўм`\n\n"
-                     f"Илтимос, тўғри чекни қайtadan юборинг.",
+                     f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} сўм`\n"
+                     f"⚠️ Сабаб: {reason}\n\n"
+                     f"Илтимос, тўғри ва янги чекни қайтадан юборинг.",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 parse_mode="Markdown"
@@ -166,7 +200,7 @@ async def handle_payment_screenshot(message: types.Message):
     except Exception as e:
         logging.error(f"AI чекни ўқишда хатолик: {e}")
         await bot.edit_message_text(
-            text=f"❌ Чекни ўқишда хатолик: {str(e)[:100]}",
+            text=f"❌ Чекни ўқишда хатолик юз берди. Илтимос, бошқатдан уриниб кўринг.",
             chat_id=message.chat.id,
             message_id=processing_msg.message_id
         )
