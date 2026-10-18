@@ -1121,31 +1121,30 @@
         try {
             const { data: existingUser, error: fetchErr } = await supabaseClient
                 .from('leaderboard')
-                .select('*')
+                .select('score, tests_count')
                 .eq('user_id', currentUserId || 0)
-                .single();
+                .maybeSingle();
+
+            let finalScore = earnedPoints;
+            let finalTestsCount = 1;
 
             if (existingUser) {
-                var newTotalScore = existingUser.score + earnedPoints;
-                var newTestsCount = (existingUser.tests_count || 1) + 1;
-                
-                await supabaseClient
-                    .from('leaderboard')
-                    .update({ 
-                        score: newTotalScore, 
-                        tests_count: newTestsCount,
-                        full_name: currentUserFullName,
-                        time_spent: timeSpentStr 
-                    })
-                    .eq('user_id', currentUserId || 0);
-            } else {
-                await supabaseClient.from('leaderboard').insert([{
+                finalScore = (existingUser.score || 0) + earnedPoints;
+                finalTestsCount = (existingUser.tests_count || 1) + 1;
+            }
+
+            const { error: upsertErr } = await supabaseClient
+                .from('leaderboard')
+                .upsert({
                     user_id: currentUserId || 0,
                     full_name: currentUserFullName,
-                    score: earnedPoints,
-                    tests_count: 1,
+                    score: finalScore,
+                    tests_count: finalTestsCount,
                     time_spent: timeSpentStr
-                }]);
+                }, { onConflict: 'user_id' });
+
+            if (upsertErr) {
+                console.error("Supabase upsert xatosi:", upsertErr);
             }
         } catch (e) {
             console.error("Natijani saqlashda xato:", e);
