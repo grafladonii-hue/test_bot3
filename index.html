@@ -17,7 +17,7 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             color: #333;
             padding-bottom: 70px;
             -webkit-user-select: none;
@@ -27,9 +27,10 @@
             max-width: 600px;
             margin: 0 auto;
             background: #fff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
         .header {
             display: flex;
@@ -217,99 +218,101 @@
         .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
         .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
         
-        /* Premium подиум стиллари (рақамлар катталаштирилди) */
+        /* Мобил экранга мослаштирилган подиум стиллари */
         .podium-container {
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            gap: 12px;
-            margin: 25px 0 20px;
-            padding-bottom: 15px;
+            gap: 6px;
+            margin: 20px 0 15px;
+            padding-top: 15px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .podium-item {
             background: #ffffff;
             border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 16px 10px;
+            border-radius: 12px;
+            padding: 12px 6px;
             text-align: center;
             flex: 1;
-            max-width: 115px;
+            min-width: 0;
             position: relative;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-        .podium-item:hover {
-            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            box-sizing: border-box;
         }
         .podium-item.first {
             background: linear-gradient(135deg, #fffdf0 0%, #fef3c7 100%);
             border-color: #fbbf24;
-            transform: translateY(-12px);
-            max-width: 130px;
-            box-shadow: 0 15px 30px rgba(251, 191, 36, 0.2);
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.15);
+            z-index: 2;
         }
         .podium-item.second {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-color: #cbd5e1;
-            box-shadow: 0 10px 20px rgba(100, 116, 139, 0.1);
         }
         .podium-item.third {
             background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
             border-color: #f6ad55;
-            box-shadow: 0 10px 20px rgba(246, 173, 85, 0.1);
         }
         
         .podium-avatar {
-            width: 58px;
-            height: 58px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 24px; /* Рақам катталаштирилди */
-            margin: 0 auto 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            font-size: 20px;
+            margin: 0 auto 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
         }
         .podium-item.first .podium-avatar { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .podium-item.second .podium-avatar { background: linear-gradient(135deg, #64748b, #475569); }
         .podium-item.third .podium-avatar { background: linear-gradient(135deg, #d97706, #b45309); }
         
         .podium-name {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
             color: #1e293b;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
+            width: 100%;
         }
         .podium-score {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 800;
             color: #16a34a;
             background: #dcfce7;
-            padding: 3px 8px;
-            border-radius: 20px;
+            padding: 2px 6px;
+            border-radius: 12px;
             display: inline-block;
         }
         .podium-info {
-            font-size: 11px;
+            font-size: 9px;
             color: #64748b;
-            margin-top: 6px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .podium-rank-badge {
             position: absolute;
-            top: -12px;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 800;
-            padding: 3px 10px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .podium-item.first .podium-rank-badge { background: #f59e0b; }
         .podium-item.second .podium-rank-badge { background: #64748b; }
@@ -318,18 +321,14 @@
         .leaderboard-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            transition: all 0.2s ease;
-        }
-        .leaderboard-item:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            box-sizing: border-box;
         }
 
         .admin-form input, .admin-form textarea, .admin-form select {
@@ -685,7 +684,7 @@
                 return;
             }
 
-            // Top 3 Podium render qilish
+            // Top 3 Podium render qilish (To'g'ri tartibda: 2-o'rin chapda, 1-o'rin o'rtada eng baland, 3-o'rin o'ngda)
             let podiumHtml = "";
             let top3Users = data.slice(0, 3);
             
@@ -695,39 +694,36 @@
                 // 2-ўрин (Чапда)
                 if (top3Users[1]) {
                     let u2 = top3Users[1];
-                    let initials2 = u2.full_name ? u2.full_name.charAt(0).toUpperCase() : "2";
                     podiumHtml += '<div class="podium-item second">' +
                         '<div class="podium-rank-badge">🥈 2-ўрин</div>' +
                         '<div class="podium-avatar">2</div>' +
                         '<div class="podium-name" title="' + u2.full_name + '">' + u2.full_name + '</div>' +
                         '<div class="podium-score">' + u2.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u2.tests_count || 1) + ' ta test</div>' +
+                        '<div class="podium-info">' + (u2.tests_count || 1) + ' test</div>' +
                         '</div>';
                 }
 
                 // 1-ўрин (Марказда, энг баланд ва ёрқин)
                 if (top3Users[0]) {
                     let u1 = top3Users[0];
-                    let initials1 = u1.full_name ? u1.full_name.charAt(0).toUpperCase() : "1";
                     podiumHtml += '<div class="podium-item first">' +
                         '<div class="podium-rank-badge">👑 1-ўрин</div>' +
                         '<div class="podium-avatar">1</div>' +
                         '<div class="podium-name" title="' + u1.full_name + '">' + u1.full_name + '</div>' +
                         '<div class="podium-score">' + u1.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u1.tests_count || 1) + ' ta test</div>' +
+                        '<div class="podium-info">' + (u1.tests_count || 1) + ' test</div>' +
                         '</div>';
                 }
 
                 // 3-ўрин (Ўнгда)
                 if (top3Users[2]) {
                     let u3 = top3Users[2];
-                    let initials3 = u3.full_name ? u3.full_name.charAt(0).toUpperCase() : "3";
                     podiumHtml += '<div class="podium-item third">' +
                         '<div class="podium-rank-badge">🥉 3-ўрин</div>' +
                         '<div class="podium-avatar">3</div>' +
                         '<div class="podium-name" title="' + u3.full_name + '">' + u3.full_name + '</div>' +
                         '<div class="podium-score">' + u3.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u3.tests_count || 1) + ' ta test</div>' +
+                        '<div class="podium-info">' + (u3.tests_count || 1) + ' test</div>' +
                         '</div>';
                 }
 
@@ -747,12 +743,12 @@
                     var tSpent = item.time_spent || '0 son';
 
                     html += '<div class="leaderboard-item">' +
-                        '<div style="display: flex; align-items: center; gap: 10px;">' +
-                        '<div style="font-weight: 800; color: #64748b; width: 24px; text-align: center;">' + rankNum + '</div>' +
-                        '<div><b style="color: #1e293b;">' + item.full_name + '</b>' +
+                        '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
+                        '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
+                        '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
                         '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">📊 ' + tCount + ' ta test • ⏱ ' + tSpent + '</div></div>' +
                         '</div>' +
-                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 20px; font-size: 13px;">' + item.score + ' ball</div>' +
+                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
                         '</div>';
                 });
                 listContainer.innerHTML = html;
