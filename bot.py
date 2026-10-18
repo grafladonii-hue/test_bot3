@@ -124,9 +124,9 @@ async def handle_payment_screenshot(message: types.Message):
             "No markdown, no backticks, no extra text."
         )
 
-        # Замонавий SDK орқали сўров юбориш
+        # Замонавий SDK орқали сўров юбориш (gemini-3.5-flash-lite модели)
         response = gemini_client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-3.5-flash-lite',
             contents=[image, prompt]
         )
         
