@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -65,7 +65,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
-        /* Мобил телефонлар учун икки бармоқ билан зум қилишни қўллаб-қувватлайдиган модал ойна */
+        /* Телефонда бармоқ билан эркин зоом қилишга мослашган модал ойна */
         .image-modal {
             display: none;
             position: fixed;
@@ -75,9 +75,8 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.95);
-            overflow: auto;
-            align-items: center;
-            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
         }
         .image-modal-content-wrapper {
             width: 100%;
@@ -86,16 +85,19 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
         }
         .image-modal img {
-            max-width: 100%;
-            max-height: 100%;
-            border-radius: 4px;
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 6px;
             object-fit: contain;
-            /* Шу қатор телефонда икки бармоқ билан эркин зоом қилишни таъминлайди */
-            touch-action: pan-x pan-y pinch-zoom;
+            cursor: grab;
+            transform-origin: center center;
+            will-change: transform;
+        }
+        .image-modal img:active {
+            cursor: grabbing;
         }
         .image-modal-close {
             position: fixed;
@@ -434,7 +436,7 @@
     <div class="image-modal-content-wrapper" onclick="event.stopPropagation()">
         <img id="modalImg" alt="Катталаштирилган расм">
     </div>
-    <div class="zoom-hint">Расмни иккита бармоқ билан катталаштиришингиз мумкин</div>
+    <div class="zoom-hint">Иккита бармоқ билан чўзиб катталаштиришингиз мумкин</div>
 </div>
 
 <div class="nav-bar">
@@ -763,15 +765,121 @@
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
     }
 
+    // Икки бармоқ билан эркин зоом қилиш (Pinch-to-Zoom) ва сичқонча орқали бошқариш лойиҳаси
+    let scale = 1;
+    let panning = false;
+    let pointX = 0;
+    let pointY = 0;
+    let startX = 0;
+    let startY = 0;
+    let initialDistance = null;
+
     function openImageModal(imgSrc) {
         var modal = document.getElementById("imageModal");
         var modalImg = document.getElementById("modalImg");
         modal.style.display = "flex";
         modalImg.src = imgSrc;
+        
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
+        setTransform(modalImg);
+
+        // --- КОМПЬЮТЕР УЧУН (СИЧҚОНЧА) ---
+        modalImg.onwheel = function(e) {
+            e.preventDefault();
+            const xs = (e.clientX - pointX) / scale;
+            const ys = (e.clientY - pointY) / scale;
+            
+            if (e.deltaY < 0) {
+                scale *= 1.2;
+            } else {
+                scale /= 1.2;
+                if (scale < 1) scale = 1;
+            }
+            
+            pointX = e.clientX - xs * scale;
+            pointY = e.clientY - ys * scale;
+            
+            if (scale === 1) { pointX = 0; pointY = 0; }
+            setTransform(modalImg);
+        };
+
+        modalImg.onmousedown = function(e) {
+            e.preventDefault();
+            startX = e.clientX - pointX;
+            startY = e.clientY - pointY;
+            panning = true;
+        };
+
+        window.onmousemove = function(e) {
+            if (!panning) return;
+            e.preventDefault();
+            pointX = e.clientX - startX;
+            pointY = e.clientY - startY;
+            setTransform(modalImg);
+        };
+
+        window.onmouseup = function() {
+            panning = false;
+        };
+
+        // --- МОБИЛ ТЕЛЕФОН УЧУН (ИККИ БАРМОҚ ВА СУРИШ) ---
+        modalImg.ontouchstart = function(e) {
+            if (e.touches.length === 1) {
+                startX = e.touches[0].clientX - pointX;
+                startY = e.touches[0].clientY - pointY;
+                panning = true;
+                initialDistance = null;
+            } else if (e.touches.length === 2) {
+                panning = false;
+                initialDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        };
+
+        modalImg.ontouchmove = function(e) {
+            if (panning && e.touches.length === 1) {
+                pointX = e.touches[0].clientX - startX;
+                pointY = e.touches[0].clientY - startY;
+                setTransform(modalImg);
+            } else if (e.touches.length === 2 && initialDistance) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                const factor = currentDistance / initialDistance;
+                scale *= factor;
+                if (scale < 1) scale = 1;
+                if (scale > 5) scale = 5;
+                
+                initialDistance = currentDistance;
+                setTransform(modalImg);
+            }
+        };
+
+        modalImg.ontouchend = function(e) {
+            if (e.touches.length < 2) {
+                initialDistance = null;
+            }
+            if (e.touches.length === 0) {
+                panning = false;
+            }
+        };
+    }
+
+    function setTransform(img) {
+        img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
     }
 
     function closeImageModal() {
         document.getElementById("imageModal").style.display = "none";
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
     }
 
     function saveCurrentAnswer() {
