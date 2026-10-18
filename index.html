@@ -538,7 +538,7 @@
 
                 html += '<div class="leaderboard-item ' + rankClass + '">' +
                     '<div>' + medal + ' &nbsp; <b>' + item.full_name + '</b>' +
-                    '<div style="font-size: 11px; color: #666; margin-top: 2px;">Vaqт: ' + (item.time_spent || 'Aniqlanmagan') + '</div></div>' +
+                    '<div style="font-size: 11px; color: #666; margin-top: 2px;">Vaqt: ' + (item.time_spent || 'Aniqlanmagan') + '</div></div>' +
                     '<div style="font-weight: bold; color: #27ae60; font-size: 16px;">' + item.score + ' ball</div>' +
                     '</div>';
             });
@@ -804,6 +804,12 @@
         var spentMinutes = Math.floor(secondsSpent / 60);
         var spentSecs = secondsSpent % 60;
         var timeSpentStr = spentMinutes + " daq " + spentSecs + " son";
+
+        // АГАР ФОЙДАЛАНУВЧИ АДМИН БЎЛСА, УНИНГ НАТИЖАСИНИ РЕЙТИНГГА ЁЗМАЙДИ
+        if (currentUserId === ADMIN_ID) {
+            console.log("Admin natijasi рейтингга ёзилмади.");
+            return;
+        }
 
         try {
             await supabaseClient.from('leaderboard').insert([{
