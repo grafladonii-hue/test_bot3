@@ -217,7 +217,7 @@
         .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
         .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
         
-        /* Yangi premium подиум стиллари */
+        /* Premium подиум стиллари (рақамлар катталаштирилди) */
         .podium-container {
             display: flex;
             justify-content: center;
@@ -260,15 +260,15 @@
         }
         
         .podium-avatar {
-            width: 54px;
-            height: 54px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
+            font-weight: 800;
+            font-size: 24px; /* Рақам катталаштирилди */
             margin: 0 auto 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
@@ -698,7 +698,7 @@
                     let initials2 = u2.full_name ? u2.full_name.charAt(0).toUpperCase() : "2";
                     podiumHtml += '<div class="podium-item second">' +
                         '<div class="podium-rank-badge">🥈 2-ўрин</div>' +
-                        '<div class="podium-avatar">' + initials2 + '</div>' +
+                        '<div class="podium-avatar">2</div>' +
                         '<div class="podium-name" title="' + u2.full_name + '">' + u2.full_name + '</div>' +
                         '<div class="podium-score">' + u2.score + ' ball</div>' +
                         '<div class="podium-info">' + (u2.tests_count || 1) + ' ta test</div>' +
@@ -711,7 +711,7 @@
                     let initials1 = u1.full_name ? u1.full_name.charAt(0).toUpperCase() : "1";
                     podiumHtml += '<div class="podium-item first">' +
                         '<div class="podium-rank-badge">👑 1-ўрин</div>' +
-                        '<div class="podium-avatar">' + initials1 + '</div>' +
+                        '<div class="podium-avatar">1</div>' +
                         '<div class="podium-name" title="' + u1.full_name + '">' + u1.full_name + '</div>' +
                         '<div class="podium-score">' + u1.score + ' ball</div>' +
                         '<div class="podium-info">' + (u1.tests_count || 1) + ' ta test</div>' +
@@ -724,7 +724,7 @@
                     let initials3 = u3.full_name ? u3.full_name.charAt(0).toUpperCase() : "3";
                     podiumHtml += '<div class="podium-item third">' +
                         '<div class="podium-rank-badge">🥉 3-ўрин</div>' +
-                        '<div class="podium-avatar">' + initials3 + '</div>' +
+                        '<div class="podium-avatar">3</div>' +
                         '<div class="podium-name" title="' + u3.full_name + '">' + u3.full_name + '</div>' +
                         '<div class="podium-score">' + u3.score + ' ball</div>' +
                         '<div class="podium-info">' + (u3.tests_count || 1) + ' ta test</div>' +
