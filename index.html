@@ -184,7 +184,6 @@
         .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
         .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
         
-        /* Рейтинг стиллари */
         .leaderboard-item {
             background: #f9f9f9;
             border: 1px solid #eee;
@@ -296,7 +295,7 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'тказиш учун Testлар бўлимига ўтинг.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
 
@@ -305,10 +304,9 @@
         <div id="tests-list"></div>
     </div>
 
-    <!-- Рейтинг саҳифаси -->
     <div id="rating-page" class="page">
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
-        <p style="color: #666; font-size: 13px;">Testlarni муваффақиятли топширган қатнашчилар натижалари:</p>
+        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli топширган қатнашчилар натижалари:</p>
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Юкланмоқда...</p>
         </div>
@@ -351,7 +349,7 @@
             <input type="hidden" id="editing-q-index" value="-1">
             <input type="hidden" id="admin-img-data" value="">
 
-            <label><b>Кайси тестга савол тегишли?</b></label>
+            <label><b>Қайси тестга савол тегишли?</b></label>
             <select id="admin-test-select" onchange="onTestSelectChange()"></select>
 
             <div id="new-test-title-box" style="display:block; margin-top: 10px;">
@@ -403,7 +401,6 @@
     <img id="modalImg" alt="Катталаштирилган расм">
 </div>
 
-<!-- Пастки меню -->
 <div class="nav-bar">
     <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
         <div>🏠</div> Bosh
@@ -527,7 +524,7 @@
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишон!</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
                 return;
             }
 
@@ -541,7 +538,7 @@
 
                 html += '<div class="leaderboard-item ' + rankClass + '">' +
                     '<div>' + medal + ' &nbsp; <b>' + item.full_name + '</b>' +
-                    '<div style="font-size: 11px; color: #666; margin-top: 2px;">Vaqt: ' + (item.time_spent || 'Aniqlanmagan') + '</div></div>' +
+                    '<div style="font-size: 11px; color: #666; margin-top: 2px;">Vaqт: ' + (item.time_spent || 'Aniqlanmagan') + '</div></div>' +
                     '<div style="font-weight: bold; color: #27ae60; font-size: 16px;">' + item.score + ' ball</div>' +
                     '</div>';
             });
@@ -808,7 +805,6 @@
         var spentSecs = secondsSpent % 60;
         var timeSpentStr = spentMinutes + " daq " + spentSecs + " son";
 
-        // Натижани Supabase базасига сақлаш
         try {
             await supabaseClient.from('leaderboard').insert([{
                 user_id: currentUserId || 0,
