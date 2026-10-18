@@ -136,7 +136,8 @@ async def handle_payment_screenshot(message: types.Message):
     photo = message.photo[-1]
     file_id = photo.file_id
     
-    processing_msg = await message.answer("🤖 Сунъий интеллект чекни текширмоқда, илтимос кутиб туринг...")
+    # Тўғриланган ёзув
+    processing_msg = await message.answer("⏳ Сиз юборган чек текширилмоқда, илтимос кутиб туринг...")
     
     try:
         file_info = await bot.get_file(file_id)
