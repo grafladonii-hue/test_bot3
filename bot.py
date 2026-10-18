@@ -2,7 +2,6 @@ import os
 import json
 import logging
 from pathlib import Path
-from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -21,7 +20,7 @@ WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 100000  # Сумма 100 000 сўмга тўғриланди
+REQUIRED_AMOUNT = 100000  # Талаб қилинадиган сумма 100 000 сўм
 
 # Замонавий Google GenAI клиенти
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -144,14 +143,11 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
-        current_date_str = datetime.now().strftime("%Y-%m-%d")
-
         prompt = (
-            f"Analyze this payment receipt image. Today's date is {current_date_str}. "
-            "Extract the numeric payment amount, verify if it is a genuine bank/payment app receipt, "
-            "and check if the receipt date is recent (not extremely old). "
+            "Analyze this payment receipt image. Extract the numeric payment amount "
+            "and determine if it is a valid bank/payment receipt. "
             "Return ONLY a raw JSON object with keys: "
-            "amount (number), is_valid_receipt (boolean), and reason (string describing why if invalid). "
+            "amount (number), is_valid_receipt (boolean), and reason (string). "
             "No markdown, no backticks, no extra text."
         )
 
@@ -192,7 +188,7 @@ async def handle_payment_screenshot(message: types.Message):
                      f"🔍 Чекдан топилган сумма: `{int(extracted_amount)} сўм`\n"
                      f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} сўм`\n"
                      f"⚠️ Сабаб: {reason}\n\n"
-                     f"Илтимос, тўғри ва янги чекни қайтадан юборинг.",
+                     f"Илтимос, тўғри чекни қайтадан юборинг.",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 parse_mode="Markdown"
