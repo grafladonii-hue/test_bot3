@@ -140,6 +140,7 @@
             cursor: pointer;
             border: 1px solid #ddd;
             transition: 0.2s;
+            white-space: pre-wrap;
         }
         .options label:hover { background: #eef2f7; }
         .options input { margin-right: 10px; }
@@ -499,7 +500,7 @@
             </div>
 
             <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
-            <textarea id="admin-reading-text" rows="3" placeholder="Матнни шу ерга киритинг..."></textarea>
+            <textarea id="admin-reading-text" rows="4" placeholder="Матнни шу ерга киритинг..."></textarea>
 
             <div class="img-upload-section">
                 <label style="color:#27ae60;"><b>🖼 Саволга расм қўшиш (Ихтиёрий):</b></label>
@@ -510,7 +511,7 @@
             </div>
 
             <label><b>Савол матни:</b></label>
-            <textarea id="admin-question" rows="3" placeholder="Савол матнини киритинг"></textarea>
+            <textarea id="admin-question" rows="4" placeholder="Савол матнини киритинг"></textarea>
 
             <label><b>Вариантлар:</b></label>
             <input type="text" id="admin-opt-0" placeholder="A) Вариант 1">
@@ -936,9 +937,8 @@
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
         var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Катталаштириш учун босинг">' : "";
 
-        // Савол матни кўп қаторли бўлиши ва қатор ташлашлари сақланиши учун CSS ёрдам беради
         document.getElementById("question-box").innerHTML = 
-            textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
+            textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap; font-size: 15px; line-height: 1.4;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
 
         document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
@@ -1354,7 +1354,9 @@
         var title = document.getElementById("admin-test-title").value.trim();
         var readingText = document.getElementById("admin-reading-text").value.trim();
         var imageUrl = document.getElementById("admin-img-data").value.trim();
+        
         var question = document.getElementById("admin-question").value.trim();
+
         var opt0 = document.getElementById("admin-opt-0").value.trim();
         var opt1 = document.getElementById("admin-opt-1").value.trim();
         var opt2 = document.getElementById("admin-opt-2").value.trim();
