@@ -218,7 +218,6 @@
         .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
         .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
         
-        /* Мобил экранга мослаштирилган подиум стиллари */
         .podium-container {
             display: flex;
             justify-content: center;
@@ -441,10 +440,8 @@
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
         <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli топширган қатнашчилар натижалари:</p>
         
-        <!-- Top 3 Podium qismi -->
         <div id="podium-section"></div>
 
-        <!-- 4-ўриндан бошлаб қатнашувчилар рўйхати -->
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Юкланмоқда...</p>
         </div>
@@ -684,14 +681,12 @@
                 return;
             }
 
-            // Top 3 Podium render qilish (To'g'ri tartibda: 2-o'rin chapda, 1-o'rin o'rtada eng baland, 3-o'rin o'ngda)
             let podiumHtml = "";
             let top3Users = data.slice(0, 3);
             
             if (top3Users.length > 0) {
                 podiumHtml += '<div class="podium-container">';
                 
-                // 2-ўрин (Чапда)
                 if (top3Users[1]) {
                     let u2 = top3Users[1];
                     podiumHtml += '<div class="podium-item second">' +
@@ -703,7 +698,6 @@
                         '</div>';
                 }
 
-                // 1-ўрин (Марказда, энг баланд ва ёрқин)
                 if (top3Users[0]) {
                     let u1 = top3Users[0];
                     podiumHtml += '<div class="podium-item first">' +
@@ -715,7 +709,6 @@
                         '</div>';
                 }
 
-                // 3-ўрин (Ўнгда)
                 if (top3Users[2]) {
                     let u3 = top3Users[2];
                     podiumHtml += '<div class="podium-item third">' +
@@ -731,7 +724,6 @@
             }
             podiumContainer.innerHTML = podiumHtml;
 
-            // 4-ўриндан бошлаб қолганлар рўйхати (List)
             let remainingUsers = data.slice(3);
             if (remainingUsers.length === 0) {
                 listContainer.innerHTML = "";
@@ -936,14 +928,16 @@
         
         q.options.forEach(function(opt, index) {
             var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + '> ' + opt + '</label>';
+            // Вариантлардаги жирний формат бузилиб кетмаслиги ва бошқа жойга ёйилмаслиги учун span ичига олинди
+            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + '> <span>' + opt + '</span></label>';
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
         var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Катталаштириш учун босинг">' : "";
 
+        // Савол матни чегараланди, агар тег чала қолса ҳам бошқа жойга таъсир қилмайди
         document.getElementById("question-box").innerHTML = 
-            textBlockHtml + imgBlockHtml + '<h3>' + q.question + '</h3><div class="options">' + optionsHtml + '</div>';
+            textBlockHtml + imgBlockHtml + '<h3><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
 
         document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
