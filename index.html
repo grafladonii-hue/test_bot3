@@ -50,6 +50,7 @@
             line-height: 1.5;
             max-height: 200px;
             overflow-y: auto;
+            white-space: pre-wrap;
         }
         .question-img {
             max-width: 100%;
@@ -338,6 +339,7 @@
             border-radius: 5px;
             box-sizing: border-box;
             font-family: inherit;
+            white-space: pre-wrap;
         }
         .admin-test-item {
             background: #fff;
@@ -508,7 +510,7 @@
             </div>
 
             <label><b>Савол матни:</b></label>
-            <input type="text" id="admin-question" placeholder="Савол матнини киритинг">
+            <textarea id="admin-question" rows="3" placeholder="Савол матнини киритинг"></textarea>
 
             <label><b>Вариантлар:</b></label>
             <input type="text" id="admin-opt-0" placeholder="A) Вариант 1">
@@ -928,16 +930,15 @@
         
         q.options.forEach(function(opt, index) {
             var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            // Вариантлардаги жирний формат бузилиб кетмаслиги ва бошқа жойга ёйилмаслиги учун span ичига олинди
             optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + '> <span>' + opt + '</span></label>';
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
         var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Катталаштириш учун босинг">' : "";
 
-        // Савол матни чегараланди, агар тег чала қолса ҳам бошқа жойга таъсир қилмайди
+        // Савол матни кўп қаторли бўлиши ва қатор ташлашлари сақланиши учун CSS ёрдам беради
         document.getElementById("question-box").innerHTML = 
-            textBlockHtml + imgBlockHtml + '<h3><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
+            textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
 
         document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
