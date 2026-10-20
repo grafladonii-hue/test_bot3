@@ -24,18 +24,16 @@ WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма: 50 000 сўм
 
-# Supabase базасини ишга тушириш
+# Supabase созламалари
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    logging.warning("⚠️ SUPABASE_URL ва SUPABASE_KEY ўзгарувчилари топилмади!")
+    logging.error("❌ SUPABASE_URL ёки SUPABASE_KEY Vercel Environment Variables'да топилмади!")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
-# Google GenAI клиенти
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-
 BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
@@ -44,19 +42,23 @@ dp = Dispatcher()
 DATA_FILE = BASE_DIR / "questions.json"
 
 # ==========================================
-# 1. TRANSACTION ID НИ ТОЗАЛАШ
+# 1. TRANSAKCIYA ID НИ ТОЗАЛАШ
 # ==========================================
 def clean_txn_id(txn_id) -> str:
     """Транзакция ID'сидан ортиқча бўшлиқ ва белгиларни олиб ташлайди."""
     if not txn_id:
         return ""
-    return re.sub(r'[^a-zA-Z0-9]', '', str(txn_id)).strip().lower()
+    cleaned = re.sub(r'[^a-zA-Z0-9]', '', str(txn_id)).strip().lower()
+    if cleaned in ["null", "none", "undefined", "false", "true", ""]:
+        return ""
+    return cleaned
 
 # ==========================================
 # 2. SUPABASE БАЗАСИ БИЛАН ИШЛАШ
 # ==========================================
 def is_user_approved(user_id: int) -> bool:
     if not supabase:
+        logging.error("Supabase уланмаган!")
         return False
     try:
         res = supabase.table("approved_users").select("user_id").eq("user_id", user_id).execute()
@@ -80,7 +82,9 @@ def is_receipt_used(txn_id) -> bool:
         return False
     try:
         res = supabase.table("used_receipts").select("txn_id").eq("txn_id", cleaned).execute()
-        return len(res.data) > 0
+        is_used = len(res.data) > 0
+        logging.info(f"Чек текширилди: {cleaned} -> Ишлатилганми: {is_used}")
+        return is_used
     except Exception as e:
         logging.error(f"Supabase'да чекни текширишда хатолик: {e}")
         return False
@@ -193,14 +197,14 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
+        # Кучайтирилган Промпт
         prompt = (
-            "Analyze this payment receipt image. Extract: "
-            "1. Numeric payment amount. "
-            "2. Unique Transaction ID / Receipt Number / Check ID (string, numeric/alphanumeric). "
-            "3. Determine if it is a formal/valid bank receipt (must have an explicit transaction ID/number, not just a simple transfer screen/screenshot). "
-            "Return ONLY a raw JSON object with keys: "
-            "amount (number), transaction_id (string or null), is_valid_receipt (boolean), reason (string). "
-            "No markdown, no backticks, no extra text."
+            "Analyze this payment receipt image strictly.\n"
+            "1. Extract numeric payment amount.\n"
+            "2. Extract the exact unique Transaction ID / Check Number / Receipt ID / Reference Number.\n"
+            "3. If there is NO clear transaction ID / check number (for example, it's just a simple transfer success screen), set transaction_id to null.\n"
+            "Return ONLY a raw JSON object without markdown or backticks:\n"
+            '{"amount": number, "transaction_id": "string or null", "is_valid_receipt": boolean, "reason": "string"}'
         )
 
         response = gemini_client.models.generate_content(
@@ -220,8 +224,8 @@ async def handle_payment_screenshot(message: types.Message):
         txn_id = clean_txn_id(raw_txn_id)
         is_valid = data.get("is_valid_receipt", False)
 
-        # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА (Скриншот бўлса)
-        if not txn_id or txn_id in ["null", "none", ""]:
+        # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА -> РАД ЭТИШ
+        if not txn_id:
             await bot.edit_message_text(
                 text="❌ **Тўлов қабул қилинмади!**\n\n"
                      "Юборган расмингизда аниқ **Транзакция ID (чек рақами)** топилмади.\n\n"
@@ -232,7 +236,7 @@ async def handle_payment_screenshot(message: types.Message):
             )
             return
 
-        # 2. ТРАНЗАКЦИЯ ID ИЛГАРИ ИШЛАТИЛГАН БЎЛСА (Такрорий чек)
+        # 2. ТРАНЗАКЦИЯ ID ИЛГАРИ ИШЛАТИЛГАН БЎЛСА -> РАД ЭТИШ
         if is_receipt_used(txn_id):
             await bot.edit_message_text(
                 text=f"❌ **Тўлов рад этилди!**\n\n"
@@ -244,10 +248,10 @@ async def handle_payment_screenshot(message: types.Message):
             )
             return
 
-        # 3. ЧЕК ҲАҚИҚИЙ ВА СУММА ЕТАРЛИ БЎЛСА
+        # 3. ЧЕК ҲАҚИҚИЙ ВА СУММА ЕТАРЛИ БЎЛСА -> ТАСДИҚЛАШ
         if is_valid and extracted_amount >= REQUIRED_AMOUNT:
             save_used_receipt(txn_id)     # Чек ID'сини Supabase'га сақлаймиз
-            save_approved_user(user_id)  # Фойдаланувчи рухсатини Supabase'га сақлаймиз
+            save_approved_user(user_id)  # Фойдаланувчини Supabase'га сақлаймиз
             
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
