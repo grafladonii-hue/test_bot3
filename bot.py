@@ -30,9 +30,14 @@ BASE_DIR = Path(__file__).resolve().parent
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Тасдиқланган фойдаланувчилар сақланадиган файл
+# Файллар йўли
 APPROVED_USERS_FILE = BASE_DIR / "approved_users.json"
+USED_RECEIPTS_FILE = BASE_DIR / "used_receipts.json"
+DATA_FILE = BASE_DIR / "questions.json"
 
+# ==========================================
+# 1. ТАСДИҚЛАНГАН ФОЙДАЛАНУВЧИЛАР БИЛАН ИШЛАШ
+# ==========================================
 def load_approved_users() -> list:
     if APPROVED_USERS_FILE.exists():
         try:
@@ -55,6 +60,39 @@ def save_approved_user(user_id: int):
 def is_user_approved(user_id: int) -> bool:
     return user_id in load_approved_users()
 
+# ==========================================
+# 2. ИШЛАТИЛГАН ЧЕКЛАРНИ (TRANSACTION ID) ТЕКШИРИШ
+# ==========================================
+def load_used_receipts() -> list:
+    if USED_RECEIPTS_FILE.exists():
+        try:
+            with open(USED_RECEIPTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error(f"Ишлатилган чекларни ўқишда хатолик: {e}")
+    return []
+
+def is_receipt_used(txn_id: str) -> bool:
+    if not txn_id:
+        return False
+    return str(txn_id).strip() in load_used_receipts()
+
+def save_used_receipt(txn_id: str):
+    if not txn_id:
+        return
+    receipts = load_used_receipts()
+    clean_id = str(txn_id).strip()
+    if clean_id not in receipts:
+        receipts.append(clean_id)
+        try:
+            with open(USED_RECEIPTS_FILE, "w", encoding="utf-8") as f:
+                json.dump(receipts, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logging.error(f"Транзакция ID ни сақлашда хатолик: {e}")
+
+# ==========================================
+# 3. FASTAPI ВА WEBHOOK СОЗЛАМАЛАРИ
+# ==========================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -65,8 +103,6 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-
-DATA_FILE = BASE_DIR / "questions.json"
 
 def load_data():
     if DATA_FILE.exists():
@@ -99,9 +135,11 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
         logging.error(f"Аъзоликни текширишда хатолик: {e}")
     return False
 
+# ==========================================
+# 4. БОТ ХЭНДЛЕРЛАРИ
+# ==========================================
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    # Фақат шахсий чатда (личкада) ишлайди
     if message.chat.type != "private":
         return
 
@@ -123,15 +161,14 @@ async def cmd_start(message: types.Message):
     else:
         await message.answer(
             "❌ Кечирасиз, сиз бизнинг ёпиқ гуруҳимиз аъзоси эмассиз.\n\n"
-            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, чек скриншотини шу ботга юборинг:\n\n"
+            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, расмий чек (квитанция) юборинг:\n\n"
             "💳 **Карта рақами:** **9860120155197128**\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
-            "Чек юборилгач Demotestlar.uz да тест ишлашингиз мумкин бўлади!"
+            "⚠️ **Изоҳ:** Шунчаки ўтказма экрани скриншоти қабул қилинмайди! Банк иловасидан **'O'tkazma tafsilotlari'** ёки **'Квитанция/Чек'** бўлимидаги аниқ Transaction ID'си бор чекни юборинг."
         )
 
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
-    # Фақат шахсий чатда (личкада) фотони қабул қилади ва текширади
     if message.chat.type != "private":
         return
 
@@ -151,11 +188,14 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
+        # Gemini AI учун янгиланган промпт (Transaction ID ни ажратиб олиш билан)
         prompt = (
-            "Analyze this payment receipt image. Extract the numeric payment amount "
-            "and determine if it is a valid bank/payment receipt. "
+            "Analyze this payment receipt image. Extract: "
+            "1. Numeric payment amount. "
+            "2. Unique Transaction ID / Receipt Number / Check ID (string, numeric/alphanumeric). "
+            "3. Determine if it is a formal/valid bank receipt (must have an explicit transaction ID/number, not just a simple transfer screen/screenshot). "
             "Return ONLY a raw JSON object with keys: "
-            "amount (number), is_valid_receipt (boolean), and reason (string). "
+            "amount (number), transaction_id (string or null), is_valid_receipt (boolean), reason (string). "
             "No markdown, no backticks, no extra text."
         )
 
@@ -172,10 +212,37 @@ async def handle_payment_screenshot(message: types.Message):
 
         data = json.loads(text_response)
         extracted_amount = float(data.get("amount", 0))
+        txn_id = data.get("transaction_id")
         is_valid = data.get("is_valid_receipt", False)
 
+        # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА (Скриншот бўлса)
+        if not txn_id or str(txn_id).lower() in ["null", "none", ""]:
+            await bot.edit_message_text(
+                text="❌ **Тўлов қабул қилинмади!**\n\n"
+                     "Юборган расмингизда аниқ **Транзакция ID (чек рақами)** топилмади.\n\n"
+                     "📌 Илтимос, оддий экран скриншотини эмас, балки банк иловасидаги **'O'tkazma tafsilotlari'** тугмасини босиб, тўлиқ квитанцияни (чекни) юборинг.",
+                chat_id=message.chat.id,
+                message_id=processing_msg.message_id,
+                parse_mode="Markdown"
+            )
+            return
+
+        # 2. ТРАНЗАКЦИЯ ID ИЛГАРИ ИШЛАТИЛГАН БЎЛСА (Такрорий чек)
+        if is_receipt_used(txn_id):
+            await bot.edit_message_text(
+                text=f"❌ **Тўлов рад этилди!**\n\n"
+                     f"⚠️ Чек ID: `{txn_id}`\n\n"
+                     f"Бу чек илгари тизимда фойдаланилган. Такрорий чек юбориш мумкин эмас!",
+                chat_id=message.chat.id,
+                message_id=processing_msg.message_id,
+                parse_mode="Markdown"
+            )
+            return
+
+        # 3. ЧЕК ҲАҚИҚИЙ ВА СУММА ЕТАРЛИ БЎЛСА
         if is_valid and extracted_amount >= REQUIRED_AMOUNT:
-            save_approved_user(user_id)  # Фойдаланувчини базага сақлаймиз
+            save_used_receipt(txn_id)     # Чек ID'сини базага сақлаймиз
+            save_approved_user(user_id)  # Фойдаланувчига рухсат берамиз
             
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -183,7 +250,10 @@ async def handle_payment_screenshot(message: types.Message):
                 ]
             )
             await bot.edit_message_text(
-                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Аниқланган сумма: `{int(extracted_amount)} сўм`\n🎉 Сизга мини-аппдан фойдаланиш ҳуқуқи берилди!",
+                text=f"✅ **Тўлов муваффақиятли тасдиқланди!**\n\n"
+                     f"💰 Аниқланган сумма: `{int(extracted_amount)} сўм`\n"
+                     f"🧾 Чек ID: `{txn_id}`\n\n"
+                     f"🎉 Сизга мини-аппдан фойдаланиш ҳуқуқи берилди!",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 reply_markup=keyboard,
@@ -204,7 +274,7 @@ async def handle_payment_screenshot(message: types.Message):
     except Exception as e:
         logging.error(f"AI чекни ўқишда хатолик: {e}")
         await bot.edit_message_text(
-            text=f"❌ Чекни ўқишда хатолик юз берди. Илтимос, бошқатдан уриниб кўринг.",
+            text="❌ Чекни ўқишда хатолик юз берди. Илтимос, қайтадан уриниб кўринг.",
             chat_id=message.chat.id,
             message_id=processing_msg.message_id
         )
