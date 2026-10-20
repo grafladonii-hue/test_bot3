@@ -20,7 +20,7 @@ WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 100000  # Талаб қилинадиган сумма 100 000 сўм
+REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма 50 000 сўм
 
 # Замонавий Google GenAI клиенти
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -123,7 +123,7 @@ async def cmd_start(message: types.Message):
     else:
         await message.answer(
             "❌ Кечирасиз, сиз бизнинг ёпиқ гуруҳимиз аъзоси эмассиз.\n\n"
-            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **100 000 сўм** ўтказиб, чек скриншотини шу ботга юборинг:\n\n"
+            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, чек скриншотини шу ботга юборинг:\n\n"
             "💳 **Карта рақами:** **9860120155197128**\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
             "Чек юборилгач Demotestlar.uz да тест ишлашингиз мумкин бўлади!"
