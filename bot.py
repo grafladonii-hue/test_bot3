@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -11,6 +12,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from google import genai
 from PIL import Image
+from supabase import create_client, Client
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,9 +22,18 @@ WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма 50 000 сўм
+REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма: 50 000 сўм
 
-# Замонавий Google GenAI клиенти
+# Supabase базасини ишга тушириш
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    logging.warning("⚠️ SUPABASE_URL ва SUPABASE_KEY ўзгарувчилари топилмади!")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+
+# Google GenAI клиенти
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -30,68 +41,62 @@ BASE_DIR = Path(__file__).resolve().parent
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Файллар йўли
-APPROVED_USERS_FILE = BASE_DIR / "approved_users.json"
-USED_RECEIPTS_FILE = BASE_DIR / "used_receipts.json"
 DATA_FILE = BASE_DIR / "questions.json"
 
 # ==========================================
-# 1. ТАСДИҚЛАНГАН ФОЙДАЛАНУВЧИЛАР БИЛАН ИШЛАШ
+# 1. TRANSACTION ID НИ ТОЗАЛАШ
 # ==========================================
-def load_approved_users() -> list:
-    if APPROVED_USERS_FILE.exists():
-        try:
-            with open(APPROVED_USERS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            logging.error(f"Тасдиқланган фойдаланувчиларни ўқишда хатолик: {e}")
-    return []
+def clean_txn_id(txn_id) -> str:
+    """Транзакция ID'сидан ортиқча бўшлиқ ва белгиларни олиб ташлайди."""
+    if not txn_id:
+        return ""
+    return re.sub(r'[^a-zA-Z0-9]', '', str(txn_id)).strip().lower()
+
+# ==========================================
+# 2. SUPABASE БАЗАСИ БИЛАН ИШЛАШ
+# ==========================================
+def is_user_approved(user_id: int) -> bool:
+    if not supabase:
+        return False
+    try:
+        res = supabase.table("approved_users").select("user_id").eq("user_id", user_id).execute()
+        return len(res.data) > 0
+    except Exception as e:
+        logging.error(f"Supabase'да фойдаланувчини текширишда хатолик: {e}")
+        return False
 
 def save_approved_user(user_id: int):
-    users = load_approved_users()
-    if user_id not in users:
-        users.append(user_id)
-        try:
-            with open(APPROVED_USERS_FILE, "w", encoding="utf-8") as f:
-                json.dump(users, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logging.error(f"Фойдаланувчини сақлашда хатолик: {e}")
-
-def is_user_approved(user_id: int) -> bool:
-    return user_id in load_approved_users()
-
-# ==========================================
-# 2. ИШЛАТИЛГАН ЧЕКЛАРНИ (TRANSACTION ID) ТЕКШИРИШ
-# ==========================================
-def load_used_receipts() -> list:
-    if USED_RECEIPTS_FILE.exists():
-        try:
-            with open(USED_RECEIPTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            logging.error(f"Ишлатилган чекларни ўқишда хатолик: {e}")
-    return []
-
-def is_receipt_used(txn_id: str) -> bool:
-    if not txn_id:
-        return False
-    return str(txn_id).strip() in load_used_receipts()
-
-def save_used_receipt(txn_id: str):
-    if not txn_id:
+    if not supabase:
         return
-    receipts = load_used_receipts()
-    clean_id = str(txn_id).strip()
-    if clean_id not in receipts:
-        receipts.append(clean_id)
-        try:
-            with open(USED_RECEIPTS_FILE, "w", encoding="utf-8") as f:
-                json.dump(receipts, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logging.error(f"Транзакция ID ни сақлашда хатолик: {e}")
+    try:
+        supabase.table("approved_users").upsert({"user_id": user_id}).execute()
+        logging.info(f"Фойдаланувчи {user_id} Supabase'га сақланди.")
+    except Exception as e:
+        logging.error(f"Фойдаланувчини Supabase'га сақлашда хатолик: {e}")
+
+def is_receipt_used(txn_id) -> bool:
+    cleaned = clean_txn_id(txn_id)
+    if not cleaned or not supabase:
+        return False
+    try:
+        res = supabase.table("used_receipts").select("txn_id").eq("txn_id", cleaned).execute()
+        return len(res.data) > 0
+    except Exception as e:
+        logging.error(f"Supabase'да чекни текширишда хатолик: {e}")
+        return False
+
+def save_used_receipt(txn_id):
+    cleaned = clean_txn_id(txn_id)
+    if not cleaned or not supabase:
+        return
+    try:
+        supabase.table("used_receipts").insert({"txn_id": cleaned}).execute()
+        logging.info(f"Чек {cleaned} Supabase'га муваффақиятли сақланди.")
+    except Exception as e:
+        logging.error(f"Чекни Supabase'га сақлашда хатолик: {e}")
 
 # ==========================================
-# 3. FASTAPI ВА WEBHOOK СОЗЛАМАЛАРИ
+# 3. FASTAPI ВА WEBHOOK
 # ==========================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -110,7 +115,7 @@ def load_data():
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            logging.error(f"Файлни ўқишда хатолик: {e}")
+            logging.error(f"Саволлар файлини ўқишда хатолик: {e}")
     return {}
 
 @app.get("/api/tests")
@@ -123,7 +128,7 @@ def update_tests(data: dict):
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logging.error(f"Файлга ёзишда хатолик: {e}")
+        logging.error(f"Саволларни файлга ёзишда хатолик: {e}")
     return {"status": "ok"}
 
 async def check_membership(user_id: int, bot: Bot) -> bool:
@@ -188,7 +193,6 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
-        # Gemini AI учун янгиланган промпт (Transaction ID ни ажратиб олиш билан)
         prompt = (
             "Analyze this payment receipt image. Extract: "
             "1. Numeric payment amount. "
@@ -212,11 +216,12 @@ async def handle_payment_screenshot(message: types.Message):
 
         data = json.loads(text_response)
         extracted_amount = float(data.get("amount", 0))
-        txn_id = data.get("transaction_id")
+        raw_txn_id = data.get("transaction_id")
+        txn_id = clean_txn_id(raw_txn_id)
         is_valid = data.get("is_valid_receipt", False)
 
         # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА (Скриншот бўлса)
-        if not txn_id or str(txn_id).lower() in ["null", "none", ""]:
+        if not txn_id or txn_id in ["null", "none", ""]:
             await bot.edit_message_text(
                 text="❌ **Тўлов қабул қилинмади!**\n\n"
                      "Юборган расмингизда аниқ **Транзакция ID (чек рақами)** топилмади.\n\n"
@@ -241,8 +246,8 @@ async def handle_payment_screenshot(message: types.Message):
 
         # 3. ЧЕК ҲАҚИҚИЙ ВА СУММА ЕТАРЛИ БЎЛСА
         if is_valid and extracted_amount >= REQUIRED_AMOUNT:
-            save_used_receipt(txn_id)     # Чек ID'сини базага сақлаймиз
-            save_approved_user(user_id)  # Фойдаланувчига рухсат берамиз
+            save_used_receipt(txn_id)     # Чек ID'сини Supabase'га сақлаймиз
+            save_approved_user(user_id)  # Фойдаланувчи рухсатини Supabase'га сақлаймиз
             
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
