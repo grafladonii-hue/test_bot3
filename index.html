@@ -673,7 +673,6 @@
             const { data, error } = await supabaseClient
                 .from('tournaments')
                 .select('*')
-                .in('status', ['active', 'waiting'])
                 .limit(1);
             
             if (data && data.length > 0) {
@@ -684,18 +683,12 @@
                 const btn = document.getElementById('tour-btn');
                 
                 banner.style.display = 'block';
-                title.innerText = `🎯 ${tour.title}`;
+                title.innerText = `🎯 ${tour.title || 'Жонли турнир'}`;
                 window.currentTournamentTestKey = tour.test_key;
                 window.currentTournamentId = tour.id;
                 
-                if (tour.status === 'active') {
-                    status.innerText = "🔴 Жонли тест давом этмоқда!";
-                    btn.style.display = 'inline-block';
-                } else {
-                    let startTime = new Date(tour.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    status.innerText = `⏳ Бошланиш вақти: ${startTime}`;
-                    btn.style.display = 'none';
-                }
+                status.innerText = "🔴 Жонли тест давом этмоқда!";
+                btn.style.display = 'inline-block';
             }
         } catch (e) {
             console.error("Турнирни юклашда хатолик:", e);
@@ -983,9 +976,9 @@
         clearInterval(timerInterval);
         
         if (isTournamentMode) {
-            timeLeft = 120; // Жонли турнир учун ҳар бир саволга 2 дақиқа (120 сония)
+            timeLeft = 120; 
         } else {
-            timeLeft = 5400; // Якка тест учун 90 дақиқа (5400 сония)
+            timeLeft = 5400; 
         }
 
         timerInterval = setInterval(function() {
@@ -1044,7 +1037,6 @@
     let pointY = 0;
     let startX = 0;
     let startY = 0;
-    let initialDistance = null;
 
     function openImageModal(imgSrc) {
         var modal = document.getElementById("imageModal");
