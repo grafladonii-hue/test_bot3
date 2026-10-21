@@ -433,11 +433,11 @@
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
-        <!-- Жонли жамоавий турнир баннери -->
-        <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: none;">
-            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир</h3>
-            <p id="tour-status" style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">Юкланмоқда...</p>
-            <button id="tour-btn" onclick="joinTournament()" style="background: #ff4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: none; width: auto;">Қўшилиш</button>
+        <!-- Жонли жамоавий турнир баннери (Доимий очиқ ҳолатда) -->
+        <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
+            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир (Синов)</h3>
+            <p id="tour-status" style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">🔴 Жонли тест давом этмоқда!</p>
+            <button id="tour-btn" onclick="joinTournament()" style="background: #ff4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;">Қўшилиш</button>
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
@@ -582,6 +582,7 @@
     var currentUserId = null;
     var currentUserFullName = "Foydalanuvchi";
     var activeTournamentId = null;
+    window.currentTournamentTestKey = 'demo_8'; // Турнир учун тест калити
 
     if (tg) {
         tg.expand();
@@ -665,41 +666,11 @@
             console.error("Юклашда хатолик:", e);
         }
         renderTestsList();
-        checkActiveTournament();
-    }
-
-    async function checkActiveTournament() {
-        try {
-            const { data, error } = await supabaseClient
-                .from('tournaments')
-                .select('*')
-                .limit(1);
-            
-            if (data && data.length > 0) {
-                const tour = data[0];
-                const banner = document.getElementById('tournament-banner');
-                const title = document.getElementById('tour-title');
-                const status = document.getElementById('tour-status');
-                const btn = document.getElementById('tour-btn');
-                
-                banner.style.display = 'block';
-                title.innerText = `🎯 ${tour.title || 'Жонли турнир'}`;
-                window.currentTournamentTestKey = tour.test_key;
-                window.currentTournamentId = tour.id;
-                
-                status.innerText = "🔴 Жонли тест давом этмоқда!";
-                btn.style.display = 'inline-block';
-            }
-        } catch (e) {
-            console.error("Турнирни юклашда хатолик:", e);
-        }
     }
 
     function joinTournament() {
-        if (window.currentTournamentId && window.currentTournamentTestKey) {
-            activeTournamentId = window.currentTournamentId;
-            startQuiz(window.currentTournamentTestKey, true);
-        }
+        // Турнир бошлаш (demo_8 тести бўйича)
+        startQuiz(window.currentTournamentTestKey || 'demo_8', true);
     }
 
     var leaderboardLimit = 50;
@@ -922,7 +893,7 @@
     function startQuiz(testId, isTour = false) {
         var rawQuestions = testData[testId] ? testData[testId].questions : [];
         if (!rawQuestions || rawQuestions.length === 0) {
-            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
+            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас! Аввал админ панелидан савол қўшинг.");
             return;
         }
         
@@ -966,7 +937,7 @@
         
         document.getElementById('quiz-container').style.display = 'block';
         document.getElementById('result-box').style.display = 'none';
-        document.getElementById('quiz-title').innerText = testData[testId].title + (isTournamentMode ? " (Жонли турнир)" : "");
+        document.getElementById('quiz-title').innerText = (testData[testId] ? testData[testId].title : "Test") + (isTournamentMode ? " (Жонли турнир)" : "");
 
         loadQuestion();
         startTimer();
@@ -976,9 +947,9 @@
         clearInterval(timerInterval);
         
         if (isTournamentMode) {
-            timeLeft = 120; 
+            timeLeft = 120; // Жонли турнир учун ҳар бир саволга 2 дақиқа (120 сония)
         } else {
-            timeLeft = 5400; 
+            timeLeft = 5400; // Якка тест учун 90 дақиқа (5400 сония)
         }
 
         timerInterval = setInterval(function() {
