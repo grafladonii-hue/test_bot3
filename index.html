@@ -130,9 +130,11 @@
         }
 
         .options label {
-            display: block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             background: #f9f9f9;
-            padding: 10px;
+            padding: 10px 12px;
             margin: 8px 0;
             border-radius: 5px;
             cursor: pointer;
@@ -142,6 +144,9 @@
         }
         .options label:hover { background: #eef2f7; }
         .options input { margin-right: 10px; }
+        .option-text { flex-grow: 1; }
+        .option-percent { font-size: 12px; font-weight: bold; color: #555; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        
         .btn-group { display: flex; gap: 10px; }
         button {
             background: #27ae60;
@@ -165,7 +170,9 @@
         button:disabled { background: #bdc3c7; cursor: not-allowed; }
         
         .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
+        .options label.correct-answer .option-percent { background: rgba(255,255,255,0.3); color: white; }
         .options label.wrong-answer { background: #ff4757 !important; color: white; border-color: #ff4757; }
+        .options label.wrong-answer .option-percent { background: rgba(255,255,255,0.3); color: white; }
 
         .result-box { display: none; text-align: center; }
         .score-circle {
@@ -434,11 +441,12 @@
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
-        <!-- Жонли жамоавий турнир баннери -->
+        <!-- Жонли жамоавий турнир баннери ва таймер -->
         <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
             <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир (Синов)</h3>
-            <p id="tour-status" style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">🔴 Жонли тест давом этмоқда!</p>
-            <button id="tour-btn" onclick="joinTournament()" style="background: #ff4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;">Қўшилиш</button>
+            <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Турнир бошланишига:</p>
+            <div id="tour-countdown" style="font-size: 18px; font-weight: bold; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;">00:00:00</div>
+            <button id="tour-btn" onclick="joinTournament()" style="background: #ff4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Қўшилиш (Бошланмаган)</button>
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
@@ -468,12 +476,12 @@
     <div id="quiz-page" class="page">
         <div class="header">
             <span id="quiz-title">Test sinovi</span>
-            <div class="timer" id="timer">Вақт: 90:00</div>
+            <div class="timer" id="timer">Вақт: 02:00</div>
         </div>
 
         <div id="quiz-container">
             <div class="question-box" id="question-box"></div>
-            <div class="btn-group">
+            <div class="btn-group" id="quiz-btn-group">
                 <button type="button" class="secondary" onclick="prevQuestion()" id="prev-btn">Oldingi</button>
                 <button type="button" onclick="nextQuestion()" id="next-btn">Keyingi</button>
             </div>
@@ -492,15 +500,20 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Саволларни қўшиш, жонли турнирга бириктириш ва тестларни умумий рўйхатда очиқ/яширин қилиш мумкин.
+            Siz administratorsiz. Жонли турнир тест ва бошланиш вақтини созлаш мумкин.
         </div>
 
-        <!-- Жонли турнирга тест бириктириш -->
+        <!-- Жонли турнирни тест ва вақтга бириктириш -->
         <div style="background: #fdfefe; border: 2px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 style="margin-top:0; color:#2c3e50;">🎯 Жонли турнирга тест бириктириш</h3>
+            <h3 style="margin-top:0; color:#2c3e50;">🎯 Жонли турнирни созлаш (Тест ва Вақт)</h3>
+            
             <label><b>Турнир учун тестни танланг:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
-            <button type="button" onclick="saveTournamentTestBinding()" style="background: #667eea;">🔗 Турнирга бириктириш ва сақлаш</button>
+            
+            <label><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
+            <input type="datetime-local" id="admin-tournament-time" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+
+            <button type="button" onclick="saveTournamentSettings()" style="background: #667eea;">💾 Турнир созламаларини сақлаш</button>
         </div>
 
         <div class="admin-form" id="admin-form-box" style="background: #fdfefe; border: 2px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
@@ -591,6 +604,8 @@
     var currentUserId = null;
     var currentUserFullName = "Foydalanuvchi";
     window.currentTournamentTestKey = 'demo_8'; 
+    window.tournamentStartTime = null;
+    var tournamentInterval = null;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
 
     if (tg) {
@@ -673,17 +688,25 @@
             }
 
             const tourRes = await supabaseClient.from('tournaments').select('*').limit(1);
-            if (tourRes.data && tourRes.data.length > 0 && tourRes.data[0].test_key) {
-                window.currentTournamentTestKey = tourRes.data[0].test_key;
+            if (tourRes.data && tourRes.data.length > 0) {
+                if (tourRes.data[0].test_key) {
+                    window.currentTournamentTestKey = tourRes.data[0].test_key;
+                }
+                if (tourRes.data[0].start_time) {
+                    window.tournamentStartTime = tourRes.data[0].start_time;
+                }
             }
+            startTournamentCountdown();
         } catch (e) {
             console.error("Юклашда хатолик:", e);
         }
         renderTestsList();
     }
 
-    async function saveTournamentTestBinding() {
+    async function saveTournamentSettings() {
         var selectedTestId = document.getElementById("admin-tournament-test-select").value;
+        var startTimeInput = document.getElementById("admin-tournament-time").value;
+
         if (!selectedTestId) {
             alert("Илтимос, тестни танланг!");
             return;
@@ -692,21 +715,70 @@
         try {
             const { data: existingTour } = await supabaseClient.from('tournaments').select('id').limit(1);
 
+            let payload = {
+                test_key: selectedTestId,
+                start_time: startTimeInput ? new Date(startTimeInput).toISOString() : null,
+                title: 'Жонли турнир',
+                status: 'active'
+            };
+
             if (existingTour && existingTour.length > 0) {
-                await supabaseClient.from('tournaments').update({ test_key: selectedTestId }).eq('id', existingTour[0].id);
+                await supabaseClient.from('tournaments').update(payload).eq('id', existingTour[0].id);
             } else {
-                await supabaseClient.from('tournaments').insert([{
-                    title: 'Жонли турнир',
-                    test_key: selectedTestId,
-                    status: 'active'
-                }]);
+                await supabaseClient.from('tournaments').insert([payload]);
             }
 
             window.currentTournamentTestKey = selectedTestId;
-            alert("Жонли турнир муваффақиятли ушбу тестга бириктирилди!");
+            window.tournamentStartTime = payload.start_time;
+            startTournamentCountdown();
+            alert("Турнир созламалари муваффақиятли сақланди!");
         } catch (err) {
-            alert("Бириктиришда хатолик: " + err.message);
+            alert("Сақлашда хатолик: " + err.message);
         }
+    }
+
+    function startTournamentCountdown() {
+        if (tournamentInterval) clearInterval(tournamentInterval);
+
+        var countdownEl = document.getElementById("tour-countdown");
+        var statusEl = document.getElementById("tour-status");
+        var btnEl = document.getElementById("tour-btn");
+
+        if (!window.tournamentStartTime) {
+            statusEl.innerText = "🔴 Жонли тест давом этмоқда!";
+            countdownEl.style.display = "none";
+            btnEl.disabled = false;
+            btnEl.style.background = "#ff4757";
+            btnEl.innerText = "Қўшилиш";
+            return;
+        }
+
+        countdownEl.style.display = "block";
+
+        tournamentInterval = setInterval(function() {
+            var now = new Date().getTime();
+            var targetTime = new Date(window.tournamentStartTime).getTime();
+            var distance = targetTime - now;
+
+            if (distance < 0) {
+                clearInterval(tournamentInterval);
+                statusEl.innerText = "🔴 Жонли тест бошланди!";
+                countdownEl.innerText = "Амалда!";
+                btnEl.disabled = false;
+                btnEl.style.background = "#ff4757";
+                btnEl.innerText = "Қўшилиш";
+            } else {
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                countdownEl.innerText = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+                statusEl.innerText = "⏳ Турнир бошланишига:";
+                btnEl.disabled = true;
+                btnEl.style.background = "#bdc3c7";
+                btnEl.innerText = "Бошланмаган";
+            }
+        }, 1000);
     }
 
     function toggleTestVisibility(testId) {
@@ -748,7 +820,7 @@
 
             if (!data || data.length === 0) {
                 podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестni ишланг!</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
                 loadMoreContainer.style.display = "none";
                 return;
             }
@@ -838,9 +910,10 @@
     var activeQuestions = [];
     var currentQuestion = 0;
     var userAnswers = {}; 
-    var timeLeft = 5400; 
+    var timeLeft = 120; 
     var timerInterval;
     var isTournamentMode = false;
+    var dynamicPercentInterval = null;
 
     function shuffleArray(array) {
         var arr = array.slice();
@@ -863,7 +936,6 @@
             var t = testData[id];
             if (!t) return;
             
-            // Агар тест админ томонидан яширилган бўлса (турнир учун), оддий рўйхатга чиқармаймиз
             if (hiddenTests[id]) return;
 
             var titleLower = t.title.toLowerCase();
@@ -920,27 +992,25 @@
     function switchTab(tab) {
         document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
         document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+        clearInterval(timerInterval);
+        clearInterval(dynamicPercentInterval);
 
         if (tab === 'home') {
             document.getElementById('home-page').classList.add('active');
             document.getElementById('nav-home').classList.add('active');
-            clearInterval(timerInterval);
         } else if (tab === 'tests') {
             renderTestsList();
             document.getElementById('tests-page').classList.add('active');
             document.getElementById('nav-tests').classList.add('active');
-            clearInterval(timerInterval);
         } else if (tab === 'rating') {
             fetchLeaderboard();
             document.getElementById('rating-page').classList.add('active');
             document.getElementById('nav-rating').classList.add('active');
-            clearInterval(timerInterval);
         } else if (tab === 'admin') {
             renderAdminTestsList();
             populateTestSelect();
             document.getElementById('admin-page').classList.add('active');
             document.getElementById('nav-admin').classList.add('active');
-            clearInterval(timerInterval);
         }
     }
 
@@ -999,9 +1069,34 @@
 
     function startTimer() {
         clearInterval(timerInterval);
+        clearInterval(dynamicPercentInterval);
         
         if (isTournamentMode) {
-            timeLeft = 120; 
+            timeLeft = 120; // Ҳар бир саволга 2 дақиқа
+            
+            // Жонли турнирда вақт ўтиши билан фоизлар ўзгариб бориши (динамик ўсиш)
+            let basePercents = generateOptionPercents(activeQuestions[currentQuestion].options.length, activeQuestions[currentQuestion].correct);
+            
+            dynamicPercentInterval = setInterval(function() {
+                let q = activeQuestions[currentQuestion];
+                // Вақт ўтиши билан тўғри жавоб фоизи ортиб боради (масалан 10% дан 75% гача)
+                let elapsed = 120 - timeLeft;
+                let boost = Math.min(50, Math.floor((elapsed / 120) * 50));
+                
+                q.options.forEach((opt, idx) => {
+                    let pElem = document.getElementById("perc-" + idx);
+                    if (pElem) {
+                        let curVal = basePercents[idx];
+                        if (idx === q.correct) {
+                            curVal = Math.min(90, curVal + boost);
+                        } else {
+                            curVal = Math.max(2, curVal - Math.floor(boost / 3));
+                        }
+                        pElem.innerText = curVal + "%";
+                    }
+                });
+            }, 3000);
+
         } else {
             timeLeft = 5400; 
         }
@@ -1013,8 +1108,9 @@
             
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
+                clearInterval(dynamicPercentInterval);
                 if (isTournamentMode) {
-                    nextQuestion();
+                    proceedToNextQuestion();
                 } else {
                     finishQuiz();
                 }
@@ -1027,9 +1123,18 @@
         var q = activeQuestions[currentQuestion];
         var optionsHtml = "";
         
+        var percents = generateOptionPercents(q.options.length, q.correct);
+
         q.options.forEach(function(opt, index) {
             var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + ' onchange="selectLiveOption(' + index + ', this, ' + q.correct + ')"> <span>' + opt + '</span></label>';
+            var onchangeAction = isTournamentMode ? "selectTournamentOption(" + index + ", " + q.correct + ")" : "selectLiveOption(" + index + ", this, " + q.correct + ")";
+            
+            // Турнир режимида фоизлар бошдан кўриниб туради ва вақт ўтиши билан ўзгариб боради
+            let percDisplay = isTournamentMode ? "inline-block" : "none";
+
+            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + ' onchange="' + onchangeAction + '"> ' +
+                           '<span class="option-text">' + opt + '</span>' +
+                           '<span class="option-percent" id="perc-' + index + '" style="display:' + percDisplay + '">' + percents[index] + '%</span></label>';
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
@@ -1038,8 +1143,58 @@
         document.getElementById("question-box").innerHTML = 
             textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap; font-size: 15px; line-height: 1.4;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
 
-        document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
-        document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
+        if (isTournamentMode) {
+            document.getElementById("quiz-btn-group").style.display = "none";
+        } else {
+            document.getElementById("quiz-btn-group").style.display = "flex";
+            document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
+            document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
+        }
+    }
+
+    function generateOptionPercents(length, correctIdx) {
+        var arr = new Array(length).fill(0);
+        var remaining = 100;
+        var correctShare = Math.floor(Math.random() * 20) + 15; // Бошида камроқ (15-35%)
+        if (correctShare > remaining) correctShare = remaining;
+        arr[correctIdx] = correctShare;
+        remaining -= correctShare;
+
+        for (var i = 0; i < length; i++) {
+            if (i === correctIdx) continue;
+            if (i === length - 1) {
+                arr[i] = remaining;
+            } else {
+                var share = Math.floor(Math.random() * remaining);
+                arr[i] = share;
+                remaining -= share;
+            }
+        }
+        return arr;
+    }
+
+    function selectTournamentOption(optionIndex, correctIndex) {
+        userAnswers[currentQuestion] = optionIndex;
+        
+        // Жавобни танлаши билан фойдаланувчи ўз жавобининг тўғри/нотўғрилигини дарҳол кўради
+        var allLabels = document.querySelectorAll('.options label');
+        allLabels.forEach((lbl, idx) => {
+            lbl.style.pointerEvents = 'none'; // Бошқа вариантни ўзгартириб бўлмайди
+            if (idx === correctIndex) lbl.classList.add('correct-answer');
+            else if (idx === optionIndex && idx !== correctIndex) lbl.classList.add('wrong-answer');
+        });
+
+        // Эслатма: фойдаланувчи кейинги саволга ўтиб кета олмайди, таймер тугашини кутади, лекин фоизлар ўзгариб туриши давом этади.
+    }
+
+    function proceedToNextQuestion() {
+        if (currentQuestion < activeQuestions.length - 1) {
+            currentQuestion++;
+            loadQuestion();
+            startTimer(); 
+        } else {
+            finishQuiz();
+        }
     }
 
     function selectLiveOption(optionIndex, labelElement, correctIndex) {
@@ -1048,6 +1203,9 @@
         
         allLabels.forEach((lbl, idx) => {
             lbl.style.pointerEvents = 'none';
+            var percSpan = lbl.querySelector('.option-percent');
+            if (percSpan) percSpan.style.display = 'inline-block';
+
             if (idx === correctIndex) {
                 lbl.classList.add('correct-answer');
             } else if (idx === optionIndex && idx !== correctIndex) {
@@ -1154,6 +1312,7 @@
     async function finishQuiz() {
         saveCurrentAnswer();
         clearInterval(timerInterval);
+        clearInterval(dynamicPercentInterval);
         
         document.getElementById("quiz-container").style.display = "none";
         document.getElementById("result-box").style.display = "block";
@@ -1169,7 +1328,7 @@
             var className = isCorrect ? "correct" : "incorrect";
             var icon = isCorrect ? "🟢" : "🔴";
             var pointsText = isCorrect ? "(+2 балл)" : "(0 балл)";
-            var userOptText = (selected !== undefined) ? q.options[selected] : "Belgilanmagan";
+            var userOptText = (selected !== undefined && selected >= 0) ? q.options[selected] : "Belgilanmagan (Vaqt o'tdi)";
 
             reviewHtml += '<div class="result-item ' + className + '">' +
                 icon + ' <b>Савол ' + (index + 1) + ':</b> ' + q.question + ' ' + pointsText + '<br>' +
