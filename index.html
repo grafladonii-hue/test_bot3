@@ -160,6 +160,7 @@
         button.danger { background: #e74c3c; }
         button.warning { background: #f39c12; }
         button.info { background: #2980b9; }
+        button.dark { background: #34495e; }
         button:hover { opacity: 0.9; }
         button:disabled { background: #bdc3c7; cursor: not-allowed; }
         
@@ -433,7 +434,7 @@
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
-        <!-- Жонли жамоавий турнир баннери (Доимий очиқ ҳолатда) -->
+        <!-- Жонли жамоавий турнир баннери -->
         <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
             <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир (Синов)</h3>
             <p id="tour-status" style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">🔴 Жонли тест давом этмоқда!</p>
@@ -491,7 +492,15 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Саволларни қўшиш ва таҳрирлаш имконияти мавжуд.
+            Siz administratorsiz. Саволларни қўшиш, жонли турнирга бириктириш ва тестларни умумий рўйхатда очиқ/яширин қилиш мумкин.
+        </div>
+
+        <!-- Жонли турнирга тест бириктириш -->
+        <div style="background: #fdfefe; border: 2px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+            <h3 style="margin-top:0; color:#2c3e50;">🎯 Жонли турнирга тест бириктириш</h3>
+            <label><b>Турнир учун тестни танланг:</b></label>
+            <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
+            <button type="button" onclick="saveTournamentTestBinding()" style="background: #667eea;">🔗 Турнирга бириктириш ва сақлаш</button>
         </div>
 
         <div class="admin-form" id="admin-form-box" style="background: #fdfefe; border: 2px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
@@ -544,7 +553,7 @@
             </div>
         </div>
 
-        <h3>📚 Мавжуд тестлар ва уларнинг саволлари</h3>
+        <h3>📚 Мавжуд тестлар ва уларнинг мақоми</h3>
         <div id="admin-tests-list" style="margin-bottom: 25px;"></div>
     </div>
 </div>
@@ -581,8 +590,8 @@
     var tg = window.Telegram ? window.Telegram.WebApp : null;
     var currentUserId = null;
     var currentUserFullName = "Foydalanuvchi";
-    var activeTournamentId = null;
-    window.currentTournamentTestKey = 'demo_8';
+    window.currentTournamentTestKey = 'demo_8'; 
+    var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
 
     if (tg) {
         tg.expand();
@@ -662,9 +671,52 @@
                     });
                 });
             }
+
+            const tourRes = await supabaseClient.from('tournaments').select('*').limit(1);
+            if (tourRes.data && tourRes.data.length > 0 && tourRes.data[0].test_key) {
+                window.currentTournamentTestKey = tourRes.data[0].test_key;
+            }
         } catch (e) {
             console.error("Юклашда хатолик:", e);
         }
+        renderTestsList();
+    }
+
+    async function saveTournamentTestBinding() {
+        var selectedTestId = document.getElementById("admin-tournament-test-select").value;
+        if (!selectedTestId) {
+            alert("Илтимос, тестни танланг!");
+            return;
+        }
+
+        try {
+            const { data: existingTour } = await supabaseClient.from('tournaments').select('id').limit(1);
+
+            if (existingTour && existingTour.length > 0) {
+                await supabaseClient.from('tournaments').update({ test_key: selectedTestId }).eq('id', existingTour[0].id);
+            } else {
+                await supabaseClient.from('tournaments').insert([{
+                    title: 'Жонли турнир',
+                    test_key: selectedTestId,
+                    status: 'active'
+                }]);
+            }
+
+            window.currentTournamentTestKey = selectedTestId;
+            alert("Жонли турнир муваффақиятли ушбу тестга бириктирилди!");
+        } catch (err) {
+            alert("Бириктиришда хатолик: " + err.message);
+        }
+    }
+
+    function toggleTestVisibility(testId) {
+        if (hiddenTests[testId]) {
+            delete hiddenTests[testId];
+        } else {
+            hiddenTests[testId] = true;
+        }
+        localStorage.setItem('hidden_tests', JSON.stringify(hiddenTests));
+        renderAdminTestsList();
         renderTestsList();
     }
 
@@ -811,6 +863,9 @@
             var t = testData[id];
             if (!t) return;
             
+            // Агар тест админ томонидан яширилган бўлса (турнир учун), оддий рўйхатга чиқармаймиз
+            if (hiddenTests[id]) return;
+
             var titleLower = t.title.toLowerCase();
             var cardHtml = '<div class="test-card">' +
                     '<div><strong>' + t.title + '</strong>' +
@@ -847,7 +902,7 @@
                     '</div>';
         }
 
-        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha testlar yo'q.</p>";
+        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
     }
 
     function toggleCategory(headerEl) {
@@ -1224,15 +1279,21 @@
 
     function populateTestSelect() {
         var select = document.getElementById("admin-test-select");
+        var tourSelect = document.getElementById("admin-tournament-test-select");
+        
         var html = '<option value="new">➕ Мутлақо янги тест яратиш</option>';
+        var tourHtml = '';
         var sortedKeys = getSortedTestKeys();
 
         sortedKeys.forEach(function(id) {
             if (testData[id]) {
-                html += '<option value="' + id + '">' + testData[id].title + ' (' + (testData[id].questions ? testData[id].questions.length : 0) + ' та савол)</option>';
+                var titleText = testData[id].title + ' (' + (testData[id].questions ? testData[id].questions.length : 0) + ' та савол)';
+                html += '<option value="' + id + '">' + titleText + '</option>';
+                tourHtml += '<option value="' + id + '" ' + (window.currentTournamentTestKey === id ? 'selected' : '') + '>' + titleText + '</option>';
             }
         });
         select.innerHTML = html;
+        tourSelect.innerHTML = tourHtml || '<option value="">Avval test qo\'shing</option>';
         onTestSelectChange();
     }
 
@@ -1269,6 +1330,10 @@
             if (!t) return;
             var questionsHtml = "";
 
+            var isHidden = hiddenTests[id];
+            var visibilityBtnText = isHidden ? "🔓 Очиш (Кўрсатиш)" : "🔒 Яшириш (Турнир учун)";
+            var visibilityBtnClass = isHidden ? "info" : "dark";
+
             if (t.questions) {
                 t.questions.forEach(function(q, qIndex) {
                     var imgIcon = q.imageUrl ? "🖼 " : "";
@@ -1283,8 +1348,11 @@
 
             html += '<div class="admin-test-item">' +
                 '<div class="admin-test-header" onclick="toggleTestAccordion(this)">' +
-                '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span> <span style="font-size: 11px; color:#27ae60; margin-left: 5px;">(Очиш учун босинг 🔽)</span></div>' +
+                '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span> ' +
+                (isHidden ? '<span style="color:#e74c3c; font-size:11px; font-weight:bold;">(🔒 Яширин)</span>' : '<span style="color:#27ae60; font-size:11px; font-weight:bold;">(👁 Очиқ)</span>') +
+                '</div>' +
                 '<div class="admin-btn-group" onclick="event.stopPropagation()">' +
+                '<button type="button" class="' + visibilityBtnClass + '" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="toggleTestVisibility(\'' + id + '\')">' + visibilityBtnText + '</button>' +
                 '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Савол қўшиш</button>' +
                 '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
                 '</div></div>' +
