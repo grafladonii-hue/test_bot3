@@ -272,7 +272,7 @@ async def bot_webhook(request: Request):
         update = types.Update.model_validate(data, context={"bot": bot})
         await dp.feed_update(bot, update)
     except Exception as e:
-        logging.error(f>Webhook error: {e}")
+        logging.error(f"Webhook error: {e}")
     return {"ok": True}
 
 @app.get("/")
