@@ -165,7 +165,6 @@
         button:hover { opacity: 0.9; }
         button:disabled { background: #bdc3c7; cursor: not-allowed; }
         
-        /* Жамоавий тест учун ранглар стили */
         .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
         .options label.wrong-answer { background: #ff4757 !important; color: white; border-color: #ff4757; }
 
@@ -486,6 +485,13 @@
             <div class="score-circle" id="score-circle">0 ball</div>
             <p id="score-text"></p>
             <div id="answers-review"></div>
+            
+            <!-- Турнир рейтинг натижалари блоки -->
+            <div id="tournament-result-leaderboard" style="display: none; margin-top: 20px; text-align: left;">
+                <h3>🏆 Жонли турнир натижалари (Leaderboard)</h3>
+                <div id="tour-leaderboard-list"></div>
+            </div>
+
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga қайтиш</button>
         </div>
     </div>
@@ -583,6 +589,7 @@
     var tg = window.Telegram ? window.Telegram.WebApp : null;
     var currentUserId = null;
     var currentUserFullName = "Foydalanuvchi";
+    var activeTournamentId = null;
 
     if (tg) {
         tg.expand();
@@ -669,7 +676,6 @@
         checkActiveTournament();
     }
 
-    // Жонли турнирларни текшириш ва бош саҳифага чиқариш
     async function checkActiveTournament() {
         try {
             const response = await fetch('/api/tournaments');
@@ -686,11 +692,12 @@
                     
                     banner.style.display = 'block';
                     title.innerText = `🎯 ${tour.title}`;
+                    window.currentTournamentTestKey = tour.test_key;
+                    window.currentTournamentId = tour.id;
                     
                     if (tour.status === 'active') {
                         status.innerText = "🔴 Жонли тест давом этмоқда!";
                         btn.style.display = 'inline-block';
-                        window.currentTournamentId = tour.id;
                     } else {
                         let startTime = new Date(tour.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         status.innerText = `⏳ Бошланиш вақти: ${startTime}`;
@@ -704,8 +711,9 @@
     }
 
     function joinTournament() {
-        if (window.currentTournamentId) {
-            window.location.href = `/tournament.html?id=${window.currentTournamentId}`;
+        if (window.currentTournamentId && window.currentTournamentTestKey) {
+            activeTournamentId = window.currentTournamentId;
+            startQuiz(window.currentTournamentTestKey, true);
         }
     }
 
@@ -823,8 +831,9 @@
     var activeQuestions = [];
     var currentQuestion = 0;
     var userAnswers = {}; 
-    var timeLeft = 5400;
+    var timeLeft = 5400; // Якка тест учун дефолт 90 дақиқа (5400 сония)
     var timerInterval;
+    var isTournamentMode = false;
 
     function shuffleArray(array) {
         var arr = array.slice();
@@ -851,7 +860,7 @@
             var cardHtml = '<div class="test-card">' +
                     '<div><strong>' + t.title + '</strong>' +
                     '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
-                    '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\')">Ishlash</button>' +
+                    '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>' +
                     '</div>';
 
             if (titleLower.includes('kuz') || titleLower.includes('куз')) {
@@ -925,47 +934,70 @@
         }
     }
 
-    function startQuiz(testId) {
+    function startQuiz(testId, isTour = false) {
         var rawQuestions = testData[testId] ? testData[testId].questions : [];
         if (!rawQuestions || rawQuestions.length === 0) {
             alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
             return;
         }
         
-        activeQuestions = rawQuestions.map(function(q) {
-            var indexedOptions = q.options.map(function(opt, idx) {
-                return { text: opt, isCorrect: (idx === q.correct) };
+        isTournamentMode = isTour;
+
+        if (isTournamentMode) {
+            activeQuestions = rawQuestions.map(function(q) {
+                return {
+                    db_id: q.db_id,
+                    readingText: q.readingText,
+                    imageUrl: q.imageUrl,
+                    question: q.question,
+                    options: q.options,
+                    correct: q.correct
+                };
             });
-            var shuffledOptions = shuffleArray(indexedOptions);
-            var newCorrectIndex = shuffledOptions.findIndex(function(o) { return o.isCorrect; });
+        } else {
+            activeQuestions = rawQuestions.map(function(q) {
+                var indexedOptions = q.options.map(function(opt, idx) {
+                    return { text: opt, isCorrect: (idx === q.correct) };
+                });
+                var shuffledOptions = shuffleArray(indexedOptions);
+                var newCorrectIndex = shuffledOptions.findIndex(function(o) { return o.isCorrect; });
 
-            return {
-                readingText: q.readingText,
-                imageUrl: q.imageUrl,
-                question: q.question,
-                options: shuffledOptions.map(function(o) { return o.text; }),
-                correct: newCorrectIndex
-            };
-        });
+                return {
+                    readingText: q.readingText,
+                    imageUrl: q.imageUrl,
+                    question: q.question,
+                    options: shuffledOptions.map(function(o) { return o.text; }),
+                    correct: newCorrectIndex
+                };
+            });
+            activeQuestions = shuffleArray(activeQuestions);
+        }
 
-        activeQuestions = shuffleArray(activeQuestions);
         currentQuestion = 0;
         userAnswers = {};
-        timeLeft = 5400;
 
         document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
         document.getElementById('quiz-page').classList.add('active');
         
         document.getElementById('quiz-container').style.display = 'block';
         document.getElementById('result-box').style.display = 'none';
-        document.getElementById('quiz-title').innerText = testData[testId].title;
+        document.getElementById('tournament-result-leaderboard').style.display = 'none';
+        document.getElementById('quiz-title').innerText = testData[testId].title + (isTournamentMode ? " (Жонли турнир)" : "");
 
         loadQuestion();
         startTimer();
     }
 
+    // Таймер логикаси: Жонли турнирда ҳар саволга 2 дақиқа, якка тестда 90 дақиқа умумий
     function startTimer() {
         clearInterval(timerInterval);
+        
+        if (isTournamentMode) {
+            timeLeft = 120; // Жонли турнир учун ҳар бир саволга 2 дақиқа (120 сония)
+        } else {
+            timeLeft = 5400; // Якка тест учун 90 дақиқа (5400 сония)
+        }
+
         timerInterval = setInterval(function() {
             var minutes = Math.floor(timeLeft / 60);
             var seconds = timeLeft % 60;
@@ -973,7 +1005,11 @@
             
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                finishQuiz();
+                if (isTournamentMode) {
+                    nextQuestion(); // Турнирда вақт тугаса кейинги саволга ўтади
+                } else {
+                    finishQuiz(); // Якка тестда умумий вақт тугаса тугайди
+                }
             }
             timeLeft--;
         }, 1000);
@@ -985,7 +1021,6 @@
         
         q.options.forEach(function(opt, index) {
             var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            // Жамоавий тест услубидаги жонли ранжли вариантларни босиш мантиғи ҳам интеграция қилинди
             optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + ' onchange="selectLiveOption(' + index + ', this, ' + q.correct + ')"> <span>' + opt + '</span></label>';
         });
 
@@ -999,19 +1034,31 @@
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
     }
 
-    // Танланган заҳоти яшил ёки қизил кўрсатувчи жонли функция
     function selectLiveOption(optionIndex, labelElement, correctIndex) {
         userAnswers[currentQuestion] = optionIndex;
         var allLabels = document.querySelectorAll('.options label');
         
         allLabels.forEach((lbl, idx) => {
-            lbl.style.pointerEvents = 'none'; // Қулфлаш
+            lbl.style.pointerEvents = 'none';
             if (idx === correctIndex) {
                 lbl.classList.add('correct-answer');
             } else if (idx === optionIndex && idx !== correctIndex) {
                 lbl.classList.add('wrong-answer');
             }
         });
+
+        if (isTournamentMode && activeTournamentId) {
+            fetch('/api/tournament/submit-answer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tournament_id: activeTournamentId,
+                    user_id: currentUserId || 0,
+                    question_index: currentQuestion,
+                    selected_option: optionIndex
+                })
+            }).then(res => res.json()).catch(err => console.error("Жавобни юборишда хато:", err));
+        }
     }
 
     let scale = 1;
@@ -1137,7 +1184,7 @@
 
     function nextQuestion() {
         saveCurrentAnswer();
-        if (userAnswers[currentQuestion] === undefined) {
+        if (userAnswers[currentQuestion] === undefined && !isTournamentMode) {
             alert("Илтимос, жавобни белгиланг!");
             return;
         }
@@ -1145,6 +1192,9 @@
         if (currentQuestion < activeQuestions.length - 1) {
             currentQuestion++;
             loadQuestion();
+            if (isTournamentMode) {
+                startTimer(); // Жонли турнирда кейинги саволга ўтганда таймер қайтадан 2 дақиқадан бошланади
+            }
         } else {
             finishQuiz();
         }
@@ -1190,6 +1240,10 @@
         document.getElementById("score-text").innerHTML = "Тўғри жавоблар: " + score + " та / Нотўғри: " + (activeQuestions.length - score) + " та";
         document.getElementById("answers-review").innerHTML = reviewHtml;
 
+        if (isTournamentMode && activeTournamentId) {
+            loadTournamentLeaderboardResult(activeTournamentId);
+        }
+
         var secondsSpent = 5400 - timeLeft;
         var spentMinutes = Math.floor(secondsSpent / 60);
         var spentSecs = secondsSpent % 60;
@@ -1230,6 +1284,33 @@
         } catch (e) {
             console.error("Natijani saqlashda xato:", e);
         }
+    }
+
+    function loadTournamentLeaderboardResult(tourId) {
+        fetch(`/api/tournament/${tourId}/leaderboard`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    var listContainer = document.getElementById("tour-leaderboard-list");
+                    listContainer.innerHTML = "";
+                    
+                    if (!data.leaderboard || data.leaderboard.length === 0) {
+                        listContainer.innerHTML = "<p>Натижалар ҳозирча йўқ.</p>";
+                        return;
+                    }
+
+                    var html = "";
+                    data.leaderboard.forEach(item => {
+                        html += `<div class="leaderboard-item">
+                            <div><b>#${item.rank}</b> Фойдаланувчи ID: ${item.user_id}</div>
+                            <div style="font-weight: bold; color: #16a34a;">${item.score} балл</div>
+                        </div>`;
+                    });
+                    listContainer.innerHTML = html;
+                    document.getElementById("tournament-result-leaderboard").style.display = "block";
+                }
+            })
+            .catch(err => console.error("Турнир рейтингини олишда хато:", err));
     }
 
     function handleImageUpload(event) {
