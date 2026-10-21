@@ -582,7 +582,7 @@
     var currentUserId = null;
     var currentUserFullName = "Foydalanuvchi";
     var activeTournamentId = null;
-    window.currentTournamentTestKey = 'demo_8'; // Турнир учун тест калити
+    window.currentTournamentTestKey = 'demo_8';
 
     if (tg) {
         tg.expand();
@@ -669,7 +669,6 @@
     }
 
     function joinTournament() {
-        // Турнир бошлаш (demo_8 тести бўйича)
         startQuiz(window.currentTournamentTestKey || 'demo_8', true);
     }
 
@@ -893,7 +892,7 @@
     function startQuiz(testId, isTour = false) {
         var rawQuestions = testData[testId] ? testData[testId].questions : [];
         if (!rawQuestions || rawQuestions.length === 0) {
-            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас! Аввал админ панелидан савол қўшинг.");
+            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
             return;
         }
         
@@ -947,9 +946,9 @@
         clearInterval(timerInterval);
         
         if (isTournamentMode) {
-            timeLeft = 120; // Жонли турнир учун ҳар бир саволга 2 дақиқа (120 сония)
+            timeLeft = 120; 
         } else {
-            timeLeft = 5400; // Якка тест учун 90 дақиқа (5400 сония)
+            timeLeft = 5400; 
         }
 
         timerInterval = setInterval(function() {
