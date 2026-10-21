@@ -164,6 +164,11 @@
         button.info { background: #2980b9; }
         button:hover { opacity: 0.9; }
         button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        
+        /* Жамоавий тест учун ранглар стили */
+        .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
+        .options label.wrong-answer { background: #ff4757 !important; color: white; border-color: #ff4757; }
+
         .result-box { display: none; text-align: center; }
         .score-circle {
             width: 130px;
@@ -430,6 +435,14 @@
             <h2>Demotestlar.uz</h2>
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
+
+        <!-- Жонли жамоавий турнир баннери -->
+        <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: none;">
+            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир</h3>
+            <p id="tour-status" style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">Юкланмоқда...</p>
+            <button id="tour-btn" onclick="joinTournament()" style="background: #ff4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: none; width: auto;">Қўшилиш</button>
+        </div>
+
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
         <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
     </div>
@@ -653,6 +666,47 @@
             console.error("Юклашда хатолик:", e);
         }
         renderTestsList();
+        checkActiveTournament();
+    }
+
+    // Жонли турнирларни текшириш ва бош саҳифага чиқариш
+    async function checkActiveTournament() {
+        try {
+            const response = await fetch('/api/tournaments');
+            const data = await response.json();
+            
+            if (data.tournaments && data.tournaments.length > 0) {
+                const tour = data.tournaments.find(t => t.status === 'active' || t.status === 'waiting');
+                
+                if (tour) {
+                    const banner = document.getElementById('tournament-banner');
+                    const title = document.getElementById('tour-title');
+                    const status = document.getElementById('tour-status');
+                    const btn = document.getElementById('tour-btn');
+                    
+                    banner.style.display = 'block';
+                    title.innerText = `🎯 ${tour.title}`;
+                    
+                    if (tour.status === 'active') {
+                        status.innerText = "🔴 Жонли тест давом этмоқда!";
+                        btn.style.display = 'inline-block';
+                        window.currentTournamentId = tour.id;
+                    } else {
+                        let startTime = new Date(tour.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        status.innerText = `⏳ Бошланиш вақти: ${startTime}`;
+                        btn.style.display = 'none';
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Турнирни юклашда хатолик:", e);
+        }
+    }
+
+    function joinTournament() {
+        if (window.currentTournamentId) {
+            window.location.href = `/tournament.html?id=${window.currentTournamentId}`;
+        }
     }
 
     var leaderboardLimit = 50;
@@ -931,7 +985,8 @@
         
         q.options.forEach(function(opt, index) {
             var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + '> <span>' + opt + '</span></label>';
+            // Жамоавий тест услубидаги жонли ранжли вариантларни босиш мантиғи ҳам интеграция қилинди
+            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + ' onchange="selectLiveOption(' + index + ', this, ' + q.correct + ')"> <span>' + opt + '</span></label>';
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
@@ -942,6 +997,21 @@
 
         document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
         document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
+    }
+
+    // Танланган заҳоти яшил ёки қизил кўрсатувчи жонли функция
+    function selectLiveOption(optionIndex, labelElement, correctIndex) {
+        userAnswers[currentQuestion] = optionIndex;
+        var allLabels = document.querySelectorAll('.options label');
+        
+        allLabels.forEach((lbl, idx) => {
+            lbl.style.pointerEvents = 'none'; // Қулфлаш
+            if (idx === correctIndex) {
+                lbl.classList.add('correct-answer');
+            } else if (idx === optionIndex && idx !== correctIndex) {
+                lbl.classList.add('wrong-answer');
+            }
+        });
     }
 
     let scale = 1;
