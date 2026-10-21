@@ -191,7 +191,6 @@ async def handle_payment_screenshot(message: types.Message):
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
-        # Тезкор ва соддалаштирилган промпт
         prompt = (
             "Read this receipt. Extract amount (number) and transaction ID / check number (string or null). "
             "Return ONLY raw JSON without markdown: "
@@ -199,7 +198,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',
             contents=[image, prompt]
         )
         
@@ -214,7 +213,6 @@ async def handle_payment_screenshot(message: types.Message):
         raw_txn_id = data.get("transaction_id")
         txn_id = clean_txn_id(raw_txn_id)
 
-        # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА
         if not txn_id:
             await bot.edit_message_text(
                 text="❌ **Тўлов қабул қилинмади!**\n\n"
@@ -225,7 +223,6 @@ async def handle_payment_screenshot(message: types.Message):
             )
             return
 
-        # 2. ТРАНЗАКЦИЯ ИШЛАТИЛГАН БЎЛСА
         if is_receipt_used(txn_id):
             await bot.edit_message_text(
                 text=f"❌ **Тўлов рад этилди!**\n\n⚠️ Бу чек илгари ишлатилган (`{txn_id}`).",
@@ -235,7 +232,6 @@ async def handle_payment_screenshot(message: types.Message):
             )
             return
 
-        # 3. СУММА ЕТАРЛИ БЎЛСА
         if extracted_amount >= REQUIRED_AMOUNT:
             save_used_receipt(txn_id)
             save_approved_user(user_id)
@@ -276,7 +272,7 @@ async def bot_webhook(request: Request):
         update = types.Update.model_validate(data, context={"bot": bot})
         await dp.feed_update(bot, update)
     except Exception as e:
-        logging.error(f"Webhook error: {e}")
+        logging.error(f>Webhook error: {e}")
     return {"ok": True}
 
 @app.get("/")
