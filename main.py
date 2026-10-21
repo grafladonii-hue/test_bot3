@@ -5,12 +5,12 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import json
 import os
 
-# Модель: Админ томонидан турнир яратиш учун
+# Модель: Админ томонидан турнир яратиш учун (дефолт вақт 2 дақиқага созланди)
 class TournamentCreate(BaseModel):
     title: str
     test_key: str
     start_time: datetime
-    duration_minutes: int = 90
+    duration_minutes: int = 2
 
 class AnswerSubmit(BaseModel):
     tournament_id: int
@@ -18,7 +18,7 @@ class AnswerSubmit(BaseModel):
     question_index: int
     selected_option: int
 
-# 1. Турнирлар рўйхатини мини-аппга етказиб берувчи endpoint (Баннер учун жуда муҳим!)
+# 1. Турнирлар рўйхатини мини-аппга етказиб берувчи endpoint
 @app.get("/api/tournaments")
 def get_tournaments():
     try:
@@ -91,7 +91,39 @@ def submit_answer(data: AnswerSubmit):
         "correct_option": correct_option_index
     }
 
-# 4. Фон жараёни: Турнирларнинг бошланиш ва тугаш вақтини автоматик бошқариш
+# 4. Турнир рейтинг (Leaderboard) натижаларини олиш endpoint'и
+@app.get("/api/tournament/{tournament_id}/leaderboard")
+def get_tournament_leaderboard(tournament_id: int):
+    try:
+        answers = supabase.table("tournament_user_answers") \
+            .select("user_id, is_correct") \
+            .eq("tournament_id", tournament_id) \
+            .execute()
+        
+        if not answers.data:
+            return {"status": "success", "leaderboard": []}
+        
+        user_scores = {}
+        for row in answers.data:
+            uid = row["user_id"]
+            if uid not in user_scores:
+                user_scores[uid] = {"user_id": uid, "score": 0, "correct_count": 0}
+            
+            if row["is_correct"]:
+                user_scores[uid]["score"] += 1
+                user_scores[uid]["correct_count"] += 1
+                
+        sorted_leaderboard = sorted(user_scores.values(), key=lambda x: x["score"], reverse=True)
+        
+        for index, item in enumerate(sorted_leaderboard):
+            item["rank"] = index + 1
+            
+        return {"status": "success", "leaderboard": sorted_leaderboard}
+        
+    except Exception as e:
+        return {"status": "error", "message": str(e), "leaderboard": []}
+
+# 5. Фон жараёни: Турнирларнинг бошланиш ва тугаш вақтини автоматик бошқариш (Дефолт 2 дақиқа)
 def manage_tournaments_lifecycle():
     now = datetime.now().astimezone()
     
@@ -104,7 +136,7 @@ def manage_tournaments_lifecycle():
     active_tournaments = supabase.table("tournaments").select("*").eq("status", "active").execute()
     for tour in active_tournaments.data:
         start_t = datetime.fromisoformat(tour["start_time"])
-        duration = tour.get("duration_minutes", 90)
+        duration = tour.get("duration_minutes", 2)
         end_t = start_t + timedelta(minutes=duration)
         
         if now >= end_t:
