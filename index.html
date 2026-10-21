@@ -97,9 +97,7 @@
             transform-origin: center center;
             will-change: transform;
         }
-        .image-modal img:active {
-            cursor: grabbing;
-        }
+        .image-modal img:active { cursor: grabbing; }
         .image-modal-close {
             position: fixed;
             top: 15px;
@@ -485,12 +483,6 @@
             <div class="score-circle" id="score-circle">0 ball</div>
             <p id="score-text"></p>
             <div id="answers-review"></div>
-            
-            <!-- Турнир рейтинг натижалари блоки -->
-            <div id="tournament-result-leaderboard" style="display: none; margin-top: 20px; text-align: left;">
-                <h3>🏆 Жонли турнир натижалари (Leaderboard)</h3>
-                <div id="tour-leaderboard-list"></div>
-            </div>
 
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga қайтиш</button>
         </div>
@@ -678,31 +670,31 @@
 
     async function checkActiveTournament() {
         try {
-            const response = await fetch('/api/tournaments');
-            const data = await response.json();
+            const { data, error } = await supabaseClient
+                .from('tournaments')
+                .select('*')
+                .in('status', ['active', 'waiting'])
+                .limit(1);
             
-            if (data.tournaments && data.tournaments.length > 0) {
-                const tour = data.tournaments.find(t => t.status === 'active' || t.status === 'waiting');
+            if (data && data.length > 0) {
+                const tour = data[0];
+                const banner = document.getElementById('tournament-banner');
+                const title = document.getElementById('tour-title');
+                const status = document.getElementById('tour-status');
+                const btn = document.getElementById('tour-btn');
                 
-                if (tour) {
-                    const banner = document.getElementById('tournament-banner');
-                    const title = document.getElementById('tour-title');
-                    const status = document.getElementById('tour-status');
-                    const btn = document.getElementById('tour-btn');
-                    
-                    banner.style.display = 'block';
-                    title.innerText = `🎯 ${tour.title}`;
-                    window.currentTournamentTestKey = tour.test_key;
-                    window.currentTournamentId = tour.id;
-                    
-                    if (tour.status === 'active') {
-                        status.innerText = "🔴 Жонли тест давом этмоқда!";
-                        btn.style.display = 'inline-block';
-                    } else {
-                        let startTime = new Date(tour.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        status.innerText = `⏳ Бошланиш вақти: ${startTime}`;
-                        btn.style.display = 'none';
-                    }
+                banner.style.display = 'block';
+                title.innerText = `🎯 ${tour.title}`;
+                window.currentTournamentTestKey = tour.test_key;
+                window.currentTournamentId = tour.id;
+                
+                if (tour.status === 'active') {
+                    status.innerText = "🔴 Жонли тест давом этмоқда!";
+                    btn.style.display = 'inline-block';
+                } else {
+                    let startTime = new Date(tour.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    status.innerText = `⏳ Бошланиш вақти: ${startTime}`;
+                    btn.style.display = 'none';
                 }
             }
         } catch (e) {
@@ -741,7 +733,7 @@
 
             if (!data || data.length === 0) {
                 podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестni ишланг!</p>";
                 loadMoreContainer.style.display = "none";
                 return;
             }
@@ -831,7 +823,7 @@
     var activeQuestions = [];
     var currentQuestion = 0;
     var userAnswers = {}; 
-    var timeLeft = 5400; // Якка тест учун дефолт 90 дақиқа (5400 сония)
+    var timeLeft = 5400; 
     var timerInterval;
     var isTournamentMode = false;
 
@@ -981,14 +973,12 @@
         
         document.getElementById('quiz-container').style.display = 'block';
         document.getElementById('result-box').style.display = 'none';
-        document.getElementById('tournament-result-leaderboard').style.display = 'none';
         document.getElementById('quiz-title').innerText = testData[testId].title + (isTournamentMode ? " (Жонли турнир)" : "");
 
         loadQuestion();
         startTimer();
     }
 
-    // Таймер логикаси: Жонли турнирда ҳар саволга 2 дақиқа, якка тестда 90 дақиқа умумий
     function startTimer() {
         clearInterval(timerInterval);
         
@@ -1006,9 +996,9 @@
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 if (isTournamentMode) {
-                    nextQuestion(); // Турнирда вақт тугаса кейинги саволга ўтади
+                    nextQuestion();
                 } else {
-                    finishQuiz(); // Якка тестда умумий вақт тугаса тугайди
+                    finishQuiz();
                 }
             }
             timeLeft--;
@@ -1046,19 +1036,6 @@
                 lbl.classList.add('wrong-answer');
             }
         });
-
-        if (isTournamentMode && activeTournamentId) {
-            fetch('/api/tournament/submit-answer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tournament_id: activeTournamentId,
-                    user_id: currentUserId || 0,
-                    question_index: currentQuestion,
-                    selected_option: optionIndex
-                })
-            }).then(res => res.json()).catch(err => console.error("Жавобни юборишда хато:", err));
-        }
     }
 
     let scale = 1;
@@ -1085,16 +1062,14 @@
             const xs = (e.clientX - pointX) / scale;
             const ys = (e.clientY - pointY) / scale;
             
-            if (e.deltaY < 0) {
-                scale *= 1.2;
-            } else {
+            if (e.deltaY < 0) scale *= 1.2;
+            else {
                 scale /= 1.2;
                 if (scale < 1) scale = 1;
             }
             
             pointX = e.clientX - xs * scale;
             pointY = e.clientY - ys * scale;
-            
             if (scale === 1) { pointX = 0; pointY = 0; }
             setTransform(modalImg);
         };
@@ -1114,54 +1089,7 @@
             setTransform(modalImg);
         };
 
-        window.onmouseup = function() {
-            panning = false;
-        };
-
-        modalImg.ontouchstart = function(e) {
-            if (e.touches.length === 1) {
-                startX = e.touches[0].clientX - pointX;
-                startY = e.touches[0].clientY - pointY;
-                panning = true;
-                initialDistance = null;
-            } else if (e.touches.length === 2) {
-                panning = false;
-                initialDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-            }
-        };
-
-        modalImg.ontouchmove = function(e) {
-            if (panning && e.touches.length === 1) {
-                pointX = e.touches[0].clientX - startX;
-                pointY = e.touches[0].clientY - startY;
-                setTransform(modalImg);
-            } else if (e.touches.length === 2 && initialDistance) {
-                const currentDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                
-                const factor = currentDistance / initialDistance;
-                scale *= factor;
-                if (scale < 1) scale = 1;
-                if (scale > 5) scale = 5;
-                
-                initialDistance = currentDistance;
-                setTransform(modalImg);
-            }
-        };
-
-        modalImg.ontouchend = function(e) {
-            if (e.touches.length < 2) {
-                initialDistance = null;
-            }
-            if (e.touches.length === 0) {
-                panning = false;
-            }
-        };
+        window.onmouseup = function() { panning = false; };
     }
 
     function setTransform(img) {
@@ -1192,9 +1120,7 @@
         if (currentQuestion < activeQuestions.length - 1) {
             currentQuestion++;
             loadQuestion();
-            if (isTournamentMode) {
-                startTimer(); // Жонли турнирда кейинги саволга ўтганда таймер қайтадан 2 дақиқадан бошланади
-            }
+            if (isTournamentMode) startTimer();
         } else {
             finishQuiz();
         }
@@ -1240,21 +1166,15 @@
         document.getElementById("score-text").innerHTML = "Тўғри жавоблар: " + score + " та / Нотўғри: " + (activeQuestions.length - score) + " та";
         document.getElementById("answers-review").innerHTML = reviewHtml;
 
-        if (isTournamentMode && activeTournamentId) {
-            loadTournamentLeaderboardResult(activeTournamentId);
-        }
-
         var secondsSpent = 5400 - timeLeft;
         var spentMinutes = Math.floor(secondsSpent / 60);
         var spentSecs = secondsSpent % 60;
         var timeSpentStr = spentMinutes + " daq " + spentSecs + " son";
 
-        if (currentUserId === ADMIN_ID) {
-            return;
-        }
+        if (currentUserId === ADMIN_ID) return;
 
         try {
-            const { data: existingUser, error: fetchErr } = await supabaseClient
+            const { data: existingUser } = await supabaseClient
                 .from('leaderboard')
                 .select('score, tests_count')
                 .eq('user_id', currentUserId || 0)
@@ -1268,7 +1188,7 @@
                 finalTestsCount = (existingUser.tests_count || 1) + 1;
             }
 
-            const { error: upsertErr } = await supabaseClient
+            await supabaseClient
                 .from('leaderboard')
                 .upsert({
                     user_id: currentUserId || 0,
@@ -1277,40 +1197,9 @@
                     tests_count: finalTestsCount,
                     time_spent: timeSpentStr
                 }, { onConflict: 'user_id' });
-
-            if (upsertErr) {
-                console.error("Supabase upsert xatosi:", upsertErr);
-            }
         } catch (e) {
             console.error("Natijani saqlashda xato:", e);
         }
-    }
-
-    function loadTournamentLeaderboardResult(tourId) {
-        fetch(`/api/tournament/${tourId}/leaderboard`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    var listContainer = document.getElementById("tour-leaderboard-list");
-                    listContainer.innerHTML = "";
-                    
-                    if (!data.leaderboard || data.leaderboard.length === 0) {
-                        listContainer.innerHTML = "<p>Натижалар ҳозирча йўқ.</p>";
-                        return;
-                    }
-
-                    var html = "";
-                    data.leaderboard.forEach(item => {
-                        html += `<div class="leaderboard-item">
-                            <div><b>#${item.rank}</b> Фойдаланувчи ID: ${item.user_id}</div>
-                            <div style="font-weight: bold; color: #16a34a;">${item.score} балл</div>
-                        </div>`;
-                    });
-                    listContainer.innerHTML = html;
-                    document.getElementById("tournament-result-leaderboard").style.display = "block";
-                }
-            })
-            .catch(err => console.error("Турнир рейтингини олишда хато:", err));
     }
 
     function handleImageUpload(event) {
@@ -1406,8 +1295,7 @@
     }
 
     function toggleTestAccordion(headerElement) {
-        var parentItem = headerElement.closest('.admin-test-item');
-        parentItem.classList.toggle('open');
+        headerElement.closest('.admin-test-item').classList.toggle('open');
     }
 
     function renderAdminTestsList() {
@@ -1505,7 +1393,6 @@
         var title = document.getElementById("admin-test-title").value.trim();
         var readingText = document.getElementById("admin-reading-text").value.trim();
         var imageUrl = document.getElementById("admin-img-data").value.trim();
-        
         var question = document.getElementById("admin-question").value.trim();
 
         var opt0 = document.getElementById("admin-opt-0").value.trim();
