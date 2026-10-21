@@ -45,7 +45,6 @@ DATA_FILE = BASE_DIR / "questions.json"
 # 1. ТРАНЗАКЦИЯ ID НИ ТОЗАЛАШ
 # ==========================================
 def clean_txn_id(txn_id) -> str:
-    """Транзакция ID'сидан ортиқча бўшлиқ ва белгиларни олиб ташлайди."""
     if not txn_id:
         return ""
     cleaned = re.sub(r'[^a-zA-Z0-9]', '', str(txn_id)).strip().lower()
@@ -58,13 +57,12 @@ def clean_txn_id(txn_id) -> str:
 # ==========================================
 def is_user_approved(user_id: int) -> bool:
     if not supabase:
-        logging.error("Supabase уланмаган!")
         return False
     try:
         res = supabase.table("approved_users").select("user_id").eq("user_id", user_id).execute()
         return len(res.data) > 0
     except Exception as e:
-        logging.error(f"Supabase'да фойдаланувчини текширишда хатолик: {e}")
+        logging.error(f"Supabase хатоси: {e}")
         return False
 
 def save_approved_user(user_id: int):
@@ -72,9 +70,8 @@ def save_approved_user(user_id: int):
         return
     try:
         supabase.table("approved_users").upsert({"user_id": user_id}).execute()
-        logging.info(f"Фойдаланувчи {user_id} Supabase'га сақланди.")
     except Exception as e:
-        logging.error(f"Фойдаланувчини Supabase'га сақлашда хатолик: {e}")
+        logging.error(f"Supabase сақлаш хатоси: {e}")
 
 def is_receipt_used(txn_id) -> bool:
     cleaned = clean_txn_id(txn_id)
@@ -82,11 +79,9 @@ def is_receipt_used(txn_id) -> bool:
         return False
     try:
         res = supabase.table("used_receipts").select("txn_id").eq("txn_id", cleaned).execute()
-        is_used = len(res.data) > 0
-        logging.info(f"Чек текширилди: {cleaned} -> Ишлатилганми: {is_used}")
-        return is_used
+        return len(res.data) > 0
     except Exception as e:
-        logging.error(f"Supabase'да чекни текширишда хатолик: {e}")
+        logging.error(f"Supabase чек текшириш хатоси: {e}")
         return False
 
 def save_used_receipt(txn_id):
@@ -95,9 +90,8 @@ def save_used_receipt(txn_id):
         return
     try:
         supabase.table("used_receipts").insert({"txn_id": cleaned}).execute()
-        logging.info(f"Чек {cleaned} Supabase'га муваффақиятли сақланди.")
     except Exception as e:
-        logging.error(f"Чекни Supabase'га сақлашда хатолик: {e}")
+        logging.error(f"Supabase чек сақлаш хатоси: {e}")
 
 # ==========================================
 # 3. FASTAPI ВА WEBHOOK
@@ -106,9 +100,9 @@ def save_used_receipt(txn_id):
 async def lifespan(app: FastAPI):
     try:
         await bot.set_webhook(WEBHOOK_URL)
-        logging.info(f"Webhook муваффақиятли ўрнатилди: {WEBHOOK_URL}")
+        logging.info(f"Webhook ўрнатилди: {WEBHOOK_URL}")
     except Exception as e:
-        logging.error(f"Webhook ўрнатишда хатолик: {e}")
+        logging.error(f"Webhook хатоси: {e}")
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -119,7 +113,7 @@ def load_data():
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            logging.error(f"Саволлар файлини ўқишда хатолик: {e}")
+            logging.error(f"Саволлар файлини ўқиш хатоси: {e}")
     return {}
 
 @app.get("/api/tests")
@@ -132,7 +126,7 @@ def update_tests(data: dict):
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logging.error(f"Саволларни файлга ёзишда хатолик: {e}")
+        logging.error(f"Саволларни ёзиш хатоси: {e}")
     return {"status": "ok"}
 
 async def check_membership(user_id: int, bot: Bot) -> bool:
@@ -141,7 +135,7 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
         if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
             return True
     except Exception as e:
-        logging.error(f"Аъзоликни текширишда хатолик: {e}")
+        logging.error(f"Аъзоликни текшириш хатоси: {e}")
     return False
 
 # ==========================================
@@ -173,7 +167,7 @@ async def cmd_start(message: types.Message):
             "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, ўтказма тафсилотлари скриншотини юборинг:\n\n"
             "💳 **Карта рақами:** **9860120155197128**\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
-            "⚠️ **Изоҳ:** Шунчаки ўтказма экрани скриншоти қабул қилинмайди! Банк иловасидан **'O'tkazma tafsilotlari'** скриншотини юборинг."
+            "⚠️ **Изоҳ:** Банк иловасидан **'O'tkazma tafsilotlari'** скриншотини юборинг."
         )
 
 @dp.message(F.photo)
@@ -190,21 +184,18 @@ async def handle_payment_screenshot(message: types.Message):
     photo = message.photo[-1]
     file_id = photo.file_id
     
-    processing_msg = await message.answer("⏳ Сиз юборган чек текширилмоқда, илтимос кутиб туринг...")
+    processing_msg = await message.answer("⏳ Чек текширилмоқда...")
     
     try:
         file_info = await bot.get_file(file_id)
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
-        # Кучайтирилган Промпт
+        # Тезкор ва соддалаштирилган промпт
         prompt = (
-            "Analyze this payment receipt image strictly.\n"
-            "1. Extract numeric payment amount.\n"
-            "2. Extract the exact unique Transaction ID / Check Number / Receipt ID / Reference Number.\n"
-            "3. If there is NO clear transaction ID / check number (for example, it's just a simple transfer success screen), set transaction_id to null.\n"
-            "Return ONLY a raw JSON object without markdown or backticks:\n"
-            '{"amount": number, "transaction_id": "string or null", "is_valid_receipt": boolean, "reason": "string"}'
+            "Read this receipt. Extract amount (number) and transaction ID / check number (string or null). "
+            "Return ONLY raw JSON without markdown: "
+            '{"amount": 0, "transaction_id": "id_or_null"}'
         )
 
         response = gemini_client.models.generate_content(
@@ -222,36 +213,32 @@ async def handle_payment_screenshot(message: types.Message):
         extracted_amount = float(data.get("amount", 0))
         raw_txn_id = data.get("transaction_id")
         txn_id = clean_txn_id(raw_txn_id)
-        is_valid = data.get("is_valid_receipt", False)
 
-        # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА -> РАД ЭТИШ
+        # 1. ТРАНЗАКЦИЯ ID ТОПИЛМАСА
         if not txn_id:
             await bot.edit_message_text(
                 text="❌ **Тўлов қабул қилинмади!**\n\n"
-                     "Юборган расмингизда аниқ **Транзакция ID (чек рақами)** топилмади.\n\n"
-                     "📌 Илтимос, оддий экран скриншотини эмас, балки банк иловасидаги **'O'tkazma tafsilotlari'** скриншотини юборинг.",
+                     "Чекдан аниқ **Транзакция ID** топилмади. Илтимос, **'O'tkazma tafsilotlari'** скриншотини юборинг.",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 parse_mode="Markdown"
             )
             return
 
-        # 2. ТРАНЗАКЦИЯ ID ИЛГАРИ ИШЛАТИЛГАН БЎЛСА -> РАД ЭТИШ
+        # 2. ТРАНЗАКЦИЯ ИШЛАТИЛГАН БЎЛСА
         if is_receipt_used(txn_id):
             await bot.edit_message_text(
-                text=f"❌ **Тўлов рад этилди!**\n\n"
-                     f"⚠️ Чек ID: `{txn_id}`\n\n"
-                     f"Бу чек илгари тизимда фойдаланилган. Такрорий чек юбориш мумкин эмас!",
+                text=f"❌ **Тўлов рад этилди!**\n\n⚠️ Бу чек илгари ишлатилган (`{txn_id}`).",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 parse_mode="Markdown"
             )
             return
 
-        # 3. ЧЕК ҲАҚИҚИЙ ВА СУММА ЕТАРЛИ БЎЛСА -> ТАСДИҚЛАШ
-        if is_valid and extracted_amount >= REQUIRED_AMOUNT:
-            save_used_receipt(txn_id)     # Чек ID'сини Supabase'га сақлаймиз
-            save_approved_user(user_id)  # Фойдаланувчини Supabase'га сақлаймиз
+        # 3. СУММА ЕТАРЛИ БЎЛСА
+        if extracted_amount >= REQUIRED_AMOUNT:
+            save_used_receipt(txn_id)
+            save_approved_user(user_id)
             
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -259,31 +246,23 @@ async def handle_payment_screenshot(message: types.Message):
                 ]
             )
             await bot.edit_message_text(
-                text=f"✅ **Тўлов муваффақиятли тасдиқланди!**\n\n"
-                     f"💰 Аниқланган сумма: `{int(extracted_amount)} сўм`\n"
-                     f"🧾 Чек ID: `{txn_id}`\n\n"
-                     f"🎉 Сизга мини-аппдан фойдаланиш ҳуқуқи берилди!",
+                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
         else:
-            reason = data.get("reason", "Сумма етарли эмас ёки чек ҳақиқий эмас.")
             await bot.edit_message_text(
-                text=f"❌ **Тўлов қабул қилинмади!**\n\n"
-                     f"🔍 Чекдан топилган сумма: `{int(extracted_amount)} сўм`\n"
-                     f"📌 Талаб қилинган сумма: `{REQUIRED_AMOUNT} сўм`\n"
-                     f"⚠️ Сабаб: {reason}\n\n"
-                     f"Илтимос, тўғри чекни қайтадан юборинг.",
+                text=f"❌ **Сумма етарли эмас!**\n\nТопилган сумма: `{int(extracted_amount)} сўм`\nТалаб қилингани: `{REQUIRED_AMOUNT} сўм`",
                 chat_id=message.chat.id,
                 message_id=processing_msg.message_id,
                 parse_mode="Markdown"
             )
     except Exception as e:
-        logging.error(f"AI чекни ўқишда хатолик: {e}")
+        logging.error(f"Хатолик: {e}")
         await bot.edit_message_text(
-            text="❌ Чекни ўқишда хатолик юз берди. Илтимос, қайтадан уриниб кўринг.",
+            text="❌ Чекни ўқишда хатолик. Қайта уриниб кўринг.",
             chat_id=message.chat.id,
             message_id=processing_msg.message_id
         )
@@ -297,7 +276,7 @@ async def bot_webhook(request: Request):
         update = types.Update.model_validate(data, context={"bot": bot})
         await dp.feed_update(bot, update)
     except Exception as e:
-        logging.error(f"Webhook update error: {e}")
+        logging.error(f"Webhook error: {e}")
     return {"ok": True}
 
 @app.get("/")
