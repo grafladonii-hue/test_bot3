@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     
-    <!-- Flatpickr (Чизиқлар орасидаги чиройли сана ва вақт танлаш кутубхонаси) CSS -->
+    <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <style>
@@ -356,7 +356,6 @@
             white-space: pre-wrap;
         }
 
-        /* Икки чизиқ орасидаги вақт дизайни */
         .tournament-datetime-box {
             border-top: 1px solid #d1d5db;
             border-bottom: 1px solid #d1d5db;
@@ -386,6 +385,14 @@
         .custom-datetime-input:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        /* Flatpickr календарь элементлари очиқ турганда устига chiqib turishi uchun z-index sozламаси */
+        .flatpickr-calendar {
+            z-index: 99999 !important;
+            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
 
         .admin-test-item {
@@ -545,7 +552,7 @@
             <label><b>Турнир учун тестни танланг:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
-            <!-- Икки чизиқ орасидаги барабан стилдаги вақт танлаш блоки -->
+            <!-- Икки чизиқ орасидаги вақт танлаш блоки -->
             <div class="tournament-datetime-box">
                 <label for="admin-tournament-time"><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
                 <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Сана ва вақтни танланг...">
@@ -632,7 +639,7 @@
     </div>
 </div>
 
-<!-- Flatpickr (Барабан ва чизиқли сана/вақт танлаш) JS Скрипти -->
+<!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
@@ -649,7 +656,6 @@
     var tournamentInterval = null;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
 
-    // Flatpickr календарь элементни созлаш (Икки чизиқ орасидаги барабан соат ва кунлар билан)
     let pickerInstance = null;
     document.addEventListener("DOMContentLoaded", function() {
         pickerInstance = flatpickr("#admin-tournament-time", {
