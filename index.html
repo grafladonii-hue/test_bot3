@@ -887,7 +887,7 @@
                 btnEl.style.background = "#2980b9"; 
                 btnEl.innerText = "Натижаларни кўриш";
                 btnEl.onclick = function() {
-                    switchTab('rating');
+                    showTournamentResults(window.currentTournamentTestKey || 'demo_8');
                 };
             } else if (now >= targetTime) {
                 tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
@@ -954,7 +954,7 @@
 
             if (!data || data.length === 0) {
                 podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестni ишланг!</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
                 loadMoreContainer.style.display = "none";
                 return;
             }
@@ -1033,6 +1033,53 @@
         } catch (err) {
             console.error("Reytingni olishda xato:", err);
             listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
+        }
+    }
+
+    async function showTournamentResults(testKey) {
+        switchTab('rating');
+        var listContainer = document.getElementById("leaderboard-list");
+        var podiumContainer = document.getElementById("podium-section");
+        var loadMoreContainer = document.getElementById("load-more-container");
+        
+        podiumContainer.innerHTML = "";
+        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Жонли тест натижалари юкланмоқда...</p>";
+        loadMoreContainer.style.display = "none";
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('leaderboard')
+                .select('*')
+                .eq('test_key', testKey)
+                .order('score', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Бу жонли тест бўйича ҳали натижалар йўқ.</p>";
+                return;
+            }
+
+            var testTitle = testData[testKey] ? testData[testKey].title : "Жонли тест";
+            var html = "<h3 style='text-align: center; color: #2c3e50; margin-bottom: 15px;'>🎯 Жонли тест натижалари: " + testTitle + "</h3>";
+            
+            data.forEach((item, index) => {
+                var rankNum = index + 1;
+                var tSpent = item.time_spent || '0 son';
+
+                html += '<div class="leaderboard-item">' +
+                    '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
+                    '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
+                    '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
+                    '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">⏱ ' + tSpent + '</div></div>' +
+                    '</div>' +
+                    '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
+                    '</div>';
+            });
+            listContainer.innerHTML = html;
+        } catch (err) {
+            console.error("Турнир натижаларини олишда хато:", err);
+            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Натижаларни юклаб бўлмади.</p>";
         }
     }
 
@@ -1501,10 +1548,13 @@
         if (currentUserId === ADMIN_ID) return;
 
         try {
+            let activeTestKeyForLeaderboard = isTournamentMode ? (window.currentTournamentTestKey || 'demo_8') : 'general';
+
             const { data: existingUser } = await supabaseClient
                 .from('leaderboard')
                 .select('score, tests_count')
                 .eq('user_id', currentUserId || 0)
+                .eq('test_key', activeTestKeyForLeaderboard)
                 .maybeSingle();
 
             let finalScore = earnedPoints;
@@ -1522,8 +1572,9 @@
                     full_name: currentUserFullName,
                     score: finalScore,
                     tests_count: finalTestsCount,
-                    time_spent: timeSpentStr
-                }, { onConflict: 'user_id' });
+                    time_spent: timeSpentStr,
+                    test_key: activeTestKeyForLeaderboard
+                }, { onConflict: 'user_id, test_key' });
         } catch (e) {
             console.error("Natijani saqlashda xato:", e);
         }
