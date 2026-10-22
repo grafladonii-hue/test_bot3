@@ -639,9 +639,14 @@
     var currentUserId = null;
     var currentUserFullName = "Foydalanuvchi";
     window.currentTournamentTestKey = 'demo_8'; 
-    window.tournamentStartTime = null;
+    window.tournamentStartTime = localStorage.getItem('cached_tournament_start') || null;
     var tournamentInterval = null;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
+
+    // Олдиндан кешланган вақт бўлса дарҳол таймерни ишга туширамиз (обновить қилганда нолга тушмаслиги учун)
+    if (window.tournamentStartTime) {
+        startTournamentCountdown();
+    }
 
     if (tg) {
         tg.expand();
@@ -729,8 +734,11 @@
                 }
                 if (tourRes.data[0].start_time) {
                     window.tournamentStartTime = tourRes.data[0].start_time;
-                    // Input майдонга ҳам базадаги вақтни тушириш учун
+                    localStorage.setItem('cached_tournament_start', tourRes.data[0].start_time);
                     setDatetimeInputValue(tourRes.data[0].start_time);
+                } else {
+                    window.tournamentStartTime = null;
+                    localStorage.removeItem('cached_tournament_start');
                 }
             }
             startTournamentCountdown();
@@ -740,7 +748,6 @@
         renderTestsList();
     }
 
-    // datetime-local input учун форматлаш функцияси
     function setDatetimeInputValue(isoString) {
         if (!isoString) return;
         try {
@@ -770,7 +777,6 @@
         try {
             const { data: existingTour } = await supabaseClient.from('tournaments').select('id').limit(1);
 
-            // Маҳаллий вақтни аниқ сақлаш (UTC га силжиб кетмаслиги учун)
             let isoString = null;
             if (startTimeInput) {
                 isoString = new Date(startTimeInput).toISOString();
@@ -791,6 +797,11 @@
 
             window.currentTournamentTestKey = selectedTestId;
             window.tournamentStartTime = isoString;
+            if (isoString) {
+                localStorage.setItem('cached_tournament_start', isoString);
+            } else {
+                localStorage.removeItem('cached_tournament_start');
+            }
             startTournamentCountdown();
             alert("Турнир созламалари муваффақиятли сақланди!");
         } catch (err) {
@@ -821,7 +832,7 @@
             var targetTime = new Date(window.tournamentStartTime).getTime();
             var distance = targetTime - now;
 
-            if (distance < 0) {
+            if (distance <= 0) {
                 clearInterval(tournamentInterval);
                 statusEl.innerText = "🔴 Жонли тест бошланди!";
                 countdownEl.innerText = "Амалда!";
