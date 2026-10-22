@@ -387,7 +387,6 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
         }
 
-        /* Flatpickr календарь элементлари очиқ турганда устига chiqib turishi uchun z-index sozламаси */
         .flatpickr-calendar {
             z-index: 99999 !important;
             font-family: Arial, sans-serif;
@@ -545,14 +544,12 @@
             Siz administratorsiz. Жонли турнир тест ва бошланиш вақтини созлаш мумкин.
         </div>
 
-        <!-- Жонли турнирни тест ва вақтга бириктириш -->
         <div style="background: #fdfefe; border: 2px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
             <h3 style="margin-top:0; color:#2c3e50;">🎯 Жонли турнирни созлаш (Тест ва Вақт)</h3>
             
             <label><b>Турнир учун тестни танланг:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
-            <!-- Икки чизиқ орасидаги вақт танлаш блоки -->
             <div class="tournament-datetime-box">
                 <label for="admin-tournament-time"><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
                 <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Сана ва вақтни танланг...">
@@ -808,24 +805,27 @@
         }
 
         try {
-            const { data: existingTour } = await supabaseClient.from('tournaments').select('id').limit(1);
-
             let isoString = null;
             if (startTimeInput) {
                 isoString = new Date(startTimeInput).toISOString();
             }
 
             let payload = {
+                id: 1,
                 test_key: selectedTestId,
                 start_time: isoString,
                 title: 'Жонли турнир',
                 status: 'active'
             };
 
-            if (existingTour && existingTour.length > 0) {
-                await supabaseClient.from('tournaments').update(payload).eq('id', existingTour[0].id);
-            } else {
-                await supabaseClient.from('tournaments').insert([payload]);
+            const { error } = await supabaseClient
+                .from('tournaments')
+                .upsert(payload);
+
+            if (error) {
+                console.error("Supabase xatoligi:", error);
+                alert("Сақлашда хатолик: " + error.message);
+                return;
             }
 
             window.currentTournamentTestKey = selectedTestId;
@@ -838,6 +838,7 @@
             startTournamentCountdown();
             alert("Турнир созламалари муваффақиятли сақланди!");
         } catch (err) {
+            console.error("Catch xatoligi:", err);
             alert("Сақлашда хатолик: " + err.message);
         }
     }
