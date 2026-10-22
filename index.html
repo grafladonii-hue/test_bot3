@@ -1553,7 +1553,11 @@
         if (currentUserId === ADMIN_ID) return;
 
         try {
-            let activeTestKeyForLeaderboard = isTournamentMode ? (window.currentTournamentTestKey || 'demo_8') : 'general';
+            // ҚАТЪИЙ АЖРАТМА: Агар жонли турнир бўлса фақат турнир калити, акс ҳолда фақат 'general' ёзилади
+            let activeTestKeyForLeaderboard = 'general';
+            if (isTournamentMode && window.currentTournamentTestKey) {
+                activeTestKeyForLeaderboard = window.currentTournamentTestKey;
+            }
 
             const { data: existingUser } = await supabaseClient
                 .from('leaderboard')
