@@ -487,7 +487,7 @@
             <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир (Синов)</h3>
             <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Турнир бошланишига:</p>
             <div id="tour-countdown" style="font-size: 18px; font-weight: bold; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;">00:00:00</div>
-            <button id="tour-btn" onclick="joinTournament()" style="background: #ff4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Қўшилиш (Бошланмаган)</button>
+            <button id="tour-btn" onclick="joinTournament()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Қўшилиш (Бошланмаган)</button>
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
@@ -703,7 +703,6 @@
         if (e.key === 'F12') e.preventDefault();
     });
 
-    // Фақатгина ADMIN_ID (644092713) киргандагина админ панелни очиш шарти:
     if (currentUserId === ADMIN_ID) {
         var adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.style.display = 'block';
@@ -860,7 +859,7 @@
             statusEl.innerText = "🔴 Жонли тест давом этмоқда!";
             countdownEl.style.display = "none";
             btnEl.disabled = false;
-            btnEl.style.background = "#ff4757";
+            btnEl.style.background = "#27ae60"; // Яшил ранг
             btnEl.innerText = "Қўшилиш";
             return;
         }
@@ -877,7 +876,7 @@
                 statusEl.innerText = "🔴 Жонли тест бошланди!";
                 countdownEl.innerText = "Амалда!";
                 btnEl.disabled = false;
-                btnEl.style.background = "#ff4757";
+                btnEl.style.background = "#27ae60"; // Яшил ранг
                 btnEl.innerText = "Қўшилиш";
             } else {
                 var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
