@@ -932,6 +932,7 @@
 
     var leaderboardLimit = 50;
 
+    // Умумий рейтингни фақат 'general' бўйича олиш
     async function fetchLeaderboard(isLoadMore = false) {
         var listContainer = document.getElementById("leaderboard-list");
         var podiumContainer = document.getElementById("podium-section");
@@ -944,10 +945,10 @@
         }
 
         try {
-            // Умумий рейтингни фақат 'general' теглик ёки умумий жадвалдан оламиз
             const { data, error, count } = await supabaseClient
                 .from('leaderboard')
                 .select('*', { count: 'exact' })
+                .eq('test_key', 'general')
                 .order('score', { ascending: false })
                 .limit(leaderboardLimit);
 
@@ -955,7 +956,7 @@
 
             if (!data || data.length === 0) {
                 podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча умумий рейтинг натижалари йўқ.</p>";
                 loadMoreContainer.style.display = "none";
                 return;
             }
@@ -1037,6 +1038,7 @@
         }
     }
 
+    // Жонли турнир натижаларини алоҳида кўрсатиш
     async function showTournamentResults(testKey) {
         switchTab('rating');
         var listContainer = document.getElementById("leaderboard-list");
@@ -1549,6 +1551,7 @@
         if (currentUserId === ADMIN_ID) return;
 
         try {
+            // МУҲИМ АЖРАТМА: Жонли турнир учун алоҳида test_key, оддий тестлар учун қатъий 'general' ёзилади
             let activeTestKeyForLeaderboard = isTournamentMode ? (window.currentTournamentTestKey || 'demo_8') : 'general';
 
             const { data: existingUser } = await supabaseClient
