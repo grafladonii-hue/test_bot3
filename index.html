@@ -932,7 +932,6 @@
 
     var leaderboardLimit = 50;
 
-    // Умумий рейтингни фақат 'general' бўйича олиш
     async function fetchLeaderboard(isLoadMore = false) {
         var listContainer = document.getElementById("leaderboard-list");
         var podiumContainer = document.getElementById("podium-section");
@@ -1038,7 +1037,6 @@
         }
     }
 
-    // Жонли турнир натижаларини алоҳида кўрсатиш
     async function showTournamentResults(testKey) {
         switchTab('rating');
         var listContainer = document.getElementById("leaderboard-list");
@@ -1228,25 +1226,30 @@
                 var startTime = new Date(window.tournamentStartTime).getTime();
                 var now = new Date().getTime();
                 var elapsedSeconds = Math.floor((now - startTime) / 1000);
-                var questionDuration = 120;
+                var questionDuration = 120; // Ҳар бир савол 2 дақиқа
                 
+                if (elapsedSeconds < 0) {
+                    alert("Турнир ҳали бошланмади!");
+                    switchTab('home');
+                    return;
+                }
+
                 var targetQuestionIndex = Math.floor(elapsedSeconds / questionDuration);
                 
                 if (targetQuestionIndex >= activeQuestions.length) {
                     alert("Жонли турнир аллақачон якунланган!");
                     switchTab('home');
                     return;
-                } else if (targetQuestionIndex > 0) {
-                    currentQuestion = targetQuestionIndex;
-                    timeLeft = questionDuration - (elapsedSeconds % questionDuration);
-                } else {
-                    currentQuestion = 0;
-                    timeLeft = questionDuration;
-                }
+                } 
+                
+                // Қатнашчи қачон киришидан қатъи назар, ҳар доим жонли вақтдаги саволдан давом этади
+                currentQuestion = targetQuestionIndex;
+                timeLeft = questionDuration - (elapsedSeconds % questionDuration);
             } else {
                 currentQuestion = 0;
                 timeLeft = 120;
             }
+            userAnswers = {};
 
         } else {
             activeQuestions = rawQuestions.map(function(q) {
@@ -1267,9 +1270,8 @@
             activeQuestions = shuffleArray(activeQuestions);
             currentQuestion = 0;
             timeLeft = 5400;
+            userAnswers = {};
         }
-
-        userAnswers = {};
 
         document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
         document.getElementById('quiz-page').classList.add('active');
@@ -1551,7 +1553,6 @@
         if (currentUserId === ADMIN_ID) return;
 
         try {
-            // МУҲИМ АЖРАТМА: Жонли турнир учун алоҳида test_key, оддий тестлар учун қатъий 'general' ёзилади
             let activeTestKeyForLeaderboard = isTournamentMode ? (window.currentTournamentTestKey || 'demo_8') : 'general';
 
             const { data: existingUser } = await supabaseClient
