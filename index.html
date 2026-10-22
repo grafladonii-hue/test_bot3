@@ -353,9 +353,7 @@
             white-space: pre-wrap;
         }
 
-        /* --------------------------------- */
         /* Икки чизиқ орасидаги вақт дизайни */
-        /* --------------------------------- */
         .tournament-datetime-box {
             border-top: 1px solid #d1d5db;
             border-bottom: 1px solid #d1d5db;
@@ -386,7 +384,6 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
         }
-        /* --------------------------------- */
 
         .admin-test-item {
             background: #fff;
@@ -732,6 +729,8 @@
                 }
                 if (tourRes.data[0].start_time) {
                     window.tournamentStartTime = tourRes.data[0].start_time;
+                    // Input майдонга ҳам базадаги вақтни тушириш учун
+                    setDatetimeInputValue(tourRes.data[0].start_time);
                 }
             }
             startTournamentCountdown();
@@ -739,6 +738,24 @@
             console.error("Юклашда хатолик:", e);
         }
         renderTestsList();
+    }
+
+    // datetime-local input учун форматлаш функцияси
+    function setDatetimeInputValue(isoString) {
+        if (!isoString) return;
+        try {
+            var date = new Date(isoString);
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            var localVal = year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+            var inputEl = document.getElementById("admin-tournament-time");
+            if (inputEl) inputEl.value = localVal;
+        } catch(e) {
+            console.log("Sanani qo'yishda xato:", e);
+        }
     }
 
     async function saveTournamentSettings() {
@@ -753,9 +770,15 @@
         try {
             const { data: existingTour } = await supabaseClient.from('tournaments').select('id').limit(1);
 
+            // Маҳаллий вақтни аниқ сақлаш (UTC га силжиб кетмаслиги учун)
+            let isoString = null;
+            if (startTimeInput) {
+                isoString = new Date(startTimeInput).toISOString();
+            }
+
             let payload = {
                 test_key: selectedTestId,
-                start_time: startTimeInput ? new Date(startTimeInput).toISOString() : null,
+                start_time: isoString,
                 title: 'Жонли турнир',
                 status: 'active'
             };
@@ -767,7 +790,7 @@
             }
 
             window.currentTournamentTestKey = selectedTestId;
-            window.tournamentStartTime = payload.start_time;
+            window.tournamentStartTime = isoString;
             startTournamentCountdown();
             alert("Турнир созламалари муваффақиятли сақланди!");
         } catch (err) {
