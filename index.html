@@ -45,16 +45,16 @@
     </div>
 
     <script>
-        // Supabase мижозини созлаш (ўзингизнинг калитларингизни қўясиз)
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        // Supabase калитлари базадан тўғрилаб қўйилди
+        const SUPABASE_URL = 'https://pudegdogypbxytbdizow.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_KOhS1ubVAnOu1PM8r2IP3Q_KF8t0Te1';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = { id: "test_user_1", first_name: "Фойдаланувчи" };
         let totalScore = 10;
         let timeSpentText = "30 сония";
 
-        // 1. Умумий рейтингни олиб келиш ва кўрсатиш функцияси (Хатоларни экранга чиқарувчи ҳимоя билан)
+        // 1. Умумий рейтингни олиб келиш ва кўрсатиш функцияси
         async function fetchLeaderboard() {
             var listContainer = document.getElementById("leaderboard-list");
             var podiumContainer = document.getElementById("podium-section");
