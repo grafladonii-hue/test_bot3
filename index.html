@@ -11,6 +11,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    
+    <!-- Flatpickr (Чизиқлар орасидаги чиройли сана ва вақт танлаш кутубхонаси) CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <style>
         body {
@@ -542,10 +545,10 @@
             <label><b>Турнир учун тестни танланг:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
-            <!-- Икки чизиқ орасидаги вақт танлаш блоки -->
+            <!-- Икки чизиқ орасидаги барабан стилдаги вақт танлаш блоки -->
             <div class="tournament-datetime-box">
                 <label for="admin-tournament-time"><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
-                <input type="datetime-local" id="admin-tournament-time" class="custom-datetime-input">
+                <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Сана ва вақтни танланг...">
             </div>
 
             <button type="button" onclick="saveTournamentSettings()" style="background: #667eea;">💾 Турнир созламаларини сақлаш</button>
@@ -629,6 +632,9 @@
     </div>
 </div>
 
+<!-- Flatpickr (Барабан ва чизиқли сана/вақт танлаш) JS Скрипти -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <script>
     const ADMIN_ID = 644092713;
     const SUPABASE_URL = 'https://pudegdogypbxytbdizow.supabase.co';
@@ -643,10 +649,30 @@
     var tournamentInterval = null;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
 
-    // Олдиндан кешланган вақт бўлса дарҳол таймерни ишга туширамиз (обновить қилганда нолга тушмаслиги учун)
-    if (window.tournamentStartTime) {
-        startTournamentCountdown();
-    }
+    // Flatpickr календарь элементни созлаш (Икки чизиқ орасидаги барабан соат ва кунлар билан)
+    let pickerInstance = null;
+    document.addEventListener("DOMContentLoaded", function() {
+        pickerInstance = flatpickr("#admin-tournament-time", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            locale: {
+                firstDayOfWeek: 1,
+                weekdays: {
+                    shorthand: ['Як', 'Ду', 'Се', 'Чор', 'Пай', 'Жум', 'Шан'],
+                    longhand: ['Якшанба', 'Душанба', 'Сешанба', 'Чоршанба', 'Пайшанба', 'Жума', 'Шанба']
+                },
+                months: {
+                    shorthand: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+                    longhand: ['Январ', 'Феврал', 'Март', 'Апрел', 'Май', 'Июн', 'Июл', 'Август', 'Сентябр', 'Октябр', 'Ноябр', 'Декабр']
+                }
+            }
+        });
+
+        if (window.tournamentStartTime) {
+            startTournamentCountdown();
+        }
+    });
 
     if (tg) {
         tg.expand();
@@ -757,9 +783,10 @@
             var day = String(date.getDate()).padStart(2, '0');
             var hours = String(date.getHours()).padStart(2, '0');
             var minutes = String(date.getMinutes()).padStart(2, '0');
-            var localVal = year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
-            var inputEl = document.getElementById("admin-tournament-time");
-            if (inputEl) inputEl.value = localVal;
+            var localVal = year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
+            if (pickerInstance) {
+                pickerInstance.setDate(localVal, true);
+            }
         } catch(e) {
             console.log("Sanani qo'yishda xato:", e);
         }
