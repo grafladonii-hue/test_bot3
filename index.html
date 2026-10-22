@@ -944,6 +944,7 @@
         }
 
         try {
+            // Умумий рейтингни фақат 'general' теглик ёки умумий жадвалдан оламиз
             const { data, error, count } = await supabaseClient
                 .from('leaderboard')
                 .select('*', { count: 'exact' })
