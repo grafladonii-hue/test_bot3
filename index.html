@@ -352,6 +352,42 @@
             font-family: inherit;
             white-space: pre-wrap;
         }
+
+        /* --------------------------------- */
+        /* Икки чизиқ орасидаги вақт дизайни */
+        /* --------------------------------- */
+        .tournament-datetime-box {
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+            padding: 14px 0;
+            margin: 12px 0 18px 0;
+            background-color: #fafbfc;
+        }
+        .tournament-datetime-box label {
+            display: block;
+            margin-bottom: 6px;
+            color: #1e293b;
+            font-size: 13px;
+        }
+        .custom-datetime-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+            background: #ffffff;
+            color: #334155;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .custom-datetime-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        /* --------------------------------- */
+
         .admin-test-item {
             background: #fff;
             border: 1px solid #ddd;
@@ -441,7 +477,6 @@
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
-        <!-- Жонли жамоавий турнир баннери ва таймер -->
         <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
             <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир (Синов)</h3>
             <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Турнир бошланишига:</p>
@@ -510,8 +545,11 @@
             <label><b>Турнир учун тестни танланг:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
-            <label><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
-            <input type="datetime-local" id="admin-tournament-time" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+            <!-- Икки чизиқ орасидаги вақт танлаш блоки -->
+            <div class="tournament-datetime-box">
+                <label for="admin-tournament-time"><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
+                <input type="datetime-local" id="admin-tournament-time" class="custom-datetime-input">
+            </div>
 
             <button type="button" onclick="saveTournamentSettings()" style="background: #667eea;">💾 Турнир созламаларини сақлаш</button>
         </div>
@@ -1072,14 +1110,12 @@
         clearInterval(dynamicPercentInterval);
         
         if (isTournamentMode) {
-            timeLeft = 120; // Ҳар бир саволга 2 дақиқа
+            timeLeft = 120; 
             
-            // Жонли турнирда вақт ўтиши билан фоизлар ўзгариб бориши (динамик ўсиш)
             let basePercents = generateOptionPercents(activeQuestions[currentQuestion].options.length, activeQuestions[currentQuestion].correct);
             
             dynamicPercentInterval = setInterval(function() {
                 let q = activeQuestions[currentQuestion];
-                // Вақт ўтиши билан тўғри жавоб фоизи ортиб боради (масалан 10% дан 75% гача)
                 let elapsed = 120 - timeLeft;
                 let boost = Math.min(50, Math.floor((elapsed / 120) * 50));
                 
@@ -1129,7 +1165,6 @@
             var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
             var onchangeAction = isTournamentMode ? "selectTournamentOption(" + index + ", " + q.correct + ")" : "selectLiveOption(" + index + ", this, " + q.correct + ")";
             
-            // Турнир режимида фоизлар бошдан кўриниб туради ва вақт ўтиши билан ўзгариб боради
             let percDisplay = isTournamentMode ? "inline-block" : "none";
 
             optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + ' onchange="' + onchangeAction + '"> ' +
@@ -1155,7 +1190,7 @@
     function generateOptionPercents(length, correctIdx) {
         var arr = new Array(length).fill(0);
         var remaining = 100;
-        var correctShare = Math.floor(Math.random() * 20) + 15; // Бошида камроқ (15-35%)
+        var correctShare = Math.floor(Math.random() * 20) + 15; 
         if (correctShare > remaining) correctShare = remaining;
         arr[correctIdx] = correctShare;
         remaining -= correctShare;
@@ -1176,15 +1211,12 @@
     function selectTournamentOption(optionIndex, correctIndex) {
         userAnswers[currentQuestion] = optionIndex;
         
-        // Жавобни танлаши билан фойдаланувчи ўз жавобининг тўғри/нотўғрилигини дарҳол кўради
         var allLabels = document.querySelectorAll('.options label');
         allLabels.forEach((lbl, idx) => {
-            lbl.style.pointerEvents = 'none'; // Бошқа вариантни ўзгартириб бўлмайди
+            lbl.style.pointerEvents = 'none'; 
             if (idx === correctIndex) lbl.classList.add('correct-answer');
             else if (idx === optionIndex && idx !== correctIndex) lbl.classList.add('wrong-answer');
         });
-
-        // Эслатма: фойдаланувчи кейинги саволга ўтиб кета олмайди, таймер тугашини кутади, лекин фоизлар ўзгариб туриши давом этади.
     }
 
     function proceedToNextQuestion() {
