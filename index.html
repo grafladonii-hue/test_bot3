@@ -939,8 +939,8 @@
         
         if (!isLoadMore) {
             leaderboardLimit = 50;
-            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Юкланмоқда...</p>";
             podiumContainer.innerHTML = "";
+            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Юкланмоқда...</p>";
         }
 
         try {
@@ -1043,8 +1043,9 @@
         var podiumContainer = document.getElementById("podium-section");
         var loadMoreContainer = document.getElementById("load-more-container");
         
-        podiumContainer.innerHTML = "";
-        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Жонли тест натижалари юкланмоқда...</p>";
+        var testTitle = testData[testKey] ? testData[testKey].title : "Жонли тест";
+        podiumContainer.innerHTML = "<h3 style='text-align: center; color: #2c3e50; margin: 10px 0;'>🎯 Жонли тест натижалари: " + testTitle + "</h3>";
+        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Натижалар юкланмоқда...</p>";
         loadMoreContainer.style.display = "none";
 
         try {
@@ -1061,9 +1062,7 @@
                 return;
             }
 
-            var testTitle = testData[testKey] ? testData[testKey].title : "Жонли тест";
-            var html = "<h3 style='text-align: center; color: #2c3e50; margin-bottom: 15px;'>🎯 Жонли тест натижалари: " + testTitle + "</h3>";
-            
+            var html = "";
             data.forEach((item, index) => {
                 var rankNum = index + 1;
                 var tSpent = item.time_spent || '0 son';
@@ -1242,7 +1241,6 @@
                     return;
                 } 
                 
-                // Қатнашчи қачон киришидан қатъи назар, ҳар доим жонли вақтдаги саволдан давом этади
                 currentQuestion = targetQuestionIndex;
                 timeLeft = questionDuration - (elapsedSeconds % questionDuration);
             } else {
@@ -1553,7 +1551,6 @@
         if (currentUserId === ADMIN_ID) return;
 
         try {
-            // ҚАТЪИЙ АЖРАТМА: Агар жонли турнир бўлса фақат турнир калити, акс ҳолда фақат 'general' ёзилади
             let activeTestKeyForLeaderboard = 'general';
             if (isTournamentMode && window.currentTournamentTestKey) {
                 activeTestKeyForLeaderboard = window.currentTournamentTestKey;
