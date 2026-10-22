@@ -854,13 +854,16 @@
         var countdownEl = document.getElementById("tour-countdown");
         var statusEl = document.getElementById("tour-status");
         var btnEl = document.getElementById("tour-btn");
+        var tourTitleEl = document.getElementById("tour-title");
 
         if (!window.tournamentStartTime) {
+            tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
             statusEl.innerText = "🔴 Жонли тест давом этмоқда!";
             countdownEl.style.display = "none";
             btnEl.disabled = false;
-            btnEl.style.background = "#27ae60"; // Яшил ранг
+            btnEl.style.background = "#27ae60"; 
             btnEl.innerText = "Қўшилиш";
+            btnEl.onclick = joinTournament;
             return;
         }
 
@@ -869,25 +872,45 @@
         tournamentInterval = setInterval(function() {
             var now = new Date().getTime();
             var targetTime = new Date(window.tournamentStartTime).getTime();
-            var distance = targetTime - now;
+            
+            var activeTestKey = window.currentTournamentTestKey || 'demo_8';
+            var totalQuestions = (testData[activeTestKey] && testData[activeTestKey].questions) ? testData[activeTestKey].questions.length : 10;
+            var totalTournamentDuration = totalQuestions * 120 * 1000; 
+            var endTime = targetTime + totalTournamentDuration;
 
-            if (distance <= 0) {
+            if (now >= endTime) {
                 clearInterval(tournamentInterval);
+                tourTitleEl.innerText = "🏁 Жонли турнир якунланди";
+                statusEl.innerText = "🔴 Жонли тест ўз ниҳоясига етди!";
+                countdownEl.style.display = "none";
+                btnEl.disabled = false;
+                btnEl.style.background = "#2980b9"; 
+                btnEl.innerText = "Натижаларни кўриш";
+                btnEl.onclick = function() {
+                    switchTab('rating');
+                };
+            } else if (now >= targetTime) {
+                tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
                 statusEl.innerText = "🔴 Жонли тест бошланди!";
                 countdownEl.innerText = "Амалда!";
                 btnEl.disabled = false;
-                btnEl.style.background = "#27ae60"; // Яшил ранг
+                btnEl.style.background = "#27ae60"; 
                 btnEl.innerText = "Қўшилиш";
+                btnEl.onclick = joinTournament;
             } else {
+                var distance = targetTime - now;
                 var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
+                tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
                 countdownEl.innerText = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
                 statusEl.innerText = "⏳ Турнир бошланишига:";
+                countdownEl.style.display = "block";
                 btnEl.disabled = true;
                 btnEl.style.background = "#bdc3c7";
                 btnEl.innerText = "Бошланмаган";
+                btnEl.onclick = null;
             }
         }, 1000);
     }
@@ -931,7 +954,7 @@
 
             if (!data || data.length === 0) {
                 podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестni ишланг!</p>";
                 loadMoreContainer.style.display = "none";
                 return;
             }
