@@ -54,7 +54,7 @@
         let totalScore = 10;
         let timeSpentText = "30 сония";
 
-        // 1. Умумий рейтингни олиб келиш ва кўрсатиш функцияси
+        // 1. Умумий рейтингни олиб келиш ва кўрсатиш функцияси (Хатоларни экранга чиқарувчи ҳимоя билан)
         async function fetchLeaderboard() {
             var listContainer = document.getElementById("leaderboard-list");
             var podiumContainer = document.getElementById("podium-section");
@@ -67,13 +67,19 @@
             if (loadMoreContainer) loadMoreContainer.style.display = "none";
 
             try {
+                if (typeof supabaseClient === 'undefined') {
+                    throw new Error("Supabase мижози топилмади!");
+                }
+
                 const { data, error } = await supabaseClient
                     .from('leaderboard')
                     .select('*')
                     .order('score', { ascending: false })
                     .limit(50);
 
-                if (error) throw error;
+                if (error) {
+                    throw new Error(error.message || "Базадан маълумот ўқишда хатолик");
+                }
 
                 if (!data || data.length === 0) {
                     listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча натижалар йўқ. Биринчи бўлиб тестни ишланг!</p>";
@@ -84,20 +90,22 @@
                 data.forEach((item, index) => {
                     var rankNum = index + 1;
                     var tSpent = item.time_spent || '0 son';
+                    var fullName = item.full_name || 'Номаълум';
+                    var score = item.score || 0;
 
                     html += '<div class="leaderboard-item">' +
                         '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
                         '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
-                        '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
+                        '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + fullName + '</b>' +
                         '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">⏱ ' + tSpent + '</div></div>' +
                         '</div>' +
-                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
+                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + score + ' ball</div>' +
                         '</div>';
                 });
                 listContainer.innerHTML = html;
             } catch (err) {
                 console.error("Рейтингни олишда хато:", err);
-                listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Рейтингни юклаб бўлмади.</p>";
+                listContainer.innerHTML = "<div style='text-align: center; color: #e74c3c; padding: 15px; background: #fde8e8; border-radius: 8px; margin: 10px 0;'><b>Хатолик юз берди:</b><br>" + err.message + "</div>";
             }
         }
 
