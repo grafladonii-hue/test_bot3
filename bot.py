@@ -13,6 +13,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from google import genai
 from PIL import Image
 from supabase import create_client, Client
+import pypdf  # PDF чекларни ўқиш учун
 
 logging.basicConfig(level=logging.INFO)
 
@@ -149,7 +150,7 @@ async def cmd_start(message: types.Message):
     user_id = message.from_user.id
     is_member = await check_membership(user_id, bot)
     is_allowed = is_user_approved(user_id)
-    
+     
     if is_member or is_allowed:
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
@@ -164,30 +165,29 @@ async def cmd_start(message: types.Message):
     else:
         await message.answer(
             "❌ Кечирасиз, сиз бизнинг ёпиқ гуруҳимиз аъзоси эмассиз.\n\n"
-            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, ўтказма тафсилотлари скриншотини юборинг:\n\n"
+            "Мини-аппдан фойдаланиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, ўтказма тафсилотлари скриншоти ёки PDF чекини юборинг:\n\n"
             "💳 **Карта рақами:** **9860120155197128**\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
-            "⚠️ **Изоҳ:** Банк иловасидан **'O'tkazma tafsilotlari'** скриншотини юборинг."
+            "⚠️ **Изоҳ:** Банк иловасидан олинган чек файли ёки скриншотини юборинг."
         )
 
+# Расм кўринишидаги чекларни қабул қилиш
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
     if message.chat.type != "private":
         return
 
     user_id = message.from_user.id
-    
+     
     if await check_membership(user_id, bot) or is_user_approved(user_id):
         await message.answer("Сиз аллақачон мини-аппдан фойдаланиш ҳуқуқига эгасиз!")
         return
 
     photo = message.photo[-1]
-    file_id = photo.file_id
-    
-    processing_msg = await message.answer("⏳ Чек текширилмоқда...")
-    
+    processing_msg = await message.answer("⏳ Чек расми текширилмоқда...")
+     
     try:
-        file_info = await bot.get_file(file_id)
+        file_info = await bot.get_file(photo.file_id)
         downloaded_file = await bot.download_file(file_info.file_path)
         image = Image.open(downloaded_file)
 
@@ -202,7 +202,72 @@ async def handle_payment_screenshot(message: types.Message):
             contents=[image, prompt]
         )
         
-        text_response = response.text.strip()
+        await process_gemini_response(response.text, user_id, message.chat.id, processing_msg.message_id)
+
+    except Exception as e:
+        logging.error(f"Расмни ўқиш хатоси: {e}")
+        await bot.edit_message_text(
+            text="❌ Чек расмини ўқишда хатолик. Қайта уриниб кўринг.",
+            chat_id=message.chat.id,
+            message_id=processing_msg.message_id
+        )
+
+# PDF ёки файл кўринишидаги чекларни қабул қилиш
+@dp.message(F.document)
+async def handle_payment_document(message: types.Message):
+    if message.chat.type != "private":
+        return
+
+    user_id = message.from_user.id
+     
+    if await check_membership(user_id, bot) or is_user_approved(user_id):
+        await message.answer("Сиз аллақачон мини-аппдан фойдаланиш ҳуқуқига эгасиз!")
+        return
+
+    doc = message.document
+    file_name = doc.file_name.lower() if doc.file_name else ""
+    
+    if not file_name.endswith('.pdf'):
+        await message.answer("❌ Илтимос, банк чекини **PDF** форматда ёки **расм** кўринишида юборинг.")
+        return
+
+    processing_msg = await message.answer("⏳ PDF чек ҳужжати текширилмоқда...")
+     
+    try:
+        file_info = await bot.get_file(doc.file_id)
+        downloaded_file = await bot.download_file(file_info.file_path)
+
+        reader = pypdf.PdfReader(downloaded_file)
+        pdf_text = ""
+        for page in reader.pages:
+            pdf_text += page.extract_text() or ""
+
+        prompt = (
+            f"Бу банк ўтказмасининг PDF чеки матни:\n{pdf_text}\n\n"
+            "Шу матндан суммани (amount - рақам кўринишида) ва транзакция ID / чек рақамини (transaction_id - стринг ёки null) ажратиб олиб беринг. "
+            "Фақат ва фақат JSON форматда жавоб қайтаринг (markdownсиз): "
+            '{"amount": 0, "transaction_id": "id_or_null"}'
+        )
+
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[prompt]
+        )
+        
+        await process_gemini_response(response.text, user_id, message.chat.id, processing_msg.message_id)
+
+    except Exception as e:
+        logging.error(f"PDF ҳужжатни ўқиш хатоси: {e}")
+        await bot.edit_message_text(
+            text="❌ PDF ҳужжатни ўқишда хатолик. Қайта уриниб кўринг.",
+            chat_id=message.chat.id,
+            message_id=processing_msg.message_id
+        )
+
+# Умумий жавобни қайта ишлаш ва тасдиқлаш функцияси
+async def process_gemini_response(text_response: str, user_id: int, chat_id: int, message_id: int):
+    try:
+        text_response = text_response.strip()
         if text_response.startswith("```json"):
             text_response = text_response[7:-3].strip()
         elif text_response.startswith("```"):
@@ -216,9 +281,9 @@ async def handle_payment_screenshot(message: types.Message):
         if not txn_id:
             await bot.edit_message_text(
                 text="❌ **Тўлов қабул қилинмади!**\n\n"
-                     "Чекдан аниқ **Транзакция ID** топилмади. Илтимос, **'O'tkazma tafsilotlari'** скриншотини юборинг.",
-                chat_id=message.chat.id,
-                message_id=processing_msg.message_id,
+                     "Чекдан аниқ **Транзакция ID** топилмади. Илтимос, тўлов тафсилотлари тўлиқ кўринган чекни юборинг.",
+                chat_id=chat_id,
+                message_id=message_id,
                 parse_mode="Markdown"
             )
             return
@@ -226,8 +291,8 @@ async def handle_payment_screenshot(message: types.Message):
         if is_receipt_used(txn_id):
             await bot.edit_message_text(
                 text=f"❌ **Тўлов рад этилди!**\n\n⚠️ Бу чек илгари ишлатилган (`{txn_id}`).",
-                chat_id=message.chat.id,
-                message_id=processing_msg.message_id,
+                chat_id=chat_id,
+                message_id=message_id,
                 parse_mode="Markdown"
             )
             return
@@ -235,7 +300,7 @@ async def handle_payment_screenshot(message: types.Message):
         if extracted_amount >= REQUIRED_AMOUNT:
             save_used_receipt(txn_id)
             save_approved_user(user_id)
-            
+             
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [InlineKeyboardButton(text="🚀 Тестларни бошлаш", web_app=WebAppInfo(url=WEB_APP_URL))]
@@ -243,24 +308,24 @@ async def handle_payment_screenshot(message: types.Message):
             )
             await bot.edit_message_text(
                 text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`",
-                chat_id=message.chat.id,
-                message_id=processing_msg.message_id,
+                chat_id=chat_id,
+                message_id=message_id,
                 reply_markup=keyboard,
                 parse_mode="Markdown"
             )
         else:
             await bot.edit_message_text(
                 text=f"❌ **Сумма етарли эмас!**\n\nТопилган сумма: `{int(extracted_amount)} сўм`\nТалаб қилингани: `{REQUIRED_AMOUNT} сўм`",
-                chat_id=message.chat.id,
-                message_id=processing_msg.message_id,
+                chat_id=chat_id,
+                message_id=message_id,
                 parse_mode="Markdown"
             )
     except Exception as e:
-        logging.error(f"Хатолик: {e}")
+        logging.error(f"JSON таҳлил қилиш хатоси: {e}")
         await bot.edit_message_text(
-            text="❌ Чекни ўқишда хатолик. Қайта уриниб кўринг.",
-            chat_id=message.chat.id,
-            message_id=processing_msg.message_id
+            text="❌ Чек маълумотларини қайта ишлашда хатолик юз берди.",
+            chat_id=chat_id,
+            message_id=message_id
         )
 
 @app.post("/api/webhook")
