@@ -6,3 +6,4 @@ pillow
 pydantic
 requests
 supabase
+pypdf
