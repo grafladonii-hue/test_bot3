@@ -726,7 +726,6 @@
         });
     }
 
-    // ТЕЗКОР ЮКЛАШ: Фақат тестларнинг номлари ва саволлар сонигина сўралади (Барча саволлар матни юкланмайди)
     async function fetchTestData() {
         try {
             testData = {};
@@ -1192,9 +1191,7 @@
         }
     }
 
-    // ТЕЗКОР ЮКЛАШ: Фойдаланувчи тест босгандагина айнан ўша тестнинг саволлари базадан олинади
     async function startQuiz(testId, isTour = false) {
-        // Фойдаланувчига юкланаётганини сездириш учун огоҳлантириш ёки анимация кўрсатиш мумкин
         const { data: rawQuestions, error } = await supabaseClient
             .from('questions')
             .select('*')
@@ -1686,7 +1683,7 @@
         headerElement.closest('.admin-test-item').classList.toggle('open');
     }
 
-    // Админ панель учун саволларни ҳам маҳаллий юклаб кўрсатиш функцияси
+    // ТАРТИБЛИ АДМИН ПАНЕЛЬ ФУНКЦИЯСИ
     async function renderAdminTestsList() {
         var listContainer = document.getElementById("admin-tests-list");
         listContainer.innerHTML = "<p style='color:#777;'>Юкланмоқда...</p>";
@@ -1716,9 +1713,10 @@
                 });
             }
 
-            var html = "";
-            var sortedKeys = Object.keys(adminTestData).sort();
+            testData = adminTestData; 
+            var sortedKeys = getSortedTestKeys();
 
+            var html = "";
             sortedKeys.forEach(function(id) {
                 var t = adminTestData[id];
                 if (!t) return;
