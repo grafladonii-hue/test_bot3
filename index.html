@@ -496,7 +496,7 @@
 
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
-        <div id="tests-list"></div>
+        <div id="tests-list"><p style="text-align: center; color: #888;">Юкланмоқда...</p></div>
     </div>
 
     <div id="rating-page" class="page">
@@ -726,10 +726,11 @@
         });
     }
 
+    // ТЕЗКОР ЮКЛАШ: Фақат тестларнинг номлари ва саволлар сонигина сўралади (Барча саволлар матни юкланмайди)
     async function fetchTestData() {
         try {
             testData = {};
-            const qRes = await supabaseClient.from('questions').select('*');
+            const qRes = await supabaseClient.from('questions').select('id, test_id, test_title');
             if (qRes.data && qRes.data.length > 0) {
                 qRes.data.forEach(q => {
                     const tId = q.test_id;
@@ -738,21 +739,12 @@
                     if (!testData[tId]) {
                         testData[tId] = {
                             title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(),
-                            questions: []
+                            questionsCount: 0
                         };
                     } else if (q.test_title) {
                         testData[tId].title = q.test_title;
                     }
-
-                    if (!testData[tId].questions) testData[tId].questions = [];
-                    testData[tId].questions.push({
-                        db_id: q.id,
-                        readingText: q.reading_text,
-                        imageUrl: q.image_url,
-                        question: q.question,
-                        options: q.options,
-                        correct: q.correct
-                    });
+                    testData[tId].questionsCount++;
                 });
             }
 
@@ -874,7 +866,7 @@
             var targetTime = new Date(window.tournamentStartTime).getTime();
             
             var activeTestKey = window.currentTournamentTestKey || 'demo_8';
-            var totalQuestions = (testData[activeTestKey] && testData[activeTestKey].questions) ? testData[activeTestKey].questions.length : 10;
+            var totalQuestions = (testData[activeTestKey] && testData[activeTestKey].questionsCount) ? testData[activeTestKey].questionsCount : 10;
             var totalTournamentDuration = totalQuestions * 120 * 1000; 
             var endTime = targetTime + totalTournamentDuration;
 
@@ -1122,7 +1114,7 @@
             var titleLower = t.title.toLowerCase();
             var cardHtml = '<div class="test-card">' +
                     '<div><strong>' + t.title + '</strong>' +
-                    '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
+                    '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questionsCount + ' ta savol • 90 daqiqa</p></div>' +
                     '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>' +
                     '</div>';
 
@@ -1200,10 +1192,16 @@
         }
     }
 
-    function startQuiz(testId, isTour = false) {
-        var rawQuestions = testData[testId] ? testData[testId].questions : [];
-        if (!rawQuestions || rawQuestions.length === 0) {
-            alert("Бу тестда ҳозиргача ҳеч қандай савол мавжуд эмас!");
+    // ТЕЗКОР ЮКЛАШ: Фойдаланувчи тест босгандагина айнан ўша тестнинг саволлари базадан олинади
+    async function startQuiz(testId, isTour = false) {
+        // Фойдаланувчига юкланаётганини сездириш учун огоҳлантириш ёки анимация кўрсатиш мумкин
+        const { data: rawQuestions, error } = await supabaseClient
+            .from('questions')
+            .select('*')
+            .eq('test_id', testId);
+
+        if (error || !rawQuestions || rawQuestions.length === 0) {
+            alert("Бу тест саволларини юклаб бўлмади!");
             return;
         }
         
@@ -1212,9 +1210,9 @@
         if (isTournamentMode) {
             activeQuestions = rawQuestions.map(function(q) {
                 return {
-                    db_id: q.db_id,
-                    readingText: q.readingText,
-                    imageUrl: q.imageUrl,
+                    db_id: q.id,
+                    readingText: q.reading_text,
+                    imageUrl: q.image_url,
                     question: q.question,
                     options: q.options,
                     correct: q.correct
@@ -1225,7 +1223,7 @@
                 var startTime = new Date(window.tournamentStartTime).getTime();
                 var now = new Date().getTime();
                 var elapsedSeconds = Math.floor((now - startTime) / 1000);
-                var questionDuration = 120; // Ҳар бир савол 2 дақиқа
+                var questionDuration = 120; 
                 
                 if (elapsedSeconds < 0) {
                     alert("Турнир ҳали бошланмади!");
@@ -1258,8 +1256,8 @@
                 var newCorrectIndex = shuffledOptions.findIndex(function(o) { return o.isCorrect; });
 
                 return {
-                    readingText: q.readingText,
-                    imageUrl: q.imageUrl,
+                    readingText: q.reading_text,
+                    imageUrl: q.image_url,
                     question: q.question,
                     options: shuffledOptions.map(function(o) { return o.text; }),
                     correct: newCorrectIndex
@@ -1654,7 +1652,7 @@
 
         sortedKeys.forEach(function(id) {
             if (testData[id]) {
-                var titleText = testData[id].title + ' (' + (testData[id].questions ? testData[id].questions.length : 0) + ' та савол)';
+                var titleText = testData[id].title + ' (' + testData[id].questionsCount + ' та савол)';
                 html += '<option value="' + id + '">' + titleText + '</option>';
                 tourHtml += '<option value="' + id + '" ' + (window.currentTournamentTestKey === id ? 'selected' : '') + '>' + titleText + '</option>';
             }
@@ -1688,48 +1686,81 @@
         headerElement.closest('.admin-test-item').classList.toggle('open');
     }
 
-    function renderAdminTestsList() {
-        var html = "";
-        var sortedKeys = getSortedTestKeys();
+    // Админ панель учун саволларни ҳам маҳаллий юклаб кўрсатиш функцияси
+    async function renderAdminTestsList() {
+        var listContainer = document.getElementById("admin-tests-list");
+        listContainer.innerHTML = "<p style='color:#777;'>Юкланмоқда...</p>";
 
-        sortedKeys.forEach(function(id) {
-            var t = testData[id];
-            if (!t) return;
-            var questionsHtml = "";
+        try {
+            const { data: allQuestions } = await supabaseClient.from('questions').select('*');
+            let adminTestData = {};
 
-            var isHidden = hiddenTests[id];
-            var visibilityBtnText = isHidden ? "🔓 Очиш (Кўрсатиш)" : "🔒 Яшириш (Турнир учун)";
-            var visibilityBtnClass = isHidden ? "info" : "dark";
-
-            if (t.questions) {
-                t.questions.forEach(function(q, qIndex) {
-                    var imgIcon = q.imageUrl ? "🖼 " : "";
-                    questionsHtml += '<div class="admin-q-item">' +
-                        '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
-                        '<div class="admin-btn-group">' +
-                        '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Таҳрирлаш</button>' +
-                        '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 Ўчириш</button>' +
-                        '</div></div>';
+            if (allQuestions) {
+                allQuestions.forEach(q => {
+                    let tId = q.test_id;
+                    if (!tId) return;
+                    if (!adminTestData[tId]) {
+                        adminTestData[tId] = {
+                            title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(),
+                            questions: []
+                        };
+                    }
+                    adminTestData[tId].questions.push({
+                        db_id: q.id,
+                        readingText: q.reading_text,
+                        imageUrl: q.image_url,
+                        question: q.question,
+                        options: q.options,
+                        correct: q.correct
+                    });
                 });
             }
 
-            html += '<div class="admin-test-item">' +
-                '<div class="admin-test-header" onclick="toggleTestAccordion(this)">' +
-                '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span> ' +
-                (isHidden ? '<span style="color:#e74c3c; font-size:11px; font-weight:bold;">(🔒 Яширин)</span>' : '<span style="color:#27ae60; font-size:11px; font-weight:bold;">(👁 Очиқ)</span>') +
-                '</div>' +
-                '<div class="admin-btn-group" onclick="event.stopPropagation()">' +
-                '<button type="button" class="' + visibilityBtnClass + '" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="toggleTestVisibility(\'' + id + '\')">' + visibilityBtnText + '</button>' +
-                '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Савол қўшиш</button>' +
-                '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
-                '</div></div>' +
-                '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Ҳозирча саволлар йўқ.</p>") + '</div>' +
-                '</div>';
-        });
-        document.getElementById("admin-tests-list").innerHTML = html || "<p style='color:#777;'>Ҳеч қандай тест мавжуд эмас.</p>";
+            var html = "";
+            var sortedKeys = Object.keys(adminTestData).sort();
+
+            sortedKeys.forEach(function(id) {
+                var t = adminTestData[id];
+                if (!t) return;
+                var questionsHtml = "";
+
+                var isHidden = hiddenTests[id];
+                var visibilityBtnText = isHidden ? "🔓 Очиш (Кўрсатиш)" : "🔒 Яшириш (Турнир учун)";
+                var visibilityBtnClass = isHidden ? "info" : "dark";
+
+                if (t.questions) {
+                    t.questions.forEach(function(q, qIndex) {
+                        var imgIcon = q.imageUrl ? "🖼 " : "";
+                        questionsHtml += '<div class="admin-q-item">' +
+                            '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
+                            '<div class="admin-btn-group">' +
+                            '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Таҳрирлаш</button>' +
+                            '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 Ўчириш</button>' +
+                            '</div></div>';
+                    });
+                }
+
+                html += '<div class="admin-test-item">' +
+                    '<div class="admin-test-header" onclick="toggleTestAccordion(this)">' +
+                    '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span> ' +
+                    (isHidden ? '<span style="color:#e74c3c; font-size:11px; font-weight:bold;">(🔒 Яширин)</span>' : '<span style="color:#27ae60; font-size:11px; font-weight:bold;">(👁 Очиқ)</span>') +
+                    '</div>' +
+                    '<div class="admin-btn-group" onclick="event.stopPropagation()">' +
+                    '<button type="button" class="' + visibilityBtnClass + '" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="toggleTestVisibility(\'' + id + '\')">' + visibilityBtnText + '</button>' +
+                    '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Савол қўшиш</button>' +
+                    '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
+                    '</div></div>' +
+                    '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Ҳозирча саволлар йўқ.</p>") + '</div>' +
+                    '</div>';
+            });
+            listContainer.innerHTML = html || "<p style='color:#777;'>Ҳеч қандай тест мавжуд эмас.</p>";
+        } catch(e) {
+            console.error("Admin ro'yxatini olishda xato:", e);
+            listContainer.innerHTML = "<p style='color:#e74c3c;'>Xatolik yuz berdi.</p>";
+        }
     }
 
-    function addNewQuestionToTest(testId) {
+    async function addNewQuestionToTest(testId) {
         if (currentUserId !== ADMIN_ID) return;
         resetAdminForm();
         document.getElementById("admin-test-select").value = testId;
@@ -1740,17 +1771,19 @@
         window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
     }
 
-    function editQuestionFromAdmin(testId, qIndex) {
+    async function editQuestionFromAdmin(testId, qIndex) {
         if (currentUserId !== ADMIN_ID) return;
-        var t = testData[testId];
-        var q = t.questions[qIndex];
+        
+        const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
+        if (!questions || !questions[qIndex]) return;
+        var q = questions[qIndex];
 
         document.getElementById("admin-test-select").value = testId;
         document.getElementById("editing-test-id").value = testId;
         document.getElementById("editing-q-index").value = qIndex;
-        document.getElementById("editing-db-id").value = q.db_id || "";
+        document.getElementById("editing-db-id").value = q.id || "";
 
-        document.getElementById("admin-reading-text").value = q.readingText || "";
+        document.getElementById("admin-reading-text").value = q.reading_text || "";
         document.getElementById("admin-question").value = q.question || "";
         document.getElementById("admin-opt-0").value = q.options && q.options[0] ? q.options[0] : "";
         document.getElementById("admin-opt-1").value = q.options && q.options[1] ? q.options[1] : "";
@@ -1758,7 +1791,7 @@
         document.getElementById("admin-opt-3").value = q.options && q.options[3] ? q.options[3] : "";
         document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
 
-        var imgUrl = q.imageUrl || "";
+        var imgUrl = q.image_url || "";
         document.getElementById("admin-img-data").value = imgUrl;
         showImagePreview(imgUrl);
 
@@ -1824,8 +1857,11 @@
                 return;
             }
             targetId = "demo_" + Date.now();
-        } else if (testData[selectVal]) {
-            testTitleToSave = testData[selectVal].title;
+        } else {
+            const { data: tempQ } = await supabaseClient.from('questions').select('test_title').eq('test_id', selectVal).limit(1);
+            if (tempQ && tempQ.length > 0) {
+                testTitleToSave = tempQ[0].test_title;
+            }
         }
 
         var payload = {
@@ -1864,9 +1900,12 @@
     async function deleteQuestionFromAdmin(testId, qIndex) {
         if (currentUserId !== ADMIN_ID) return;
         if (confirm("Ростдан ҳам ушбу саволни ўчириб ташламоқчимисиз?")) {
-            var q = testData[testId].questions[qIndex];
-            if (q && q.db_id) {
-                await supabaseClient.from('questions').delete().eq('id', q.db_id);
+            const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
+            if (questions && questions[qIndex]) {
+                var q = questions[qIndex];
+                if (q && q.id) {
+                    await supabaseClient.from('questions').delete().eq('id', q.id);
+                }
             }
             await fetchTestData();
             renderAdminTestsList();
