@@ -526,7 +526,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            <a href="https://t.me/Baxtiyor_Karjabov" target="_blank" class="btn-telegram">
+            <a href="https://t.me/Baxtiyor_Karjabov" target="_blank" onclick="openAdminLink(event)" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -739,7 +739,6 @@
         }
     }
 
-    // Admin panelini xavfsiz tekshirib chiqarish
     if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
         var adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.style.display = 'block';
@@ -1143,15 +1142,36 @@
         return arr;
     }
 
-    // VIP obunaga o'tish uchun Telegram WebApp orqali ochish funksiyasi
+    // VIP obunaga bot orqali o'tish funksiyasi (Universal Telegram WebApp ochish)
     function openVipBot(e) {
         if (e) e.preventDefault();
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            window.Telegram.WebApp.openTelegramLink(botUrl);
-        } else {
-            window.open(botUrl, '_blank');
+        if (window.Telegram && window.Telegram.WebApp) {
+            if (window.Telegram.WebApp.openTelegramLink) {
+                window.Telegram.WebApp.openTelegramLink(botUrl);
+                return;
+            } else if (window.Telegram.WebApp.openLink) {
+                window.Telegram.WebApp.openLink(botUrl);
+                return;
+            }
         }
+        window.open(botUrl, '_blank');
+    }
+
+    // Admin bilan bog'lanish uchun universal ochish funksiyasi
+    function openAdminLink(e) {
+        if (e) e.preventDefault();
+        var adminUrl = "https://t.me/Baxtiyor_Karjabov";
+        if (window.Telegram && window.Telegram.WebApp) {
+            if (window.Telegram.WebApp.openTelegramLink) {
+                window.Telegram.WebApp.openTelegramLink(adminUrl);
+                return;
+            } else if (window.Telegram.WebApp.openLink) {
+                window.Telegram.WebApp.openLink(adminUrl);
+                return;
+            }
+        }
+        window.open(adminUrl, '_blank');
     }
 
     function renderTestsList() {
