@@ -1098,23 +1098,37 @@
         return arr;
     }
 
+    // РЕНДЕР ФУНКЦИЯСИ: ПРЕМИУМ СТАТУС ВА РУХСАТНИ ТЕКШИРИШ
     function renderTestsList() {
+        // URL'дан status=premium келган бўлса, LocalStorage'га сақлаш
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'premium') {
+            localStorage.setItem('is_premium_user', 'true');
+        }
+
+        var isUserPremium = localStorage.getItem('is_premium_user') === 'true';
+
         var sortedKeys = getSortedTestKeys();
         var kuzHtml = "";
         var bahorHtml = "";
         var boshqaHtml = "";
 
-        sortedKeys.forEach(function(id) {
+        sortedKeys.forEach(function(id, index) {
             var t = testData[id];
-            if (!t) return;
-            
-            if (hiddenTests[id]) return;
+            if (!t || hiddenTests[id]) return;
+
+            // Агар премиум бўлмаса ва 4-тестдан бошлаб (index >= 3) бўлса — қулфланади
+            var isLocked = !isUserPremium && (index >= 3);
+
+            var actionBtn = isLocked 
+                ? '<button type="button" class="warning" style="width: auto; padding: 8px 15px;" onclick="redirectToBot()">🔒 Очиш (Тўлов)</button>'
+                : '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
             var cardHtml = '<div class="test-card">' +
                     '<div><strong>' + t.title + '</strong>' +
                     '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questionsCount + ' ta savol • 90 daqiqa</p></div>' +
-                    '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>' +
+                    actionBtn +
                     '</div>';
 
             if (titleLower.includes('kuz') || titleLower.includes('куз')) {
@@ -1147,6 +1161,15 @@
         }
 
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
+    }
+
+    // БОТГА ТЎЛОВ УЧУН ЙЎНАЛТИРИШ
+    function redirectToBot() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.openTelegramLink('https://t.me/Demotestlaruz_bot?start=pay_premium');
+        } else {
+            window.location.href = 'https://t.me/Demotestlaruz_bot?start=pay_premium';
+        }
     }
 
     function toggleCategory(headerEl) {
@@ -1683,7 +1706,6 @@
         headerElement.closest('.admin-test-item').classList.toggle('open');
     }
 
-    // ТАРТИБЛИ АДМИН ПАНЕЛЬ ФУНКЦИЯСИ
     async function renderAdminTestsList() {
         var listContainer = document.getElementById("admin-tests-list");
         listContainer.innerHTML = "<p style='color:#777;'>Юкланмоқда...</p>";
