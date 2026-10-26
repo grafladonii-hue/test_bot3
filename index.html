@@ -516,10 +516,10 @@
         </div>
 
         <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
-            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Жонли турнир (Синов)</h3>
-            <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Турнир бошланишига:</p>
+            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Jonli турнир (Sinov)</h3>
+            <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Turnir boshlanishiga:</p>
             <div id="tour-countdown" style="font-size: 18px; font-weight: bold; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;">00:00:00</div>
-            <button id="tour-btn" onclick="joinTournament()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Қўшилиш (Бошланмаган)</button>
+            <button id="tour-btn" onclick="joinTournament()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Qo'shilish (Boshlanmagan)</button>
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
@@ -538,17 +538,17 @@
 
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
-        <div id="tests-list"><p style="text-align: center; color: #888;">Юкланмоқда...</p></div>
+        <div id="tests-list"><p style="text-align: center; color: #888;">Yuklanmoqda...</p></div>
     </div>
 
     <div id="rating-page" class="page">
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
-        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli топширган қатнашчилар натижалари:</p>
+        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan qatnashchilar natijalari:</p>
         
         <div id="podium-section"></div>
 
         <div id="leaderboard-list" style="margin-top: 15px;">
-            <p style="text-align: center; color: #888;">Юкланмоқда...</p>
+            <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
         
         <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
@@ -559,7 +559,7 @@
     <div id="quiz-page" class="page">
         <div class="header">
             <span id="quiz-title">Test sinovi</span>
-            <div class="timer" id="timer">Вақт: 02:00</div>
+            <div class="timer" id="timer">Vaqt: 02:00</div>
         </div>
 
         <div id="quiz-container">
@@ -571,23 +571,23 @@
         </div>
 
         <div class="result-box" id="result-box">
-            <h2>Тест якунланди!</h2>
+            <h2>Test yakunlandi!</h2>
             <div class="score-circle" id="score-circle">0 ball</div>
             <p id="score-text"></p>
             <div id="answers-review"></div>
 
-            <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga қайтиш</button>
+            <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
     </div>
 
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Жонли турнир тест ва бошланиш вақтини созлаш мумкин.
+            Siz administratorsiz. Jonli турнир тест ва бошланиш вақтини созлаш мумкин.
         </div>
 
         <div style="background: #fdfefe; border: 2px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 style="margin-top:0; color:#2c3e50;">🎯 Жонли турнирни созлаш (Тест ва Вақт)</h3>
+            <h3 style="margin-top:0; color:#2c3e50;">🎯 Jonli турнирни созлаш (Тест ва Вақт)</h3>
             
             <label><b>Турнир учун тестни танланг:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
@@ -650,7 +650,7 @@
             </div>
         </div>
 
-        <h3>📚 Мавжуд тестлар ва уларнинг мақоми</h3>
+        <h3>📚 Mavjud testlar va ularning maqomi</h3>
         <div id="admin-tests-list" style="margin-bottom: 25px;"></div>
     </div>
 </div>
@@ -658,9 +658,9 @@
 <div id="imageModal" class="image-modal" onclick="closeImageModal()">
     <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
     <div class="image-modal-content-wrapper" onclick="event.stopPropagation()">
-        <img id="modalImg" alt="Катталаштирилган расм">
+        <img id="modalImg" alt="Kattalashtirilgan rasm">
     </div>
-    <div class="zoom-hint">Иккита бармоқ билан чўзиб катталаштиришингиз мумкин</div>
+    <div class="zoom-hint">Ikkita barmoq bilan cho'zib kattalashtirishingiz mumkin</div>
 </div>
 
 <div class="nav-bar">
@@ -739,7 +739,6 @@
         }
     }
 
-    // Админ панели текшируви (string типга ўтказиб солиштирамиз)
     if (String(currentUserId) === String(ADMIN_ID)) {
         var adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.style.display = 'block';
@@ -808,7 +807,7 @@
             }
             startTournamentCountdown();
         } catch (e) {
-            console.error("Юклашда хатолик:", e);
+            console.error("Yuklashda xatolik:", e);
         }
         renderTestsList();
     }
@@ -833,7 +832,7 @@
 
     async function saveTournamentSettings() {
         if (String(currentUserId) !== String(ADMIN_ID)) {
-            alert("Ушбу амални фақат администратор бажариши мумкин!");
+            alert("Ushbu amalni faqat administrator bajarishi mumkin!");
             return;
         }
 
@@ -841,7 +840,7 @@
         var startTimeInput = document.getElementById("admin-tournament-time").value;
 
         if (!selectedTestId) {
-            alert("Илтимос, тестни танланг!");
+            alert("Iltimos, testni tanlang!");
             return;
         }
 
@@ -855,7 +854,7 @@
                 id: 1,
                 test_key: selectedTestId,
                 start_time: isoString,
-                title: 'Жонли турнир',
+                title: 'Jonli турнир',
                 status: 'active'
             };
 
@@ -865,7 +864,7 @@
 
             if (error) {
                 console.error("Supabase xatoligi:", error);
-                alert("Сақлашда хатолик: " + error.message);
+                alert("Saqlashda xatolik: " + error.message);
                 return;
             }
 
@@ -877,10 +876,10 @@
                 localStorage.removeItem('cached_tournament_start');
             }
             startTournamentCountdown();
-            alert("Турнир созламалари муваффақиятли сақланди!");
+            alert("Turnir sozlamalari muvaffaqiyatli saqlandi!");
         } catch (err) {
             console.error("Catch xatoligi:", err);
-            alert("Сақлашда хатолик: " + err.message);
+            alert("Saqlashda xatolik: " + err.message);
         }
     }
 
@@ -893,12 +892,12 @@
         var tourTitleEl = document.getElementById("tour-title");
 
         if (!window.tournamentStartTime) {
-            tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
-            statusEl.innerText = "🔴 Жонли тест давом этмоқда!";
+            tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
+            statusEl.innerText = "🔴 Jonli test davom etmoqda!";
             countdownEl.style.display = "none";
             btnEl.disabled = false;
             btnEl.style.background = "#27ae60"; 
-            btnEl.innerText = "Қўшилиш";
+            btnEl.innerText = "Qo'shilish";
             btnEl.onclick = joinTournament;
             return;
         }
@@ -916,22 +915,22 @@
 
             if (now >= endTime) {
                 clearInterval(tournamentInterval);
-                tourTitleEl.innerText = "🏁 Жонли турнир якунланди";
-                statusEl.innerText = "🔴 Жонли тест ўз ниҳоясига етди!";
+                tourTitleEl.innerText = "🏁 Jonli turnir yakunlandi";
+                statusEl.innerText = "🔴 Jonli test o'z nihoyasiga yetdi!";
                 countdownEl.style.display = "none";
                 btnEl.disabled = false;
                 btnEl.style.background = "#2980b9"; 
-                btnEl.innerText = "Натижаларни кўриш";
+                btnEl.innerText = "Natijalarni ko'rish";
                 btnEl.onclick = function() {
                     showTournamentResults(window.currentTournamentTestKey || 'demo_8');
                 };
             } else if (now >= targetTime) {
-                tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
-                statusEl.innerText = "🔴 Жонли тест бошланди!";
-                countdownEl.innerText = "Амалда!";
+                tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
+                statusEl.innerText = "🔴 Jonli test boshlandi!";
+                countdownEl.innerText = "Amalda!";
                 btnEl.disabled = false;
                 btnEl.style.background = "#27ae60"; 
-                btnEl.innerText = "Қўшилиш";
+                btnEl.innerText = "Qo'shilish";
                 btnEl.onclick = joinTournament;
             } else {
                 var distance = targetTime - now;
@@ -939,13 +938,13 @@
                 var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                tourTitleEl.innerText = "🎯 Жонли турнир (Синов)";
+                tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
                 countdownEl.innerText = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-                statusEl.innerText = "⏳ Турнир бошланишига:";
+                statusEl.innerText = "⏳ Turnir boshlanishiga:";
                 countdownEl.style.display = "block";
                 btnEl.disabled = true;
                 btnEl.style.background = "#bdc3c7";
-                btnEl.innerText = "Бошланмаган";
+                btnEl.innerText = "Boshlanmagan";
                 btnEl.onclick = null;
             }
         }, 1000);
@@ -976,7 +975,7 @@
         if (!isLoadMore) {
             leaderboardLimit = 50;
             podiumContainer.innerHTML = "";
-            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Юкланмоқда...</p>";
+            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
         }
 
         try {
@@ -991,7 +990,7 @@
 
             if (!data || data.length === 0) {
                 podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Ҳозирча умумий рейтинг натижалари йўқ.</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha umumiy reyting natijalari yo'q.</p>";
                 loadMoreContainer.style.display = "none";
                 return;
             }
@@ -1005,7 +1004,7 @@
                 if (top3Users[1]) {
                     let u2 = top3Users[1];
                     podiumHtml += '<div class="podium-item second">' +
-                        '<div class="podium-rank-badge">🥈 2-ўрин</div>' +
+                        '<div class="podium-rank-badge">🥈 2-o\'rin</div>' +
                         '<div class="podium-avatar">2</div>' +
                         '<div class="podium-name" title="' + u2.full_name + '">' + u2.full_name + '</div>' +
                         '<div class="podium-score">' + u2.score + ' ball</div>' +
@@ -1016,7 +1015,7 @@
                 if (top3Users[0]) {
                     let u1 = top3Users[0];
                     podiumHtml += '<div class="podium-item first">' +
-                        '<div class="podium-rank-badge">👑 1-ўрин</div>' +
+                        '<div class="podium-rank-badge">👑 1-o\'rin</div>' +
                         '<div class="podium-avatar">1</div>' +
                         '<div class="podium-name" title="' + u1.full_name + '">' + u1.full_name + '</div>' +
                         '<div class="podium-score">' + u1.score + ' ball</div>' +
@@ -1027,7 +1026,7 @@
                 if (top3Users[2]) {
                     let u3 = top3Users[2];
                     podiumHtml += '<div class="podium-item third">' +
-                        '<div class="podium-rank-badge">🥉 3-ўрин</div>' +
+                        '<div class="podium-rank-badge">🥉 3-o\'rin</div>' +
                         '<div class="podium-avatar">3</div>' +
                         '<div class="podium-name" title="' + u3.full_name + '">' + u3.full_name + '</div>' +
                         '<div class="podium-score">' + u3.score + ' ball</div>' +
@@ -1079,9 +1078,9 @@
         var podiumContainer = document.getElementById("podium-section");
         var loadMoreContainer = document.getElementById("load-more-container");
         
-        var testTitle = testData[testKey] ? testData[testKey].title : "Жонли тест";
-        podiumContainer.innerHTML = "<h3 style='text-align: center; color: #2c3e50; margin: 10px 0;'>🎯 Жонли тест натижалари: " + testTitle + "</h3>";
-        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Натижалар юкланмоқда...</p>";
+        var testTitle = testData[testKey] ? testData[testKey].title : "Jonli test";
+        podiumContainer.innerHTML = "<h3 style='text-align: center; color: #2c3e50; margin: 10px 0;'>🎯 Jonli test natijalari: " + testTitle + "</h3>";
+        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Natijalar yuklanmoqda...</p>";
         loadMoreContainer.style.display = "none";
 
         try {
@@ -1094,7 +1093,7 @@
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Бу жонли тест бўйича ҳали натижалар йўқ.</p>";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Bu jonli test bo'yicha hali natijalar yo'q.</p>";
                 return;
             }
 
@@ -1114,8 +1113,8 @@
             });
             listContainer.innerHTML = html;
         } catch (err) {
-            console.error("Турнир натижаларини олишда хато:", err);
-            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Натижаларни юклаб бўлмади.</p>";
+            console.error("Turnir natijalarini olishda xato:", err);
+            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Natijalarni yuklab bo'lmadi.</p>";
         }
     }
 
@@ -1143,6 +1142,17 @@
         return arr;
     }
 
+    // VIP obunaga o'tish uchun Telegram WebApp orqali ochish funksiyasi
+    function openVipBot(e) {
+        e.preventDefault();
+        var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+            window.Telegram.WebApp.openTelegramLink(botUrl);
+        } else {
+            window.open(botUrl, '_blank');
+        }
+    }
+
     function renderTestsList() {
         var urlParams = new URLSearchParams(window.location.search);
         
@@ -1166,7 +1176,7 @@
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<a href="https://t.me/Demotestlaruz_bot?start=pay_premium" target="_blank" class="vip-link-btn">⭐ VIP obuna</a>'
+                ? '<a href="https://t.me/Demotestlaruz_bot?start=pay_premium" onclick="openVipBot(event)" class="vip-link-btn" title="VIP obunaga bot orqali a\'zo bo\'ling">⭐ VIP obuna</a>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
@@ -1200,7 +1210,7 @@
         }
         if (boshqaHtml) {
             html += '<div class="category-section">' +
-                    '<div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa тестлар</span><span>🔽</span></div>' +
+                    '<div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>🔽</span></div>' +
                     '<div class="category-content">' + boshqaHtml + '</div>' +
                     '</div>';
         }
@@ -1222,7 +1232,7 @@
 
     function switchTab(tab) {
         if (tab === 'admin' && String(currentUserId) !== String(ADMIN_ID)) {
-            alert("Сизда бу бўлимга кириш ҳуқуқи йўқ!");
+            alert("Sizda bu bo'limga kirish huquqi yo'q!");
             return;
         }
 
@@ -1257,7 +1267,7 @@
             .eq('test_id', testId);
 
         if (error || !rawQuestions || rawQuestions.length === 0) {
-            alert("Бу тест саволларини юклаб бўлмади!");
+            alert("Bu test savollarini yuklab bo'lmadi!");
             return;
         }
         
@@ -1282,7 +1292,7 @@
                 var questionDuration = 120; 
                 
                 if (elapsedSeconds < 0) {
-                    alert("Турнир ҳали бошланмади!");
+                    alert("Turnir hali boshlanmadi!");
                     switchTab('home');
                     return;
                 }
@@ -1290,7 +1300,7 @@
                 var targetQuestionIndex = Math.floor(elapsedSeconds / questionDuration);
                 
                 if (targetQuestionIndex >= activeQuestions.length) {
-                    alert("Жонли турнир аллақачон якунланган!");
+                    alert("Jonli turnir allaqachon yakunlangan!");
                     switchTab('home');
                     return;
                 } 
@@ -1330,7 +1340,7 @@
         
         document.getElementById('quiz-container').style.display = 'block';
         document.getElementById('result-box').style.display = 'none';
-        document.getElementById('quiz-title').innerText = (testData[testId] ? testData[testId].title : "Test") + (isTournamentMode ? " (Жонли турнир)" : "");
+        document.getElementById('quiz-title').innerText = (testData[testId] ? testData[testId].title : "Test") + (isTournamentMode ? " (Jonli turnir)" : "");
 
         loadQuestion();
         startTimer();
@@ -1373,7 +1383,7 @@
         timerInterval = setInterval(function() {
             var minutes = Math.floor(timeLeft / 60);
             var seconds = timeLeft % 60;
-            document.getElementById("timer").innerText = "Вақт: " + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+            document.getElementById("timer").innerText = "Vaqt: " + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
             
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
@@ -1409,7 +1419,7 @@
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
-        var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Расмли савол" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Катталаштириш учун босинг">' : "";
+        var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Rasmli savol" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Kattalashtirish uchun bosing">' : "";
 
         document.getElementById("question-box").innerHTML = 
             textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap; font-size: 15px; line-height: 1.4;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
@@ -1551,7 +1561,7 @@
     function nextQuestion() {
         saveCurrentAnswer();
         if (userAnswers[currentQuestion] === undefined && !isTournamentMode) {
-            alert("Илтимос, жавобни белгиланг!");
+            alert("Iltimos, javobni belgilang!");
             return;
         }
 
@@ -1581,7 +1591,7 @@
         document.getElementById("result-box").style.display = "block";
 
         var score = 0;
-        var reviewHtml = "<h3>Жавоблар таҳлили:</h3>";
+        var reviewHtml = "<h3>Javoblar tahlili:</h3>";
 
         activeQuestions.forEach(function(q, index) {
             var selected = userAnswers[index];
@@ -1590,19 +1600,19 @@
 
             var className = isCorrect ? "correct" : "incorrect";
             var icon = isCorrect ? "🟢" : "🔴";
-            var pointsText = isCorrect ? "(+2 балл)" : "(0 балл)";
+            var pointsText = isCorrect ? "(+2 ball)" : "(0 ball)";
             var userOptText = (selected !== undefined && selected >= 0) ? q.options[selected] : "Belgilanmagan (Vaqt o'tdi)";
 
             reviewHtml += '<div class="result-item ' + className + '">' +
-                icon + ' <b>Савол ' + (index + 1) + ':</b> ' + q.question + ' ' + pointsText + '<br>' +
-                'Сизнинг жавобингиз: ' + userOptText + '<br>' +
-                (!isCorrect ? 'Тўғри жавоб: <b>' + q.options[q.correct] + '</b>' : '') +
+                icon + ' <b>Savol ' + (index + 1) + ':</b> ' + q.question + ' ' + pointsText + '<br>' +
+                'Sizning javobingiz: ' + userOptText + '<br>' +
+                (!isCorrect ? 'To\'g\'ri javob: <b>' + q.options[q.correct] + '</b>' : '') +
                 '</div>';
         });
 
         var earnedPoints = score * 2;
         document.getElementById("score-circle").innerText = earnedPoints + " ball";
-        document.getElementById("score-text").innerHTML = "Тўғри жавоблар: " + score + " та / Нотўғри: " + (activeQuestions.length - score) + " та";
+        document.getElementById("score-text").innerHTML = "To'g'ri javoblar: " + score + " ta / Noto'g'ri: " + (activeQuestions.length - score) + " ta";
         document.getElementById("answers-review").innerHTML = reviewHtml;
 
         var secondsSpent = 5400 - timeLeft;
@@ -1710,13 +1720,13 @@
         var select = document.getElementById("admin-test-select");
         var tourSelect = document.getElementById("admin-tournament-test-select");
         
-        var html = '<option value="new">➕ Мутлақо янги тест яратиш</option>';
+        var html = '<option value="new">➕ Mutlaqo yangi test yaratish</option>';
         var tourHtml = '';
         var sortedKeys = getSortedTestKeys();
 
         sortedKeys.forEach(function(id) {
             if (testData[id]) {
-                var titleText = testData[id].title + ' (' + testData[id].questionsCount + ' та савол)';
+                var titleText = testData[id].title + ' (' + testData[id].questionsCount + ' ta savol)';
                 html += '<option value="' + id + '">' + titleText + '</option>';
                 tourHtml += '<option value="' + id + '" ' + (window.currentTournamentTestKey === id ? 'selected' : '') + '>' + titleText + '</option>';
             }
@@ -1733,15 +1743,15 @@
         if (val === "new") {
             titleBox.style.display = "block";
             document.getElementById("editing-test-id").value = "";
-            document.getElementById("form-title").innerText = "➕ Янги тест яратиш ва савол қўшиш";
+            document.getElementById("form-title").innerText = "➕ Yangi test yaratish va savol qo'shish";
         } else {
             titleBox.style.display = "none";
             document.getElementById("editing-test-id").value = val;
             var qIndex = parseInt(document.getElementById("editing-q-index").value);
             if (qIndex >= 0) {
-                document.getElementById("form-title").innerText = "✏️ " + (testData[val] ? testData[val].title : "") + " — Саволни таҳрирлаш (№" + (qIndex + 1) + ")";
+                document.getElementById("form-title").innerText = "✏️ " + (testData[val] ? testData[val].title : "") + " — Savolni tahrirlash (№" + (qIndex + 1) + ")";
             } else {
-                document.getElementById("form-title").innerText = "➕ " + (testData[val] ? testData[val].title : "") + " тестига янги савол қўшиш";
+                document.getElementById("form-title").innerText = "➕ " + (testData[val] ? testData[val].title : "") + " testiga yangi savol qo'shish";
             }
         }
     }
@@ -1752,7 +1762,7 @@
 
     async function renderAdminTestsList() {
         var listContainer = document.getElementById("admin-tests-list");
-        listContainer.innerHTML = "<p style='color:#777;'>Юкланмоқда...</p>";
+        listContainer.innerHTML = "<p style='color:#777;'>Yuklanmoqda...</p>";
 
         try {
             const { data: allQuestions } = await supabaseClient.from('questions').select('*');
@@ -1789,7 +1799,7 @@
                 var questionsHtml = "";
 
                 var isHidden = hiddenTests[id];
-                var visibilityBtnText = isHidden ? "🔓 Очиш (Кўрсатиш)" : "🔒 Яшириш (Турнир учун)";
+                var visibilityBtnText = isHidden ? "🔓 Ochish (Ko'rsatish)" : "🔒 Yashirish (Turnir uchun)";
                 var visibilityBtnClass = isHidden ? "info" : "dark";
 
                 if (t.questions) {
@@ -1798,26 +1808,26 @@
                         questionsHtml += '<div class="admin-q-item">' +
                             '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
                             '<div class="admin-btn-group">' +
-                            '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Таҳрирлаш</button>' +
-                            '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 Ўчириш</button>' +
+                            '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Tahrirlash</button>' +
+                            '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 O'chirish</button>' +
                             '</div></div>';
                     });
                 }
 
                 html += '<div class="admin-test-item">' +
                     '<div class="admin-test-header" onclick="toggleTestAccordion(this)">' +
-                    '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' та савол</span> ' +
-                    (isHidden ? '<span style="color:#e74c3c; font-size:11px; font-weight:bold;">(🔒 Яширин)</span>' : '<span style="color:#27ae60; font-size:11px; font-weight:bold;">(👁 Очиқ)</span>') +
+                    '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' ta savol</span> ' +
+                    (isHidden ? '<span style="color:#e74c3c; font-size:11px; font-weight:bold;">(🔒 Yashirin)</span>' : '<span style="color:#27ae60; font-size:11px; font-weight:bold;">(👁 Ochiq)</span>') +
                     '</div>' +
                     '<div class="admin-btn-group" onclick="event.stopPropagation()">' +
                     '<button type="button" class="' + visibilityBtnClass + '" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="toggleTestVisibility(\'' + id + '\')">' + visibilityBtnText + '</button>' +
-                    '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Савол қўшиш</button>' +
-                    '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 Ўчириш</button>' +
+                    '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Savol qo\'shish</button>' +
+                    '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 O\'chirish</button>' +
                     '</div></div>' +
-                    '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Ҳозирча саволлар йўқ.</p>") + '</div>' +
+                    '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Hozircha savollar yo'q.</p>") + '</div>' +
                     '</div>';
             });
-            listContainer.innerHTML = html || "<p style='color:#777;'>Ҳеч қандай тест мавжуд эмас.</p>";
+            listContainer.innerHTML = html || "<p style='color:#777;'>Hech qanday test mavjud emas.</p>";
         } catch(e) {
             console.error("Admin ro'yxatini olishda xato:", e);
             listContainer.innerHTML = "<p style='color:#e74c3c;'>Xatolik yuz berdi.</p>";
@@ -1883,7 +1893,7 @@
 
     async function saveQuestionFromAdmin() {
         if (String(currentUserId) !== String(ADMIN_ID)) {
-            alert("Ушбу амални фақат администратор бажариши мумкин!");
+            alert("Ushbu amalni faqat administrator bajarishi mumkin!");
             return;
         }
 
@@ -1903,21 +1913,21 @@
         var correct = parseInt(document.getElementById("admin-correct-opt").value);
 
         if (!question || !opt0 || !opt1) {
-            alert("Илтимос, савол ва камида 2 та вариантни тўлдиринг!");
+            alert("Iltimos, savol va kamida 2 ta variantni to'ldiring!");
             return;
         }
 
         saveBtn.disabled = true;
-        saveBtn.innerText = "⏳ Сақланмоқда...";
+        saveBtn.innerText = "⏳ Saqlanmoqda...";
 
         var targetId = selectVal;
         var testTitleToSave = title;
 
         if (selectVal === "new") {
             if (!title) {
-                alert("Илтимос, янги тест номини киритинг!");
+                alert("Iltimos, yangi test nomini kiriting!");
                 saveBtn.disabled = false;
-                saveBtn.innerText = "💾 Сақлаш";
+                saveBtn.innerText = "💾 Saqlash";
                 return;
             }
             targetId = "demo_" + Date.now();
@@ -1948,12 +1958,12 @@
         }
 
         saveBtn.disabled = false;
-        saveBtn.innerText = "💾 Сақлаш";
+        saveBtn.innerText = "💾 Saqlash";
 
         if (err) {
-            alert("Сақлашда хатолик: " + err.message);
+            alert("Saqlashda xatolik: " + err.message);
         } else {
-            alert("Муваффақиятли сақланди!");
+            alert("Muvaffaqiyatli saqlandi!");
             resetAdminForm();
             await fetchTestData();
             renderAdminTestsList();
@@ -1963,7 +1973,7 @@
 
     async function deleteQuestionFromAdmin(testId, qIndex) {
         if (String(currentUserId) !== String(ADMIN_ID)) return;
-        if (confirm("Ростдан ҳам ушбу саволни ўчириб ташламоқчимисиз?")) {
+        if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
             const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
             if (questions && questions.length > qIndex) {
                 var q = questions[qIndex];
@@ -1980,7 +1990,7 @@
 
     async function deleteTestFromAdmin(id) {
         if (String(currentUserId) !== String(ADMIN_ID)) return;
-        if (confirm("Ростдан ҳам ушбу бутун тестни ва ундаги барча саволларни ўчириб ташламоқчимисиз?")) {
+        if (confirm("Rostdan ham ushbu butun testni va undagi barcha savollarni o'chirib tashlamoqchisiz?")) {
             await supabaseClient.from('questions').delete().eq('test_id', id);
             await fetchTestData();
             renderAdminTestsList();
