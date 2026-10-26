@@ -168,7 +168,8 @@
         }
         button.secondary { background: #95a5a6; }
         button.danger { background: #e74c3c; }
-        button.warning { background: #f39c12; }
+        button.warning { background: #e67e22 !important; color: #ffffff !important; }
+        button.warning:hover { background: #d35400 !important; }
         button.info { background: #2980b9; }
         button.dark { background: #34495e; }
         button:hover { opacity: 0.9; }
@@ -230,12 +231,22 @@
         .test-card {
             background: #f9f9f9;
             border: 1px solid #e1e1e1;
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 8px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .test-card button {
+            width: 110px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .page { display: none; }
         .page.active { display: block; }
@@ -742,7 +753,6 @@
         return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
     }
 
-    // ТАРТИБ: Барча тестлар кетма-кет ўсиш бўйича сараланади (Demo-1, Demo-2, Demo-3, Demo-4, Demo-5...)
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
             return extractTestNum(a) - extractTestNum(b);
@@ -1133,7 +1143,6 @@
     function renderTestsList() {
         var urlParams = new URLSearchParams(window.location.search);
         
-        // Премиум статус текшируви
         if (urlParams.get('status') === 'premium' || currentUserId === ADMIN_ID) {
             localStorage.setItem('is_premium_user', 'true');
         }
@@ -1151,13 +1160,11 @@
             if (!t || hiddenTests[id]) return; 
 
             var testNum = extractTestNum(id);
-            
-            // Demo-1, Demo-2, Demo-3 - бепул, қолганлари премиум
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<button type="button" class="warning" style="width: auto; padding: 8px 15px;" onclick="redirectToBot()">🔒 Очиш (Тўлов)</button>'
-                : '<button type="button" style="width: auto; padding: 8px 15px;" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
+                ? '<button type="button" class="warning" onclick="redirectToBot()">🔒 Очиш (Тўлов)</button>'
+                : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
             var cardHtml = '<div class="test-card">' +
@@ -1199,11 +1206,18 @@
     }
 
     function redirectToBot() {
+        var botUrl = 'https://t.me/Demotestlaruz_bot?start=pay_premium';
         if (window.Telegram && window.Telegram.WebApp) {
-            Telegram.WebApp.openTelegramLink('https://t.me/Demotestlaruz_bot?start=pay_premium');
-        } else {
-            window.location.href = 'https://t.me/Demotestlaruz_bot?start=pay_premium';
+            try {
+                if (window.Telegram.WebApp.openTelegramLink) {
+                    window.Telegram.WebApp.openTelegramLink(botUrl);
+                    return;
+                }
+            } catch (e) {
+                console.log("openTelegramLink xatosi:", e);
+            }
         }
+        window.open(botUrl, '_blank');
     }
 
     function toggleCategory(headerEl) {
@@ -1456,7 +1470,6 @@
             else if (idx === optionIndex && idx !== correctIndex) lbl.classList.add('wrong-answer');
         });
 
-        // Агар тўғри жавоб топилса, конфетти чиқарамиз
         if (optionIndex === correctIndex) {
             confetti({
                 particleCount: 80,
