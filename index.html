@@ -768,7 +768,7 @@
     }
 
     function redirectToBotUrl(url) {
-        // Telegram muhitida to'g'ridan-to'g'ri o'tishni amalga oshirish
+        // Telegram WebApp muhitida ochishga harakat qilish
         if (window.Telegram && window.Telegram.WebApp) {
             try {
                 if (window.Telegram.WebApp.openTelegramLink) {
@@ -780,11 +780,8 @@
             }
         }
 
-        // Agar WebAppAPI ishlamasa, foydalanuvchiga modal yoki ogohlantirish chiqarib, havolani ko'rsatamiz
-        let confirmOpen = confirm("VIP obuna uchun botga o'тиш: " + url + "\nOK tugmasini bosing.");
-        if (confirmOpen) {
-            window.open(url, '_blank');
-        }
+        // Agar bloklansa, foydalanuvchiga ustiga bosib o'tish uchun oyna (prompt yoki alert orqali havola) chiqaramiz
+        window.prompt("Ботга ўтиш учун қуйидаги ҳаволани нусхаланг:", url);
     }
 
     async function fetchTestData() {
