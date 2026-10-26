@@ -722,24 +722,11 @@
         return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
     }
 
+    // ТАРТИБ: Барча тестлар кетма-кет ўсиш бўйича сараланади (Demo-1, Demo-2, Demo-3, Demo-4, Demo-5...)
     function getSortedTestKeys() {
-        var allKeys = Object.keys(testData);
-
-        var freeKeys = allKeys.filter(function(id) {
-            var num = extractTestNum(id);
-            return num >= 1 && num <= 3;
-        }).sort(function(a, b) {
-            return extractTestNum(a) - extractTestNum(b); // Demo-1, 2, 3
+        return Object.keys(testData).sort(function(a, b) {
+            return extractTestNum(a) - extractTestNum(b);
         });
-
-        var paidKeys = allKeys.filter(function(id) {
-            var num = extractTestNum(id);
-            return num > 3 || num === 0;
-        }).sort(function(a, b) {
-            return extractTestNum(b) - extractTestNum(a); // Demo-9, 8, 7, 6...
-        });
-
-        return freeKeys.concat(paidKeys);
     }
 
     async function fetchTestData() {
@@ -1136,7 +1123,7 @@
 
             var testNum = extractTestNum(id);
             
-            // Demo-1, Demo-2, Demo-3 ёки Премиум фойдаланувчилар учун ОЧИҚ
+            // Demo-1, Demo-2, Demo-3 - бепул, қолганлари премиум
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
