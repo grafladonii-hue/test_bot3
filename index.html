@@ -491,7 +491,11 @@
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
-        <button type="button" onclick="switchTab('tests')">Testlarni boshlash</button>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
+            <button type="button" class="info" onclick="openAdminContact()">👨‍🏫 Admin bilan bog'lanish</button>
+        </div>
     </div>
 
     <div id="tests-page" class="page">
@@ -727,6 +731,15 @@
         return Object.keys(testData).sort(function(a, b) {
             return extractTestNum(a) - extractTestNum(b);
         });
+    }
+
+    function openAdminContact() {
+        var adminTelegramUrl = 'https://t.me/Baxtiyor_Karjabov';
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+            Telegram.WebApp.openTelegramLink(adminTelegramUrl);
+        } else {
+            window.open(adminTelegramUrl, '_blank');
+        }
     }
 
     async function fetchTestData() {
