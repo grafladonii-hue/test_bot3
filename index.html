@@ -11,6 +11,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <!-- Конфетти анимацияси учун кутубхона -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -1453,6 +1455,15 @@
             if (idx === correctIndex) lbl.classList.add('correct-answer');
             else if (idx === optionIndex && idx !== correctIndex) lbl.classList.add('wrong-answer');
         });
+
+        // Агар тўғри жавоб топилса, конфетти чиқарамиз
+        if (optionIndex === correctIndex) {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
     }
 
     function proceedToNextQuestion() {
