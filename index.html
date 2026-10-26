@@ -153,7 +153,7 @@
         .option-percent { font-size: 12px; font-weight: bold; color: #555; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; }
         
         .btn-group { display: flex; gap: 10px; }
-        button, .vip-link-btn {
+        button, .vip-link-btn, .btn-telegram {
             background: #27ae60;
             color: white;
             border: none;
@@ -173,7 +173,6 @@
         button.secondary { background: #95a5a6; }
         button.danger { background: #e74c3c; }
         
-        /* VIP Obuna tugmasi uchun aniq uslub */
         .vip-link-btn {
             background: #e67e22 !important;
             color: #ffffff !important;
@@ -183,7 +182,7 @@
 
         button.info { background: #2980b9; }
         button.dark { background: #34495e; }
-        button:hover { opacity: 0.9; }
+        button:hover, .btn-telegram:hover, .vip-link-btn:hover { opacity: 0.9; }
         button:disabled { background: #bdc3c7; cursor: not-allowed; }
         
         .btn-telegram {
@@ -192,7 +191,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            text-decoration: none;
+            font-weight: bold;
         }
 
         .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
