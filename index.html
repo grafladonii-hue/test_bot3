@@ -761,11 +761,26 @@
 
     function openAdminContact() {
         var adminTelegramUrl = 'https://t.me/Baxtiyor_Karjabov';
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            Telegram.WebApp.openTelegramLink(adminTelegramUrl);
-        } else {
-            window.open(adminTelegramUrl, '_blank');
+        redirectToBotUrl(adminTelegramUrl);
+    }
+
+    function redirectToBot() {
+        var botUrl = 'https://t.me/Demotestlaruz_bot?start=pay_premium';
+        redirectToBotUrl(botUrl);
+    }
+
+    function redirectToBotUrl(url) {
+        if (window.Telegram && window.Telegram.WebApp) {
+            try {
+                if (window.Telegram.WebApp.openTelegramLink) {
+                    window.Telegram.WebApp.openTelegramLink(url);
+                    return;
+                }
+            } catch (e) {
+                console.log("openTelegramLink xatosi:", e);
+            }
         }
+        window.open(url, '_blank');
     }
 
     async function fetchTestData() {
@@ -1203,21 +1218,6 @@
         }
 
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
-    }
-
-    function redirectToBot() {
-        var botUrl = 'https://t.me/Demotestlaruz_bot?start=pay_premium';
-        if (window.Telegram && window.Telegram.WebApp) {
-            try {
-                if (window.Telegram.WebApp.openTelegramLink) {
-                    window.Telegram.WebApp.openTelegramLink(botUrl);
-                    return;
-                }
-            } catch (e) {
-                console.log("openTelegramLink xatosi:", e);
-            }
-        }
-        window.open(botUrl, '_blank');
     }
 
     function toggleCategory(headerEl) {
