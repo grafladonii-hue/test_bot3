@@ -1164,8 +1164,9 @@
             var testNum = extractTestNum(id);
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
+            // Тўғридан-тўғри tg:// протоколи орқали ботга ўтишни таъминлаймиз
             var actionBtn = isLocked 
-                ? '<a href="https://t.me/Demotestlaruz_bot?start=pay_premium" target="_blank" class="vip-link-btn">⭐ VIP obuna</a>'
+                ? '<a href="tg://resolve?domain=Demotestlaruz_bot&start=pay_premium" class="vip-link-btn">⭐ VIP obuna</a>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
@@ -1868,130 +1869,4 @@
         document.getElementById("editing-q-index").value = "-1";
         document.getElementById("admin-test-title").value = "";
         document.getElementById("admin-reading-text").value = "";
-        document.getElementById("admin-question").value = "";
-        document.getElementById("admin-opt-0").value = "";
-        document.getElementById("admin-opt-1").value = "";
-        document.getElementById("admin-opt-2").value = "";
-        document.getElementById("admin-opt-3").value = "";
-        document.getElementById("admin-correct-opt").value = 0;
-        
-        removeImage();
-        populateTestSelect();
-        onTestSelectChange();
-    }
-
-    async function saveQuestionFromAdmin() {
-        if (currentUserId !== ADMIN_ID) {
-            alert("Ушбу амални фақат администратор бажариши мумкин!");
-            return;
-        }
-
-        var selectVal = document.getElementById("admin-test-select").value;
-        var saveBtn = document.getElementById("save-test-btn");
-        var dbId = document.getElementById("editing-db-id").value;
-
-        var title = document.getElementById("admin-test-title").value.trim();
-        var readingText = document.getElementById("admin-reading-text").value.trim();
-        var imageUrl = document.getElementById("admin-img-data").value.trim();
-        var question = document.getElementById("admin-question").value.trim();
-
-        var opt0 = document.getElementById("admin-opt-0").value.trim();
-        var opt1 = document.getElementById("admin-opt-1").value.trim();
-        var opt2 = document.getElementById("admin-opt-2").value.trim();
-        var opt3 = document.getElementById("admin-opt-3").value.trim();
-        var correct = parseInt(document.getElementById("admin-correct-opt").value);
-
-        if (!question || !opt0 || !opt1) {
-            alert("Илтимос, савол ва камида 2 та вариантни тўлдиринг!");
-            return;
-        }
-
-        saveBtn.disabled = true;
-        saveBtn.innerText = "⏳ Сақланмоқда...";
-
-        var targetId = selectVal;
-        var testTitleToSave = title;
-
-        if (selectVal === "new") {
-            if (!title) {
-                alert("Илтимос, янги тест номини киритинг!");
-                saveBtn.disabled = false;
-                saveBtn.innerText = "💾 Сақлаш";
-                return;
-            }
-            targetId = "demo_" + Date.now();
-        } else {
-            const { data: tempQ } = await supabaseClient.from('questions').select('test_title').eq('test_id', selectVal).limit(1);
-            if (tempQ && tempQ.length > 0) {
-                testTitleToSave = tempQ[0].test_title;
-            }
-        }
-
-        var payload = {
-            test_id: targetId,
-            test_title: testTitleToSave,
-            reading_text: readingText || null,
-            image_url: imageUrl || null,
-            question: question,
-            options: [opt0, opt1, opt2, opt3].filter(Boolean),
-            correct: correct
-        };
-
-        let err = null;
-        if (dbId) {
-            const res = await supabaseClient.from('questions').update(payload).eq('id', dbId);
-            err = res.error;
-        } else {
-            const res = await supabaseClient.from('questions').insert([payload]);
-            err = res.error;
-        }
-
-        saveBtn.disabled = false;
-        saveBtn.innerText = "💾 Сақлаш";
-
-        if (err) {
-            alert("Сақлашда хатолик: " + err.message);
-        } else {
-            alert("Муваффақиятли сақланди!");
-            resetAdminForm();
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-        }
-    }
-
-    async function deleteQuestionFromAdmin(testId, qIndex) {
-        if (currentUserId !== ADMIN_ID) return;
-        if (confirm("Ростдан ҳам ушбу саволни ўчириб ташламоқчимисиз?")) {
-            const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
-            if (questions && questions.length > qIndex) {
-                var q = questions[qIndex];
-                if (q && q.id) {
-                    await supabaseClient.from('questions').delete().eq('id', q.id);
-                }
-            }
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-            populateTestSelect();
-        }
-    }
-
-    async function deleteTestFromAdmin(id) {
-        if (currentUserId !== ADMIN_ID) return;
-        if (confirm("Ростдан ҳам ушбу бутун тестни ва ундаги барча саволларни ўчириб ташламоқчимисиз?")) {
-            await supabaseClient.from('questions').delete().eq('test_id', id);
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-            populateTestSelect();
-        }
-    }
-
-    window.onload = function() {
-        fetchTestData();
-    };
-</script>
-
-</body>
-</html>
+        document.getElementById("admin-question").
