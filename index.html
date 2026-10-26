@@ -153,7 +153,7 @@
         .option-percent { font-size: 12px; font-weight: bold; color: #555; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; }
         
         .btn-group { display: flex; gap: 10px; }
-        button {
+        button, .vip-link-btn {
             background: #27ae60;
             color: white;
             border: none;
@@ -165,11 +165,22 @@
             transition: 0.2s;
             position: relative;
             z-index: 10;
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
+            display: block;
         }
         button.secondary { background: #95a5a6; }
         button.danger { background: #e74c3c; }
-        button.warning { background: #e67e22 !important; color: #ffffff !important; }
-        button.warning:hover { background: #d35400 !important; }
+        
+        /* VIP Obuna tugmasi uchun aniq uslub */
+        .vip-link-btn {
+            background: #e67e22 !important;
+            color: #ffffff !important;
+            font-weight: bold;
+        }
+        .vip-link-btn:hover { background: #d35400 !important; opacity: 0.9; }
+
         button.info { background: #2980b9; }
         button.dark { background: #34495e; }
         button:hover { opacity: 0.9; }
@@ -181,6 +192,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            text-decoration: none;
         }
 
         .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
@@ -238,7 +250,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .test-card button {
+        .test-card .vip-link-btn, .test-card button {
             width: 110px;
             padding: 8px 10px;
             font-size: 13px;
@@ -515,25 +527,18 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            <button type="button" class="btn-telegram" onclick="openAdminContact()">
+            <a href="https://t.me/Baxtiyor_Karjabov" target="_blank" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
                 Admin bilan bog'lanish
-            </button>
+            </a>
         </div>
     </div>
 
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
-        
-        <!-- Ботга ўтиш учун махсус блок (тугма босилганда шу ерда кўринади) -->
-        <div id="bot-redirect-box" style="display:none; background: #e8f8f5; border: 2px dashed #27ae60; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-            <p style="margin: 0 0 8px 0; font-size: 13px; color: #2c3e50; font-weight: bold;">⭐ VIP obuna uchun botga o'ting:</p>
-            <a id="bot-link-a" href="https://t.me/Demotestlaruz_bot?start=pay_premium" target="_blank" style="background: #27ae60; color: white; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">👉 @Demotestlaruz_bot га ўтиш</a>
-        </div>
-
         <div id="tests-list"><p style="text-align: center; color: #888;">Юкланмоқда...</p></div>
     </div>
 
@@ -764,33 +769,6 @@
         return Object.keys(testData).sort(function(a, b) {
             return extractTestNum(a) - extractTestNum(b);
         });
-    }
-
-    function openAdminContact() {
-        redirectToBotUrl('https://t.me/Baxtiyor_Karjabov');
-    }
-
-    function redirectToBot() {
-        // Telegram WebApp API орқали очишга уриниб кўрамиз
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            window.Telegram.WebApp.openTelegramLink('https://t.me/Demotestlaruz_bot?start=pay_premium');
-            return;
-        }
-        
-        // Агар очилмаса, Testlar саҳифасида ботимизнинг очиқ ҳаволасини кўрсатиб қўямиз
-        var box = document.getElementById('bot-redirect-box');
-        if (box) {
-            box.style.display = 'block';
-            box.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    function redirectToBotUrl(url) {
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            window.Telegram.WebApp.openTelegramLink(url);
-            return;
-        }
-        window.open(url, '_blank');
     }
 
     async function fetchTestData() {
@@ -1188,7 +1166,7 @@
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<button type="button" class="warning" onclick="redirectToBot()">⭐ VIP obuna</button>'
+                ? '<a href="https://t.me/Demotestlaruz_bot?start=pay_premium" target="_blank" class="vip-link-btn">⭐ VIP obuna</a>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
