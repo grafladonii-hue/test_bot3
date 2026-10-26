@@ -526,13 +526,13 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            <a href="https://t.me/Baxtiyor_Karjabov" target="_blank" onclick="openAdminLink(event)" class="btn-telegram">
+            <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
                 Admin bilan bog'lanish
-            </a>
+            </button>
         </div>
     </div>
 
@@ -1142,36 +1142,44 @@
         return arr;
     }
 
-    // VIP obunaga bot orqali o'tish funksiyasi (Universal Telegram WebApp ochish)
-    function openVipBot(e) {
-        if (e) e.preventDefault();
+    // VIP obunaga bot orqali o'tish uchun to'g'ridan-to'g'ri Telegram WebApp buyrug'i
+    function openVipBotDirect(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
+        
         if (window.Telegram && window.Telegram.WebApp) {
-            if (window.Telegram.WebApp.openTelegramLink) {
+            if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
                 window.Telegram.WebApp.openTelegramLink(botUrl);
                 return;
-            } else if (window.Telegram.WebApp.openLink) {
+            } else if (typeof window.Telegram.WebApp.openLink === 'function') {
                 window.Telegram.WebApp.openLink(botUrl);
                 return;
             }
         }
-        window.open(botUrl, '_blank');
+        window.location.href = botUrl;
     }
 
-    // Admin bilan bog'lanish uchun universal ochish funksiyasi
+    // Admin bilan bog'lanish uchun universal funksiya
     function openAdminLink(e) {
-        if (e) e.preventDefault();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         var adminUrl = "https://t.me/Baxtiyor_Karjabov";
+        
         if (window.Telegram && window.Telegram.WebApp) {
-            if (window.Telegram.WebApp.openTelegramLink) {
+            if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
                 window.Telegram.WebApp.openTelegramLink(adminUrl);
                 return;
-            } else if (window.Telegram.WebApp.openLink) {
+            } else if (typeof window.Telegram.WebApp.openLink === 'function') {
                 window.Telegram.WebApp.openLink(adminUrl);
                 return;
             }
         }
-        window.open(adminUrl, '_blank');
+        window.location.href = adminUrl;
     }
 
     function renderTestsList() {
@@ -1196,8 +1204,9 @@
             var testNum = extractTestNum(id);
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
+            // <a> tegi o'rniga kafolatlangan ishlaydigan <button> ishlatildi
             var actionBtn = isLocked 
-                ? '<a href="https://t.me/Demotestlaruz_bot?start=pay_premium" onclick="openVipBot(event)" class="vip-link-btn" title="VIP obunaga bot orqali a\'zo bo\'ling">⭐ VIP obuna</a>'
+                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obunaga bot orqali a\'zo bo\'ling">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
