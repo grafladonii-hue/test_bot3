@@ -581,7 +581,7 @@
                 <label style="color:#27ae60;"><b>🖼 Саволга расм қўшиш (Ихтиёрий):</b></label>
                 <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
                 <input type="text" id="admin-img-url" placeholder="Ёки расмнинг интернет URL ҳаволасини киритинг" onchange="handleUrlImage(this.value)">
-                <img id="img-preview" class="img-preview" alt="Расм кўриниши">
+                <img id="img-preview" class="img-preview" alt="Расм көриниши">
                 <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Расмни ўчириш</button>
             </div>
 
@@ -711,27 +711,34 @@
 
     var testData = {};
 
+    // Функция точного извлечения номера теста из title или test_id
+    function extractTestNum(id) {
+        var t = testData[id];
+        var textToSearch = (t && t.title) ? t.title : id;
+        var match = textToSearch.match(/demo[-_]?(\d+)/i);
+        if (match && match[1]) {
+            return parseInt(match[1], 10);
+        }
+        var matchAnyNum = textToSearch.match(/\d+/);
+        return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
+    }
+
+    // Сортировка: Demo-1, 2, 3 (возрастание), далее Demo-9, 8, 7, 6... (убывание)
     function getSortedTestKeys() {
         var allKeys = Object.keys(testData);
 
-        // Demo-1, Demo-2, Demo-3 (по возрастанию)
         var freeKeys = allKeys.filter(function(id) {
-            var num = parseInt((id.match(/\d+/) || [0])[0], 10);
+            var num = extractTestNum(id);
             return num >= 1 && num <= 3;
         }).sort(function(a, b) {
-            var numA = parseInt((a.match(/\d+/) || [0])[0], 10);
-            var numB = parseInt((b.match(/\d+/) || [0])[0], 10);
-            return numA - numB;
+            return extractTestNum(a) - extractTestNum(b); // 1, 2, 3
         });
 
-        // Все остальные: Demo-9, Demo-8, Demo-7... (по убыванию)
         var paidKeys = allKeys.filter(function(id) {
-            var num = parseInt((id.match(/\d+/) || [0])[0], 10);
+            var num = extractTestNum(id);
             return num > 3 || num === 0;
         }).sort(function(a, b) {
-            var numA = parseInt((a.match(/\d+/) || [0])[0], 10);
-            var numB = parseInt((b.match(/\d+/) || [0])[0], 10);
-            return numB - numA;
+            return extractTestNum(b) - extractTestNum(a); // 9, 8, 7, 6...
         });
 
         return freeKeys.concat(paidKeys);
@@ -1127,9 +1134,9 @@
             var t = testData[id];
             if (!t || hiddenTests[id]) return; 
 
-            var testNum = parseInt((id.match(/\d+/) || [0])[0], 10);
+            var testNum = extractTestNum(id);
             
-            // Demo-1, Demo-2, Demo-3 бепул, қолганлари 🔒 Тўловли
+            // Demo-1, Demo-2, Demo-3 - бесплатные. Остальные - закрыты.
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
@@ -1172,7 +1179,7 @@
                     '</div>';
         }
 
-        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
+        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochoq testlar yo'q.</p>";
     }
 
     function redirectToBot() {
