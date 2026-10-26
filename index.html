@@ -711,6 +711,7 @@
 
     var testData = {};
 
+    // ЎСИШ ТАРТИБИДА САРАЛАШ (Demo-1, Demo-2, Demo-3 ... Demo-8)
     function getSortedTestKeys() {
         return Object.keys(testData).sort(function(a, b) {
             var titleA = testData[a] ? (testData[a].title || "") : "";
@@ -722,7 +723,7 @@
             var numA = matchA ? parseInt(matchA[0], 10) : 0;
             var numB = matchB ? parseInt(matchB[0], 10) : 0;
 
-            return numB - numA;
+            return numA - numB; // Тўғри ўсиш тартиби (1, 2, 3...)
         });
     }
 
@@ -1098,9 +1099,8 @@
         return arr;
     }
 
-    // РЕНДЕР ФУНКЦИЯСИ: ПРЕМИУМ СТАТУС ВА РУХСАТНИ ТЕКШИРИШ
+    // ТЎҒРИЛАНГАН РЕНДЕР ФУНКЦИЯСИ: DEMO-1, DEMO-2, DEMO-3 БЕПУЛ
     function renderTestsList() {
-        // URL'дан status=premium келган бўлса, LocalStorage'га сақлаш
         var urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('status') === 'premium') {
             localStorage.setItem('is_premium_user', 'true');
@@ -1113,12 +1113,16 @@
         var bahorHtml = "";
         var boshqaHtml = "";
 
-        sortedKeys.forEach(function(id, index) {
-            var t = testData[id];
-            if (!t || hiddenTests[id]) return;
+        var visibleIndex = 0;
 
-            // Агар премиум бўлмаса ва 4-тестдан бошлаб (index >= 3) бўлса — қулфланади
-            var isLocked = !isUserPremium && (index >= 3);
+        sortedKeys.forEach(function(id) {
+            var t = testData[id];
+            if (!t || hiddenTests[id]) return; 
+
+            // visibleIndex 0 (Demo-1), 1 (Demo-2), 2 (Demo-3) бепул бўлади.
+            // 3 ва ундан юқорилари (Demo-4 ва ҳоказо) қулфланади.
+            var isLocked = !isUserPremium && (visibleIndex >= 3);
+            visibleIndex++; 
 
             var actionBtn = isLocked 
                 ? '<button type="button" class="warning" style="width: auto; padding: 8px 15px;" onclick="redirectToBot()">🔒 Очиш (Тўлов)</button>'
@@ -1163,7 +1167,6 @@
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
     }
 
-    // БОТГА ТЎЛОВ УЧУН ЙЎНАЛТИРИШ
     function redirectToBot() {
         if (window.Telegram && window.Telegram.WebApp) {
             Telegram.WebApp.openTelegramLink('https://t.me/Demotestlaruz_bot?start=pay_premium');
