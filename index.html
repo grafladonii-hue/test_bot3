@@ -527,6 +527,13 @@
 
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
+        
+        <!-- Ботга ўтиш учун махсус блок (тугма босилганда шу ерда кўринади) -->
+        <div id="bot-redirect-box" style="display:none; background: #e8f8f5; border: 2px dashed #27ae60; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 8px 0; font-size: 13px; color: #2c3e50; font-weight: bold;">⭐ VIP obuna uchun botga o'ting:</p>
+            <a id="bot-link-a" href="https://t.me/Demotestlaruz_bot?start=pay_premium" target="_blank" style="background: #27ae60; color: white; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">👉 @Demotestlaruz_bot га ўтиш</a>
+        </div>
+
         <div id="tests-list"><p style="text-align: center; color: #888;">Юкланмоқда...</p></div>
     </div>
 
@@ -764,24 +771,26 @@
     }
 
     function redirectToBot() {
-        redirectToBotUrl('https://t.me/Demotestlaruz_bot?start=pay_premium');
+        // Telegram WebApp API орқали очишга уриниб кўрамиз
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+            window.Telegram.WebApp.openTelegramLink('https://t.me/Demotestlaruz_bot?start=pay_premium');
+            return;
+        }
+        
+        // Агар очилмаса, Testlar саҳифасида ботимизнинг очиқ ҳаволасини кўрсатиб қўямиз
+        var box = document.getElementById('bot-redirect-box');
+        if (box) {
+            box.style.display = 'block';
+            box.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     function redirectToBotUrl(url) {
-        // Telegram WebApp muhitida ochishga harakat qilish
-        if (window.Telegram && window.Telegram.WebApp) {
-            try {
-                if (window.Telegram.WebApp.openTelegramLink) {
-                    window.Telegram.WebApp.openTelegramLink(url);
-                    return;
-                }
-            } catch (e) {
-                console.log("openTelegramLink xatosi:", e);
-            }
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+            window.Telegram.WebApp.openTelegramLink(url);
+            return;
         }
-
-        // Agar bloklansa, foydalanuvchiga ustiga bosib o'tish uchun oyna (prompt yoki alert orqali havola) chiqaramiz
-        window.prompt("Ботга ўтиш учун қуйидаги ҳаволани нусхаланг:", url);
+        window.open(url, '_blank');
     }
 
     async function fetchTestData() {
