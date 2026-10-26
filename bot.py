@@ -153,7 +153,6 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
      
     # Ёпиқ гуруҳ аъзоси ёки илгари тўлов қилган фойдаланувчилар учун
     if is_member or is_allowed:
-        # Премиум линк манзили шакллантирилади
         premium_app_url = f"{WEB_APP_URL}/?status=premium"
         
         keyboard = InlineKeyboardMarkup(
@@ -165,7 +164,8 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
             "Хуш келибсиз, Demotestlar.uz (Бахтиёр Каржабов Демо тестлар платформаси)га!\n\n"
             "✅ Сизда мини-аппнинг **барча тестларидан** фойдаланиш ҳуқуқи мавжуд (Премиум).\n"
             "Тестларни ишлаш учун қуйидаги тугмани босинг:",
-            reply_markup=keyboard
+            reply_markup=keyboard,
+            parse_mode="Markdown"
         )
     else:
         # Тўлов қилмаган оддий фойдаланувчилар учун стандарт линк (3 та тест бепул)
@@ -179,8 +179,8 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
         
         await message.answer(
             "Хуш келибсиз, Demotestlar.uz платформасига!\n\n"
-            "Дaстлабки **3 та тест бепул** тақдим этилади.\n\n"
-            "🔒 Барча тестларни ва 4-вариантдан кейингиларини тўлиқ очиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
+            "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
+            "🔒 Барча тестларни тўлиқ очиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
             "💳 **Карта рақами:** `9860120155197128`\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
             "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда барча тестларни очиб беради.",
@@ -200,7 +200,7 @@ async def handle_payment_screenshot(message: types.Message):
         premium_app_url = f"{WEB_APP_URL}/?status=premium"
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="🚀 Тестларни бошлаш", web_app=WebAppInfo(url=premium_app_url))]
+                [InlineKeyboardButton(text="🚀 Тестларни бошлаш (Премиум)", web_app=WebAppInfo(url=premium_app_url))]
             ]
         )
         await message.answer("Сиз аллақачон мини-аппдан тўлиқ фойдаланиш ҳуқуқига эгасиз!", reply_markup=keyboard)
@@ -247,7 +247,7 @@ async def handle_payment_document(message: types.Message):
         premium_app_url = f"{WEB_APP_URL}/?status=premium"
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="🚀 Тестларни бошлаш", web_app=WebAppInfo(url=premium_app_url))]
+                [InlineKeyboardButton(text="🚀 Тестларни бошлаш (Премиум)", web_app=WebAppInfo(url=premium_app_url))]
             ]
         )
         await message.answer("Сиз аллақачон мини-аппдан тўлиқ фойдаланиш ҳуқуқига эгасиз!", reply_markup=keyboard)
@@ -257,7 +257,7 @@ async def handle_payment_document(message: types.Message):
     file_name = doc.file_name.lower() if doc.file_name else ""
     
     if not file_name.endswith('.pdf'):
-        await message.answer("❌ Илтимос, банк чекини **PDF** форматда ёки **расм** кўринишида юборинг.")
+        await message.answer("❌ Илтимос, банк чекини **PDF** форматда ёки **расм** кўринишида юборинг.", parse_mode="Markdown")
         return
 
     processing_msg = await message.answer("⏳ PDF чек ҳужжати текширилмоқда...")
