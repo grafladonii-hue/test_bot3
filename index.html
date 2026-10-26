@@ -780,7 +780,12 @@
                 console.log("openTelegramLink xatosi:", e);
             }
         }
-        window.open(url, '_blank');
+        
+        try {
+            window.location.href = url;
+        } catch (err) {
+            window.open(url, '_blank');
+        }
     }
 
     async function fetchTestData() {
@@ -1178,7 +1183,7 @@
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<button type="button" class="warning" onclick="redirectToBot()">🔒 Очиш (Тўлов)</button>'
+                ? '<button type="button" class="warning" onclick="redirectToBot()">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
