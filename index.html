@@ -770,6 +770,7 @@
     }
 
     function redirectToBotUrl(url) {
+        // Telegram Web App muhitida ishlashini kafolatlaydigan qism
         if (window.Telegram && window.Telegram.WebApp) {
             try {
                 if (window.Telegram.WebApp.openTelegramLink) {
@@ -781,11 +782,8 @@
             }
         }
         
-        try {
-            window.location.href = url;
-        } catch (err) {
-            window.open(url, '_blank');
-        }
+        // Agar WebAppAPI topilmasa yoki ishlamasa
+        window.open(url, '_blank');
     }
 
     async function fetchTestData() {
