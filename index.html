@@ -581,7 +581,7 @@
                 <label style="color:#27ae60;"><b>🖼 Саволга расм қўшиш (Ихтиёрий):</b></label>
                 <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
                 <input type="text" id="admin-img-url" placeholder="Ёки расмнинг интернет URL ҳаволасини киритинг" onchange="handleUrlImage(this.value)">
-                <img id="img-preview" class="img-preview" alt="Расм көриниши">
+                <img id="img-preview" class="img-preview" alt="Расм кўриниши">
                 <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Расмни ўчириш</button>
             </div>
 
@@ -711,7 +711,6 @@
 
     var testData = {};
 
-    // Функция точного извлечения номера теста из title или test_id
     function extractTestNum(id) {
         var t = testData[id];
         var textToSearch = (t && t.title) ? t.title : id;
@@ -723,7 +722,6 @@
         return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
     }
 
-    // Сортировка: Demo-1, 2, 3 (возрастание), далее Demo-9, 8, 7, 6... (убывание)
     function getSortedTestKeys() {
         var allKeys = Object.keys(testData);
 
@@ -731,14 +729,14 @@
             var num = extractTestNum(id);
             return num >= 1 && num <= 3;
         }).sort(function(a, b) {
-            return extractTestNum(a) - extractTestNum(b); // 1, 2, 3
+            return extractTestNum(a) - extractTestNum(b); // Demo-1, 2, 3
         });
 
         var paidKeys = allKeys.filter(function(id) {
             var num = extractTestNum(id);
             return num > 3 || num === 0;
         }).sort(function(a, b) {
-            return extractTestNum(b) - extractTestNum(a); // 9, 8, 7, 6...
+            return extractTestNum(b) - extractTestNum(a); // Demo-9, 8, 7, 6...
         });
 
         return freeKeys.concat(paidKeys);
@@ -1118,7 +1116,9 @@
 
     function renderTestsList() {
         var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium') {
+        
+        // Премиум статус текшируви
+        if (urlParams.get('status') === 'premium' || currentUserId === ADMIN_ID) {
             localStorage.setItem('is_premium_user', 'true');
         }
 
@@ -1136,7 +1136,7 @@
 
             var testNum = extractTestNum(id);
             
-            // Demo-1, Demo-2, Demo-3 - бесплатные. Остальные - закрыты.
+            // Demo-1, Demo-2, Demo-3 ёки Премиум фойдаланувчилар учун ОЧИҚ
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
@@ -1179,7 +1179,7 @@
                     '</div>';
         }
 
-        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochoq testlar yo'q.</p>";
+        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
     }
 
     function redirectToBot() {
