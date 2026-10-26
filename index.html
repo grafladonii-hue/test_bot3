@@ -768,7 +768,7 @@
     }
 
     function redirectToBotUrl(url) {
-        // Telegram WebApp orqali ochishga harakat qilish
+        // Telegram muhitida to'g'ridan-to'g'ri o'tishni amalga oshirish
         if (window.Telegram && window.Telegram.WebApp) {
             try {
                 if (window.Telegram.WebApp.openTelegramLink) {
@@ -779,21 +779,12 @@
                 console.log("openTelegramLink xatosi:", e);
             }
         }
-        
-        // Agar WebAppAPI ishlamasa, tg:// схемаси орқали мажбурий йўналтириш
-        try {
-            if (url.includes('Demotestlaruz_bot')) {
-                window.location.href = 'tg://resolve?domain=Demotestlaruz_bot&start=pay_premium';
-                return;
-            } else if (url.includes('Baxtiyor_Karjabov')) {
-                window.location.href = 'tg://resolve?domain=Baxtiyor_Karjabov';
-                return;
-            }
-        } catch (e) {
-            console.log("tg:// xatosi:", e);
-        }
 
-        window.open(url, '_blank');
+        // Agar WebAppAPI ishlamasa, foydalanuvchiga modal yoki ogohlantirish chiqarib, havolani ko'rsatamiz
+        let confirmOpen = confirm("VIP obuna uchun botga o'тиш: " + url + "\nOK tugmasini bosing.");
+        if (confirmOpen) {
+            window.open(url, '_blank');
+        }
     }
 
     async function fetchTestData() {
@@ -1990,7 +1981,7 @@
         if (currentUserId !== ADMIN_ID) return;
         if (confirm("Ростдан ҳам ушбу саволни ўчириб ташламоқчимисиз?")) {
             const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
-            if (questions && questions[qIndex]) {
+            if (questions && questions.length > qIndex) {
                 var q = questions[qIndex];
                 if (q && q.id) {
                     await supabaseClient.from('questions').delete().eq('id', q.id);
