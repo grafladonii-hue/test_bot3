@@ -11,7 +11,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <!-- Конфетти анимацияси учун кутубхона -->
+    <!-- Konfetti animatsiyasi uchun kutubxona -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <!-- Flatpickr CSS -->
@@ -516,7 +516,7 @@
         </div>
 
         <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
-            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Jonli турнир (Sinov)</h3>
+            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Jonli turnir (Sinov)</h3>
             <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Turnir boshlanishiga:</p>
             <div id="tour-countdown" style="font-size: 18px; font-weight: bold; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;">00:00:00</div>
             <button id="tour-btn" onclick="joinTournament()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Qo'shilish (Boshlanmagan)</button>
@@ -583,70 +583,70 @@
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Jonli турнир тест ва бошланиш вақтини созлаш мумкин.
+            Siz administratorsiz. Jonli turnir test va boshlanish vaqtini sozlash mumkin.
         </div>
 
         <div style="background: #fdfefe; border: 2px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 style="margin-top:0; color:#2c3e50;">🎯 Jonli турнирни созлаш (Тест ва Вақт)</h3>
+            <h3 style="margin-top:0; color:#2c3e50;">🎯 Jonli turnirni sozlash (Test va Vaqt)</h3>
             
-            <label><b>Турнир учун тестни танланг:</b></label>
+            <label><b>Turnir uchun testni tanlang:</b></label>
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
             <div class="tournament-datetime-box">
-                <label for="admin-tournament-time"><b>Турнир бошланиш вақти (Сана ва соат):</b></label>
-                <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Сана ва вақтни танланг...">
+                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soat):</b></label>
+                <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Sana va vaqtni tanlang...">
             </div>
 
-            <button type="button" onclick="saveTournamentSettings()" style="background: #667eea;">💾 Турнир созламаларини сақлаш</button>
+            <button type="button" onclick="saveTournamentSettings()" style="background: #667eea;">💾 Turnir sozlamalarini saqlash</button>
         </div>
 
         <div class="admin-form" id="admin-form-box" style="background: #fdfefe; border: 2px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 id="form-title" style="margin-top:0; color:#2c3e50;">➕ Янги савол қўшиш</h3>
+            <h3 id="form-title" style="margin-top:0; color:#2c3e50;">➕ Yangi savol qo'shish</h3>
             
             <input type="hidden" id="editing-test-id" value="">
             <input type="hidden" id="editing-db-id" value="">
             <input type="hidden" id="editing-q-index" value="-1">
             <input type="hidden" id="admin-img-data" value="">
 
-            <label><b>Қайси тестга савол тегишли?</b></label>
+            <label><b>Qaysi testga savol tegishli?</b></label>
             <select id="admin-test-select" onchange="onTestSelectChange()"></select>
 
             <div id="new-test-title-box" style="display:block; margin-top: 10px;">
-                <label style="color:#27ae60;"><b>Янги тест номини киритинг:</b></label>
+                <label style="color:#27ae60;"><b>Yangi test nomini kiriting:</b></label>
                 <input type="text" id="admin-test-title" placeholder="Masalan: Demo-1 (kuz 2026)">
             </div>
 
-            <label><b>Матн (Ихтиёрий, матнли саволлар учун):</b></label>
-            <textarea id="admin-reading-text" rows="4" placeholder="Матнни шу ерга киритинг..."></textarea>
+            <label><b>Matn (Ixtiyoriy, matnli savollar uchun):</b></label>
+            <textarea id="admin-reading-text" rows="4" placeholder="Matnni shu yerga kiriting..."></textarea>
 
             <div class="img-upload-section">
-                <label style="color:#27ae60;"><b>🖼 Саволга расм қўшиш (Ихтиёрий):</b></label>
+                <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Ixtiyoriy):</b></label>
                 <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
-                <input type="text" id="admin-img-url" placeholder="Ёки расмнинг интернет URL ҳаволасини киритинг" onchange="handleUrlImage(this.value)">
-                <img id="img-preview" class="img-preview" alt="Расм кўриниши">
-                <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Расмни ўчириш</button>
+                <input type="text" id="admin-img-url" placeholder="Yoki rasmning internet URL havolasini kiriting" onchange="handleUrlImage(this.value)">
+                <img id="img-preview" class="img-preview" alt="Rasm ko'rinishi">
+                <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Rasmni o'chirish</button>
             </div>
 
-            <label><b>Савол матни:</b></label>
-            <textarea id="admin-question" rows="4" placeholder="Савол матнини киритинг"></textarea>
+            <label><b>Savol matni:</b></label>
+            <textarea id="admin-question" rows="4" placeholder="Savol matnini kiriting"></textarea>
 
-            <label><b>Вариантлар:</b></label>
-            <input type="text" id="admin-opt-0" placeholder="A) Вариант 1">
-            <input type="text" id="admin-opt-1" placeholder="B) Вариант 2">
-            <input type="text" id="admin-opt-2" placeholder="C) Вариант 3">
-            <input type="text" id="admin-opt-3" placeholder="D) Вариант 4">
+            <label><b>Variantlar:</b></label>
+            <input type="text" id="admin-opt-0" placeholder="A) Variant 1">
+            <input type="text" id="admin-opt-1" placeholder="B) Variant 2">
+            <input type="text" id="admin-opt-2" placeholder="C) Variant 3">
+            <input type="text" id="admin-opt-3" placeholder="D) Variant 4">
 
-            <label><b>Тўғри жавоб варианти:</b></label>
+            <label><b>To'g'ri javob varianti:</b></label>
             <select id="admin-correct-opt">
-                <option value="0">A) Вариант 1</option>
-                <option value="1">B) Вариант 2</option>
-                <option value="2">C) Вариант 3</option>
-                <option value="3">D) Вариант 4</option>
+                <option value="0">A) Variant 1</option>
+                <option value="1">B) Variant 2</option>
+                <option value="2">C) Variant 3</option>
+                <option value="3">D) Variant 4</option>
             </select>
 
             <div class="btn-group" style="margin-top: 10px;">
-                <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">💾 Сақлаш</button>
-                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()">Тозалаш</button>
+                <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">💾 Saqlash</button>
+                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()">Tozalash</button>
             </div>
         </div>
 
@@ -704,12 +704,12 @@
             locale: {
                 firstDayOfWeek: 1,
                 weekdays: {
-                    shorthand: ['Як', 'Ду', 'Се', 'Чор', 'Пай', 'Жум', 'Шан'],
-                    longhand: ['Якшанба', 'Душанба', 'Сешанба', 'Чоршанба', 'Пайшанба', 'Жума', 'Шанба']
+                    shorthand: ['Yak', 'Du', 'Se', 'Chor', 'Pay', 'Jum', 'Shan'],
+                    longhand: ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
                 },
                 months: {
-                    shorthand: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
-                    longhand: ['Январ', 'Феврал', 'Март', 'Апрел', 'Май', 'Июн', 'Июл', 'Август', 'Сентябр', 'Октябр', 'Ноябр', 'Декабр']
+                    shorthand: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'],
+                    longhand: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr']
                 }
             }
         });
@@ -739,7 +739,8 @@
         }
     }
 
-    if (String(currentUserId) === String(ADMIN_ID)) {
+    // Admin panelini xavfsiz tekshirib chiqarish
+    if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
         var adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.style.display = 'block';
         if (window.eruda) eruda.init();
@@ -854,7 +855,7 @@
                 id: 1,
                 test_key: selectedTestId,
                 start_time: isoString,
-                title: 'Jonli турнир',
+                title: 'Jonli turnir',
                 status: 'active'
             };
 
@@ -1144,7 +1145,7 @@
 
     // VIP obunaga o'tish uchun Telegram WebApp orqali ochish funksiyasi
     function openVipBot(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
             window.Telegram.WebApp.openTelegramLink(botUrl);
@@ -1156,7 +1157,7 @@
     function renderTestsList() {
         var urlParams = new URLSearchParams(window.location.search);
         
-        if (urlParams.get('status') === 'premium' || String(currentUserId) === String(ADMIN_ID)) {
+        if (urlParams.get('status') === 'premium' || (currentUserId && String(currentUserId) === String(ADMIN_ID))) {
             localStorage.setItem('is_premium_user', 'true');
         }
 
@@ -1620,7 +1621,7 @@
         var spentSecs = secondsSpent % 60;
         var timeSpentStr = spentMinutes + " daq " + spentSecs + " son";
 
-        if (String(currentUserId) === String(ADMIN_ID)) return;
+        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) return;
 
         try {
             let activeTestKeyForLeaderboard = 'general';
@@ -1809,7 +1810,7 @@
                             '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
                             '<div class="admin-btn-group">' +
                             '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Tahrirlash</button>' +
-                            '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 O'chirish</button>' +
+                            '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 O\'chirish</button>' +
                             '</div></div>';
                     });
                 }
