@@ -711,20 +711,30 @@
 
     var testData = {};
 
-    // ЎСИШ ТАРТИБИДА САРАЛАШ (Demo-1, Demo-2, Demo-3 ... Demo-8)
     function getSortedTestKeys() {
-        return Object.keys(testData).sort(function(a, b) {
-            var titleA = testData[a] ? (testData[a].title || "") : "";
-            var titleB = testData[b] ? (testData[b].title || "") : "";
+        var allKeys = Object.keys(testData);
 
-            var matchA = titleA.match(/\d+/);
-            var matchB = titleB.match(/\d+/);
-
-            var numA = matchA ? parseInt(matchA[0], 10) : 0;
-            var numB = matchB ? parseInt(matchB[0], 10) : 0;
-
-            return numA - numB; // Тўғри ўсиш тартиби (1, 2, 3...)
+        // Demo-1, Demo-2, Demo-3 (по возрастанию)
+        var freeKeys = allKeys.filter(function(id) {
+            var num = parseInt((id.match(/\d+/) || [0])[0], 10);
+            return num >= 1 && num <= 3;
+        }).sort(function(a, b) {
+            var numA = parseInt((a.match(/\d+/) || [0])[0], 10);
+            var numB = parseInt((b.match(/\d+/) || [0])[0], 10);
+            return numA - numB;
         });
+
+        // Все остальные: Demo-9, Demo-8, Demo-7... (по убыванию)
+        var paidKeys = allKeys.filter(function(id) {
+            var num = parseInt((id.match(/\d+/) || [0])[0], 10);
+            return num > 3 || num === 0;
+        }).sort(function(a, b) {
+            var numA = parseInt((a.match(/\d+/) || [0])[0], 10);
+            var numB = parseInt((b.match(/\d+/) || [0])[0], 10);
+            return numB - numA;
+        });
+
+        return freeKeys.concat(paidKeys);
     }
 
     async function fetchTestData() {
@@ -1099,7 +1109,6 @@
         return arr;
     }
 
-    // ТЎҒРИЛАНГАН РЕНДЕР ФУНКЦИЯСИ: DEMO-1, DEMO-2, DEMO-3 БЕПУЛ
     function renderTestsList() {
         var urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('status') === 'premium') {
@@ -1109,20 +1118,19 @@
         var isUserPremium = localStorage.getItem('is_premium_user') === 'true';
 
         var sortedKeys = getSortedTestKeys();
+
         var kuzHtml = "";
         var bahorHtml = "";
         var boshqaHtml = "";
-
-        var visibleIndex = 0;
 
         sortedKeys.forEach(function(id) {
             var t = testData[id];
             if (!t || hiddenTests[id]) return; 
 
-            // visibleIndex 0 (Demo-1), 1 (Demo-2), 2 (Demo-3) бепул бўлади.
-            // 3 ва ундан юқорилари (Demo-4 ва ҳоказо) қулфланади.
-            var isLocked = !isUserPremium && (visibleIndex >= 3);
-            visibleIndex++; 
+            var testNum = parseInt((id.match(/\d+/) || [0])[0], 10);
+            
+            // Demo-1, Demo-2, Demo-3 бепул, қолганлари 🔒 Тўловли
+            var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
                 ? '<button type="button" class="warning" style="width: auto; padding: 8px 15px;" onclick="redirectToBot()">🔒 Очиш (Тўлов)</button>'
