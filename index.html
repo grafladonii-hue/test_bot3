@@ -760,17 +760,15 @@
     }
 
     function openAdminContact() {
-        var adminTelegramUrl = 'https://t.me/Baxtiyor_Karjabov';
-        redirectToBotUrl(adminTelegramUrl);
+        redirectToBotUrl('https://t.me/Baxtiyor_Karjabov');
     }
 
     function redirectToBot() {
-        var botUrl = 'https://t.me/Demotestlaruz_bot?start=pay_premium';
-        redirectToBotUrl(botUrl);
+        redirectToBotUrl('https://t.me/Demotestlaruz_bot?start=pay_premium');
     }
 
     function redirectToBotUrl(url) {
-        // Telegram Web App muhitida ishlashini kafolatlaydigan qism
+        // Telegram WebApp orqali ochishga harakat qilish
         if (window.Telegram && window.Telegram.WebApp) {
             try {
                 if (window.Telegram.WebApp.openTelegramLink) {
@@ -782,7 +780,19 @@
             }
         }
         
-        // Agar WebAppAPI topilmasa yoki ishlamasa
+        // Agar WebAppAPI ishlamasa, tg:// схемаси орқали мажбурий йўналтириш
+        try {
+            if (url.includes('Demotestlaruz_bot')) {
+                window.location.href = 'tg://resolve?domain=Demotestlaruz_bot&start=pay_premium';
+                return;
+            } else if (url.includes('Baxtiyor_Karjabov')) {
+                window.location.href = 'tg://resolve?domain=Baxtiyor_Karjabov';
+                return;
+            }
+        } catch (e) {
+            console.log("tg:// xatosi:", e);
+        }
+
         window.open(url, '_blank');
     }
 
