@@ -172,6 +172,14 @@
         button:hover { opacity: 0.9; }
         button:disabled { background: #bdc3c7; cursor: not-allowed; }
         
+        .btn-telegram {
+            background: #0088cc !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
         .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
         .options label.correct-answer .option-percent { background: rgba(255,255,255,0.3); color: white; }
         .options label.wrong-answer { background: #ff4757 !important; color: white; border-color: #ff4757; }
@@ -494,7 +502,13 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            <button type="button" class="info" onclick="openAdminContact()">👨‍🏫 Admin bilan bog'lanish</button>
+            <button type="button" class="btn-telegram" onclick="openAdminContact()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                Admin bilan bog'lanish
+            </button>
         </div>
     </div>
 
