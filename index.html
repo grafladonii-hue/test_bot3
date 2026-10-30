@@ -1142,6 +1142,7 @@
         return arr;
     }
 
+    // ТЎҒРИЛАНГАН ВА КУЧАЙТИРИЛГАН БОТГА ЎТИШ ФУНКЦИЯСИ
     function openVipBotDirect(e) {
         if (e) {
             e.preventDefault();
@@ -1149,16 +1150,20 @@
         }
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
         
+        // Telegram WebApp орқали очишга уринамиз
         if (window.Telegram && window.Telegram.WebApp) {
-            if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+            if (window.Telegram.WebApp.openTelegramLink) {
                 window.Telegram.WebApp.openTelegramLink(botUrl);
                 return;
-            } else if (typeof window.Telegram.WebApp.openLink === 'function') {
+            }
+            if (window.Telegram.WebApp.openLink) {
                 window.Telegram.WebApp.openLink(botUrl);
                 return;
             }
         }
-        window.location.href = botUrl;
+        
+        // Запас вариант (браузер орқали)
+        window.open(botUrl, '_blank');
     }
 
     function openAdminLink(e) {
@@ -1731,7 +1736,6 @@
         }
     }
 
-    // Yangilangan: file_id kiritilganda ham admin panelda rasm ko'rinishini (preview) chiqarish
     async function handleUrlImage(val) {
         let trimmed = val.trim();
         if (trimmed !== "") {
