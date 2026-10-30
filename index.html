@@ -620,7 +620,7 @@
             <textarea id="admin-reading-text" rows="4" placeholder="Matnni shu yerga kiriting..."></textarea>
 
             <div class="img-upload-section">
-                <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Telegram orqali):</b></label>
+                <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Telegram file_id yoki URL):</b></label>
                 <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
                 <input type="text" id="admin-img-url" placeholder="Yoki Telegram file_id yoki rasm havolasini kiriting" onchange="handleUrlImage(this.value)">
                 <img id="img-preview" class="img-preview" alt="Rasm ko'rinishi">
@@ -1202,7 +1202,7 @@
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obunaga bot orqali a\'zo bo\'ling">⭐ VIP obuna</button>'
+                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna bot orqali">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
@@ -1368,7 +1368,7 @@
         document.getElementById('result-box').style.display = 'none';
         document.getElementById('quiz-title').innerText = (testData[testId] ? testData[testId].title : "Test") + (isTournamentMode ? " (Jonli turnir)" : "");
 
-        loadQuestion();
+        await loadQuestion();
         startTimer();
     }
 
@@ -1424,7 +1424,7 @@
         }, 1000);
     }
 
-    function loadQuestion() {
+    async function loadQuestion() {
         var q = activeQuestions[currentQuestion];
         var optionsHtml = "";
         
@@ -1446,15 +1446,22 @@
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
         
-        // Rasm Telegram file_id yoki URL ekanligini tekshirib chiqarish
+        // Rasm file_id yoki URL ekanligini tekshirib бэкенд орқали олиш
         var imgBlockHtml = "";
         if (q.imageUrl) {
-            var finalImgSrc = q.imageUrl;
-            if (!q.imageUrl.startsWith("http") && !q.imageUrl.startsWith("data:")) {
-                // Agar file_id bo'lsa Telegram getFile orqali olish mumkin yoki bot orqali render qilish
-                finalImgSrc = "https://api.telegram.org/file/bot_TOKEN_PLACEHOLDER/" + q.imageUrl; 
+            let imgSrc = q.imageUrl;
+            if (!imgSrc.startsWith("http") && !imgSrc.startsWith("data:")) {
+                try {
+                    let response = await fetch('/get-image-url/' + imgSrc);
+                    let resJson = await response.json();
+                    if (resJson.url) {
+                        imgSrc = resJson.url;
+                    }
+                } catch (err) {
+                    console.error("Rasm havolasini olishda xato:", err);
+                }
             }
-            imgBlockHtml = '<img src="' + q.imageUrl + '" class="question-img" alt="Rasmli savol" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Kattalashtirish uchun bosing">';
+            imgBlockHtml = '<img src="' + imgSrc + '" class="question-img" alt="Rasmli savol" onclick="openImageModal(\'' + imgSrc + '\')" title="Kattalashtirish uchun bosing">';
         }
 
         document.getElementById("question-box").innerHTML = 
@@ -1513,10 +1520,10 @@
         }
     }
 
-    function proceedToNextQuestion() {
+    async function proceedToNextQuestion() {
         if (currentQuestion < activeQuestions.length - 1) {
             currentQuestion++;
-            loadQuestion();
+            await loadQuestion();
             startTimer(); 
         } else {
             finishQuiz();
@@ -1594,7 +1601,7 @@
         }
     }
 
-    function nextQuestion() {
+    async function nextQuestion() {
         saveCurrentAnswer();
         if (userAnswers[currentQuestion] === undefined && !isTournamentMode) {
             alert("Iltimos, javobni belgilang!");
@@ -1603,18 +1610,18 @@
 
         if (currentQuestion < activeQuestions.length - 1) {
             currentQuestion++;
-            loadQuestion();
+            await loadQuestion();
             if (isTournamentMode) startTimer();
         } else {
             finishQuiz();
         }
     }
 
-    function prevQuestion() {
+    async function prevQuestion() {
         saveCurrentAnswer();
         if (currentQuestion > 0) {
             currentQuestion--;
-            loadQuestion();
+            await loadQuestion();
         }
     }
 
@@ -1715,8 +1722,6 @@
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9);
                     
-                    // BU YERDA: Admindan olingan rasmni Telegram bot orqali kanalga yuborib file_id olish yoki link qilish мумкин. 
-                    // Hozircha Egressni tejash uchun to'g'ridan-to'g'ri base64 yoki Telegram file_id kiritishga мосланди.
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
@@ -1727,11 +1732,12 @@
         }
     }
 
-    function handleUrlImage(url) {
-        if (url.trim() !== "") {
-            document.getElementById("admin-img-data").value = url.trim();
+    function handleUrlImage(val) {
+        let trimmed = val.trim();
+        if (trimmed !== "") {
+            document.getElementById("admin-img-data").value = trimmed;
             document.getElementById("admin-img-file").value = "";
-            showImagePreview(url.trim());
+            showImagePreview(trimmed);
         }
     }
 
@@ -1739,8 +1745,13 @@
         var preview = document.getElementById("img-preview");
         var removeBtn = document.getElementById("remove-img-btn");
         if (src) {
-            preview.src = src;
-            preview.style.display = "block";
+            // Agar file_id bo'lsa preview ko'rsatib bo'lmaydi, shuning uchun http yoki data tekshiriladi
+            if (src.startsWith("http") || src.startsWith("data:")) {
+                preview.src = src;
+                preview.style.display = "block";
+            } else {
+                preview.style.display = "none"; // file_id matn ko'rinishida bo'ladi
+            }
             removeBtn.style.display = "inline-block";
         } else {
             preview.style.display = "none";
@@ -1906,6 +1917,7 @@
 
         var imgUrl = q.image_url || "";
         document.getElementById("admin-img-data").value = imgUrl;
+        document.getElementById("admin-img-url").value = imgUrl.startsWith("http") || imgUrl.startsWith("data:") ? "" : imgUrl;
         showImagePreview(imgUrl);
 
         onTestSelectChange();
@@ -1942,7 +1954,14 @@
 
         var title = document.getElementById("admin-test-title").value.trim();
         var readingText = document.getElementById("admin-reading-text").value.trim();
+        
+        // Agar admin URL inputiga file_id yozgan bo'lsa, o'shani olamiz
+        var urlInputVal = document.getElementById("admin-img-url").value.trim();
+        if (urlInputVal !== "") {
+            document.getElementById("admin-img-data").value = urlInputVal;
+        }
         var imageUrl = document.getElementById("admin-img-data").value.trim();
+        
         var question = document.getElementById("admin-question").value.trim();
 
         var opt0 = document.getElementById("admin-opt-0").value.trim();
