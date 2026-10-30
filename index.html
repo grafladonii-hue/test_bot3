@@ -622,7 +622,7 @@
             <div class="img-upload-section">
                 <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Telegram file_id yoki URL):</b></label>
                 <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
-                <input type="text" id="admin-img-url" placeholder="Yoki Telegram file_id yoki rasm havolasini kiriting" onchange="handleUrlImage(this.value)">
+                <input type="text" id="admin-img-url" placeholder="Yoki Telegram file_id yoki rasm havolasini kiriting" oninput="handleUrlImage(this.value)">
                 <img id="img-preview" class="img-preview" alt="Rasm ko'rinishi">
                 <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Rasmni o'chirish</button>
             </div>
@@ -1446,7 +1446,6 @@
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
         
-        // Rasm file_id yoki URL ekanligini tekshirib бэкенд орқали олиш
         var imgBlockHtml = "";
         if (q.imageUrl) {
             let imgSrc = q.imageUrl;
@@ -1732,12 +1731,31 @@
         }
     }
 
-    function handleUrlImage(val) {
+    // Yangilangan: file_id kiritilganda ham admin panelda rasm ko'rinishini (preview) chiqarish
+    async function handleUrlImage(val) {
         let trimmed = val.trim();
         if (trimmed !== "") {
             document.getElementById("admin-img-data").value = trimmed;
             document.getElementById("admin-img-file").value = "";
-            showImagePreview(trimmed);
+
+            if (!trimmed.startsWith("http") && !trimmed.startsWith("data:")) {
+                try {
+                    let response = await fetch('/get-image-url/' + trimmed);
+                    let resJson = await response.json();
+                    if (resJson.url) {
+                        showImagePreview(resJson.url);
+                    } else {
+                        showImagePreview("");
+                    }
+                } catch (err) {
+                    console.error("Preview olishda xato:", err);
+                    showImagePreview("");
+                }
+            } else {
+                showImagePreview(trimmed);
+            }
+        } else {
+            showImagePreview("");
         }
     }
 
@@ -1745,13 +1763,8 @@
         var preview = document.getElementById("img-preview");
         var removeBtn = document.getElementById("remove-img-btn");
         if (src) {
-            // Agar file_id bo'lsa preview ko'rsatib bo'lmaydi, shuning uchun http yoki data tekshiriladi
-            if (src.startsWith("http") || src.startsWith("data:")) {
-                preview.src = src;
-                preview.style.display = "block";
-            } else {
-                preview.style.display = "none"; // file_id matn ko'rinishida bo'ladi
-            }
+            preview.src = src;
+            preview.style.display = "block";
             removeBtn.style.display = "inline-block";
         } else {
             preview.style.display = "none";
@@ -1917,8 +1930,13 @@
 
         var imgUrl = q.image_url || "";
         document.getElementById("admin-img-data").value = imgUrl;
-        document.getElementById("admin-img-url").value = imgUrl.startsWith("http") || imgUrl.startsWith("data:") ? "" : imgUrl;
-        showImagePreview(imgUrl);
+        document.getElementById("admin-img-url").value = imgUrl;
+        
+        if (imgUrl) {
+            handleUrlImage(imgUrl);
+        } else {
+            showImagePreview("");
+        }
 
         onTestSelectChange();
         window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
@@ -1955,7 +1973,6 @@
         var title = document.getElementById("admin-test-title").value.trim();
         var readingText = document.getElementById("admin-reading-text").value.trim();
         
-        // Agar admin URL inputiga file_id yozgan bo'lsa, o'shani olamiz
         var urlInputVal = document.getElementById("admin-img-url").value.trim();
         if (urlInputVal !== "") {
             document.getElementById("admin-img-data").value = urlInputVal;
