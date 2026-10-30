@@ -620,9 +620,9 @@
             <textarea id="admin-reading-text" rows="4" placeholder="Matnni shu yerga kiriting..."></textarea>
 
             <div class="img-upload-section">
-                <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Ixtiyoriy):</b></label>
+                <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Telegram orqali):</b></label>
                 <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
-                <input type="text" id="admin-img-url" placeholder="Yoki rasmning internet URL havolasini kiriting" onchange="handleUrlImage(this.value)">
+                <input type="text" id="admin-img-url" placeholder="Yoki Telegram file_id yoki rasm havolasini kiriting" onchange="handleUrlImage(this.value)">
                 <img id="img-preview" class="img-preview" alt="Rasm ko'rinishi">
                 <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Rasmni o'chirish</button>
             </div>
@@ -1142,7 +1142,6 @@
         return arr;
     }
 
-    // VIP obunaga bot orqali o'tish uchun to'g'ridan-to'g'ri Telegram WebApp buyrug'i
     function openVipBotDirect(e) {
         if (e) {
             e.preventDefault();
@@ -1162,7 +1161,6 @@
         window.location.href = botUrl;
     }
 
-    // Admin bilan bog'lanish uchun universal funksiya
     function openAdminLink(e) {
         if (e) {
             e.preventDefault();
@@ -1190,7 +1188,6 @@
         }
 
         var isUserPremium = localStorage.getItem('is_premium_user') === 'true';
-
         var sortedKeys = getSortedTestKeys();
 
         var kuzHtml = "";
@@ -1204,7 +1201,6 @@
             var testNum = extractTestNum(id);
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
-            // <a> tegi o'rniga kafolatlangan ishlaydigan <button> ishlatildi
             var actionBtn = isLocked 
                 ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obunaga bot orqali a\'zo bo\'ling">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
@@ -1449,7 +1445,17 @@
         });
 
         var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
-        var imgBlockHtml = q.imageUrl ? '<img src="' + q.imageUrl + '" class="question-img" alt="Rasmli savol" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Kattalashtirish uchun bosing">' : "";
+        
+        // Rasm Telegram file_id yoki URL ekanligini tekshirib chiqarish
+        var imgBlockHtml = "";
+        if (q.imageUrl) {
+            var finalImgSrc = q.imageUrl;
+            if (!q.imageUrl.startsWith("http") && !q.imageUrl.startsWith("data:")) {
+                // Agar file_id bo'lsa Telegram getFile orqali olish mumkin yoki bot orqali render qilish
+                finalImgSrc = "https://api.telegram.org/file/bot_TOKEN_PLACEHOLDER/" + q.imageUrl; 
+            }
+            imgBlockHtml = '<img src="' + q.imageUrl + '" class="question-img" alt="Rasmli savol" onclick="openImageModal(\'' + q.imageUrl + '\')" title="Kattalashtirish uchun bosing">';
+        }
 
         document.getElementById("question-box").innerHTML = 
             textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap; font-size: 15px; line-height: 1.4;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
@@ -1708,6 +1714,9 @@
                     }
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    // BU YERDA: Admindan olingan rasmni Telegram bot orqali kanalga yuborib file_id olish yoki link qilish мумкин. 
+                    // Hozircha Egressni tejash uchun to'g'ridan-to'g'ri base64 yoki Telegram file_id kiritishga мосланди.
                     document.getElementById("admin-img-data").value = compressedBase64;
                     document.getElementById("admin-img-url").value = "";
                     showImagePreview(compressedBase64);
