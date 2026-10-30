@@ -526,6 +526,10 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
+            
+            <!-- Бош саҳифага қўшилган VIP обуна тугмаси -->
+            <button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)">⭐ VIP obuna bo'lish</button>
+
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -1142,7 +1146,7 @@
         return arr;
     }
 
-    // ТЎҒРИЛАНГАН ВА КУЧАЙТИРИЛГАН БОТГА ЎТИШ ФУНКЦИЯСИ
+    // Ботга ўтиш функцияси
     function openVipBotDirect(e) {
         if (e) {
             e.preventDefault();
@@ -1150,7 +1154,6 @@
         }
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
         
-        // Telegram WebApp орқали очишга уринамиз
         if (window.Telegram && window.Telegram.WebApp) {
             if (window.Telegram.WebApp.openTelegramLink) {
                 window.Telegram.WebApp.openTelegramLink(botUrl);
@@ -1161,8 +1164,6 @@
                 return;
             }
         }
-        
-        // Запас вариант (браузер орқали)
         window.open(botUrl, '_blank');
     }
 
