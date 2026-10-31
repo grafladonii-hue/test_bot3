@@ -67,7 +67,6 @@
         }
         .question-img:hover { opacity: 0.95; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
         
-        /* Расмни катталаштириш (Modal) ойнаси */
         .image-modal {
             display: none;
             position: fixed;
@@ -169,7 +168,8 @@
         button.info { background: #3498db; color: white; }
         button.dark { background: #34495e; color: white; }
         
-        .vip-link-btn { background: #27ae60 !important; color: #ffffff !important; font-weight: bold; }
+        .vip-link-btn { background: #e67e22 !important; color: #ffffff !important; font-weight: bold; }
+        .vip-active-btn { background: #27ae60 !important; color: #ffffff !important; font-weight: bold; }
         .btn-telegram { background: #0088cc !important; font-weight: bold; }
 
         .result-box { display: none; text-align: center; }
@@ -228,7 +228,16 @@
             justify-content: space-between;
             align-items: center;
         }
-        .test-card button { width: 110px; padding: 8px 10px; font-size: 13px; font-weight: bold; border-radius: 6px; }
+        .test-card .vip-link-btn, .test-card button {
+            width: 110px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
         .page { display: none; }
         .page.active { display: block; }
         .brand-header { text-align: center; margin-bottom: 20px; }
@@ -390,7 +399,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
+            <button type="button" id="vip-status-btn" class="vip-link-btn" onclick="openVipBotDirect(event)">⭐ VIP obunani ulash</button>
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">Admin bilan bog'lanish</button>
         </div>
     </div>
@@ -562,6 +571,62 @@
     var allLeaderboardData = [];
     var leaderboardDisplayLimit = 50;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
+    var isUserPremium = false;
+
+    async function checkUserVipStatus() {
+        // Админ доимо VIP ҳуқуқига эга
+        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
+            isUserPremium = true;
+            updateVipButtonUI();
+            renderTestsList();
+            return;
+        }
+
+        // URL ёки қисқа хотирада статус бўлса
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'premium' || localStorage.getItem('is_premium_user') === 'true') {
+            isUserPremium = true;
+            updateVipButtonUI();
+            renderTestsList();
+            return;
+        }
+
+        // Акс ҳолда базадан (leaderboard ёки алоҳида обуна жадвалидан) текшириш
+        if (currentUserId) {
+            try {
+                const { data } = await supabaseClient
+                    .from('leaderboard')
+                    .select('score')
+                    .eq('user_id', currentUserId)
+                    .limit(1);
+                
+                // Масалан, агар базада мавжуд бўлса ёки VIP рўйхатида бўлса
+                // Ҳозирги мантиқда тест сотиб олганлар ёки натижаси борлар ёхуд махсус флаг текширилади
+                // Керак бўлса бу ерга алоҳида obuna таблицасини ҳам улашингиз мумкин.
+            } catch(e) {
+                console.log(e);
+            }
+        }
+        
+        isUserPremium = false;
+        updateVipButtonUI();
+        renderTestsList();
+    }
+
+    function updateVipButtonUI() {
+        var btn = document.getElementById("vip-status-btn");
+        if (!btn) return;
+
+        if (isUserPremium) {
+            btn.className = "vip-active-btn";
+            btn.innerText = "⭐ VIP obuna faol ✅";
+            btn.onclick = function(e) { e.preventDefault(); switchTab('tests'); };
+        } else {
+            btn.className = "vip-link-btn";
+            btn.innerText = "⭐ VIP obunani ulash";
+            btn.onclick = openVipBotDirect;
+        }
+    }
 
     async function fetchTestData() {
         try {
@@ -582,11 +647,7 @@
         } catch (e) {
             console.error("Xatolik:", e);
         }
-        renderTestsList();
-        if (document.getElementById('admin-page').classList.contains('active')) {
-            renderAdminTestsList();
-            populateTestSelect();
-        }
+        await checkUserVipStatus();
     }
 
     function extractTestNum(id) {
@@ -608,15 +669,21 @@
 
         sortedKeys.forEach(function(id) {
             var t = testData[id];
-            if (!t || hiddenTests[id]) return; // Яширилган тестларни кўрсатмаслик
+            if (!t || hiddenTests[id]) return;
+
+            var testNum = extractTestNum(id);
+            // Дастлабки 3 та тест бепул, қолганлари VIP учун
+            var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
+
+            var actionBtn = isLocked 
+                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna talab etiladi">⭐ VIP</button>'
+                : '<button type="button" onclick="startQuiz(\'' + id + '\')">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
-            var qCount = t.questions.length;
-
             var cardHtml = '<div class="test-card">' +
                 '<div><strong>' + t.title + '</strong>' +
-                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + qCount + ' ta savol • 90 daqiqa</p></div>' +
-                '<button type="button" onclick="startQuiz(\'' + id + '\')">Ishlash</button>' +
+                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questions.length + ' ta savol • 90 daqiqa</p></div>' +
+                actionBtn +
                 '</div>';
 
             if (titleLower.includes('kuz') || titleLower.includes('куз')) {
@@ -758,6 +825,14 @@
     }
 
     function startQuiz(testId) {
+        var testNum = extractTestNum(testId);
+        var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
+        if (isLocked) {
+            alert("Ushbu test VIP obunachilar uchun mo'ljallangan!");
+            openVipBotDirect();
+            return;
+        }
+
         if (!testData[testId] || testData[testId].questions.length === 0) {
             alert("Bu тестда ҳали саволлар йўқ!");
             return;
@@ -1250,21 +1325,42 @@
     }
 
     function removeImage() {
-        document.getElementById("admin-img-data.value") = "";
+        document.getElementById("admin-img-data").value = "";
         document.getElementById("admin-img-file").value = "";
         document.getElementById("admin-img-url").value = "";
         showImagePreview("");
     }
 
-    function checkAndOpenVip(e) {
+    function openVipBotDirect(e) {
         if (e) { e.preventDefault(); e.stopPropagation(); }
-        localStorage.setItem('is_premium_user', 'true');
-        switchTab('tests');
+        var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+                window.Telegram.WebApp.openTelegramLink(botUrl);
+                return;
+            } else if (typeof window.Telegram.WebApp.openLink === 'function') {
+                window.Telegram.WebApp.openLink(botUrl);
+                return;
+            }
+        }
+        window.location.href = botUrl;
     }
 
     function openAdminLink(e) {
         if (e) { e.preventDefault(); e.stopPropagation(); }
-        window.location.href = "https://t.me/Baxtiyor_Karjabov";
+        var adminUrl = "https://t.me/Baxtiyor_Karjabov";
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+                window.Telegram.WebApp.openTelegramLink(adminUrl);
+                return;
+            } else if (typeof window.Telegram.WebApp.openLink === 'function') {
+                window.Telegram.WebApp.openLink(adminUrl);
+                return;
+            }
+        }
+        window.location.href = adminUrl;
     }
 
     window.onload = function() {
