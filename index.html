@@ -525,7 +525,7 @@
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             
-            <!-- VIP obuna tugmasi (Базадан автоматик текширади) -->
+            <!-- VIP obuna tugmasi (approved_users jadvalidan tekshiradi) -->
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna bo'lish</button>
 
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
@@ -942,7 +942,7 @@
         fetchLeaderboard(true);
     }
 
-    // ⭐ BAZADАН ПРЕМИУМНИ ТЕКШИРИШ ВА ОЧИШ ФУНКЦИЯСИ
+    // ⭐ BAZADАН ПРЕМИУМНИ ТЕКШИРИШ ВА ОЧИШ (approved_users орқали)
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
@@ -955,24 +955,26 @@
             return;
         }
 
-        if (String(currentUserId) === String(ADMIN_ID) || localStorage.getItem('is_premium_user') === 'true') {
+        if (String(currentUserId) === String(ADMIN_ID)) {
             alert("Sizda allaqachon VIP obuna faol!");
             renderTestsList();
             return;
         }
 
         try {
+            // approved_users jadvalidan user_id bo'yicha tekshiramiz
             const { data, error } = await supabaseClient
-                .from('subscriptions')
+                .from('approved_users')
                 .select('*')
                 .eq('user_id', currentUserId)
                 .maybeSingle();
 
-            if (data && data.is_paid === true) {
+            if (data) {
                 localStorage.setItem('is_premium_user', 'true');
-                alert("Tabriklaymiz! Sizning avvalgi VIP obunangiz bazadan topildi va faollashtirildi! 🎉");
+                alert("Tabriklaymiz! Sizning VIP obunangiz bazadan topildi va faollashtirildi! 🎉");
                 renderTestsList();
             } else {
+                localStorage.removeItem('is_premium_user');
                 openVipBotDirect();
             }
         } catch (err) {
@@ -981,7 +983,7 @@
         }
     }
 
-    // ⭐ БОТГА ЎТИШНИ ТАЪМИНЛОВЧИ МУСТАҲКАМ ФУНКЦИЯ (Барча телефонлар учун)
+    // ⭐ БОТГА ЎТИШНИ ТАЪМИНЛОВЧИ МУСТАҲКАМ ФУНКЦИЯ
     function openVipBotDirect(e) {
         if (e) {
             e.preventDefault();
@@ -1071,9 +1073,30 @@
         renderTestsList();
     }
 
-    function renderTestsList() {
+    async function renderTestsList() {
+        var isUserApprovedInDb = false;
+
+        if (currentUserId && String(currentUserId) !== String(ADMIN_ID)) {
+            try {
+                const { data } = await supabaseClient
+                    .from('approved_users')
+                    .select('user_id')
+                    .eq('user_id', currentUserId)
+                    .maybeSingle();
+                
+                if (data) {
+                    isUserApprovedInDb = true;
+                    localStorage.setItem('is_premium_user', 'true');
+                } else {
+                    localStorage.removeItem('is_premium_user');
+                }
+            } catch (err) {
+                console.log("DB check error:", err);
+            }
+        }
+
         var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium' || (currentUserId && String(currentUserId) === String(ADMIN_ID))) {
+        if (urlParams.get('status') === 'premium' || (currentUserId && String(currentUserId) === String(ADMIN_ID)) || isUserApprovedInDb) {
             localStorage.setItem('is_premium_user', 'true');
         }
 
