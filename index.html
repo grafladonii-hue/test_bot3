@@ -77,26 +77,27 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.95);
-            overflow: hidden;
-            touch-action: none;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .image-modal-content-wrapper {
-            width: 100%;
-            height: 100%;
+            min-width: 100%;
+            min-height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .image-modal img {
-            max-width: 90%;
-            max-height: 85vh;
+            max-width: 100%;
+            max-height: 90vh;
             border-radius: 6px;
             object-fit: contain;
-            cursor: grab;
-            transition: transform 0.1s ease-out;
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
         }
-        .image-modal img:active { cursor: grabbing; }
         .image-modal-close {
             position: fixed;
             top: 15px;
@@ -126,6 +127,7 @@
             font-size: 11px;
             pointer-events: none;
             z-index: 10000;
+            text-align: center;
         }
 
         .options label {
@@ -244,6 +246,7 @@
         }
         .category-content { display: block; margin-top: 8px; }
 
+        /* РЕЙТИНГ ДИЗАЙНЛАРИ ВА ТОП-3 */
         .leaderboard-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -253,6 +256,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-sizing: border-box;
+        }
+        .leaderboard-item.rank-1 {
+            background: linear-gradient(135deg, #fffdf0 0%, #fef3c7 100%);
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+        }
+        .leaderboard-item.rank-2 {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #cbd5e1;
+        }
+        .leaderboard-item.rank-3 {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 2px solid #f6ad55;
         }
     </style>
 </head>
@@ -281,9 +298,12 @@
 
     <div id="rating-page" class="page">
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
-        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan qatnashchilar natijalari:</p>
+        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan barcha qatnashchilar natijalari:</p>
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
+        </div>
+        <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
+            <button type="button" onclick="loadMoreLeaderboard()" style="background: #3498db; width: auto; padding: 10px 20px;">Yна 50 тани кўрсатиш</button>
         </div>
     </div>
 
@@ -325,9 +345,9 @@
 <div id="imageModal" class="image-modal" onclick="closeImageModal()">
     <span class="image-modal-close">&times;</span>
     <div class="image-modal-content-wrapper">
-        <img id="modalImage" src="" alt="Zoom Image">
+        <img id="modalImage" src="" alt="Zoom Image" onclick="event.stopPropagation(); toggleImageZoom(this);">
     </div>
-    <div class="zoom-hint">Kattalashtirish uchun ikki marta bosing yoki suring</div>
+    <div class="zoom-hint">Kattalashtirish uchun ikki marta bosing yoki ikki бармоқ билан чўзинг</div>
 </div>
 
 <div class="nav-bar">
@@ -354,10 +374,9 @@
     var quizTimerInterval = null;
     var timeLeftSeconds = 90 * 60;
 
-    // Zoom ўзгарувчилари
-    let currentScale = 1;
-    let isDragging = false;
-    let startX = 0, startY = 0, translateX = 0, translateY = 0;
+    // Рейтингда ҳар сафар 50 тадан кўрсатиш учун ўзгарувчилар
+    var allLeaderboardData = [];
+    var leaderboardDisplayLimit = 50;
 
     async function fetchTestData() {
         try {
@@ -424,7 +443,6 @@
         document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
     }
 
-    // Саволларни тасодифий аралаштириш (Fisher-Yates shuffle)
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             let j = Math.floor(Math.random() * (i + 1));
@@ -435,37 +453,75 @@
         return array;
     }
 
+    // РЕЙТИНГНИ ЮКЛАШ ВА 50 ТАДАН ОШИРИБ БОРИШ
     async function fetchLeaderboard() {
         var listContainer = document.getElementById("leaderboard-list");
         if (!listContainer) return;
         listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
+        leaderboardDisplayLimit = 50;
 
         try {
             const { data, error } = await supabaseClient
                 .from('leaderboard')
                 .select('*')
                 .eq('test_key', 'general')
-                .order('score', { ascending: false })
-                .limit(50);
+                .order('score', { ascending: false });
 
             if (error) throw error;
             if (!data || data.length === 0) {
                 listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
+                document.getElementById("load-more-container").style.display = "none";
                 return;
             }
 
-            let html = "";
-            data.forEach((item, index) => {
-                html += '<div class="leaderboard-item">' +
-                    '<div><b>' + (index + 1) + '. ' + item.full_name + '</b>' +
-                    '<div style="font-size: 11px; color: #666;">📊 ' + (item.tests_count || 1) + ' ta test</div></div>' +
-                    '<div style="font-weight: bold; color: #16a34a;">' + item.score + ' ball</div>' +
-                    '</div>';
-            });
-            listContainer.innerHTML = html;
+            allLeaderboardData = data;
+            renderLeaderboardList();
         } catch (err) {
             listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
         }
+    }
+
+    function renderLeaderboardList() {
+        var listContainer = document.getElementById("leaderboard-list");
+        var loadMoreBtnContainer = document.getElementById("load-more-container");
+        
+        let sliceData = allLeaderboardData.slice(0, leaderboardDisplayLimit);
+        let html = "";
+
+        sliceData.forEach((item, index) => {
+            let rankClass = "";
+            let medal = "";
+            if (index === 0) {
+                rankClass = "rank-1";
+                medal = "🥇 ";
+            } else if (index === 1) {
+                rankClass = "rank-2";
+                medal = "🥈 ";
+            } else if (index === 2) {
+                rankClass = "rank-3";
+                medal = "🥉 ";
+            }
+
+            html += '<div class="leaderboard-item ' + rankClass + '">' +
+                '<div><b>' + medal + (index + 1) + '. ' + item.full_name + '</b>' +
+                '<div style="font-size: 11px; color: #666; margin-left: ' + (index < 3 ? '20px' : '0') + ';">📊 ' + (item.tests_count || 1) + ' ta test</div></div>' +
+                '<div style="font-weight: bold; color: #16a34a; font-size: 15px;">' + item.score + ' ball</div>' +
+                '</div>';
+        });
+
+        listContainer.innerHTML = html;
+
+        // Агар яна кўрсатадиган одамлар қолган бўлса, тугмани чиқарамиз
+        if (leaderboardDisplayLimit < allLeaderboardData.length) {
+            loadMoreBtnContainer.style.display = "block";
+        } else {
+            loadMoreBtnContainer.style.display = "none";
+        }
+    }
+
+    function loadMoreLeaderboard() {
+        leaderboardDisplayLimit += 50;
+        renderLeaderboardList();
     }
 
     function startQuiz(testId) {
@@ -473,7 +529,6 @@
             alert("Bu тестда ҳали саволлар йўқ!");
             return;
         }
-        // Тест бошланганда саволлар тартибини аралаштирамиз
         let originalQuestions = [...testData[testId].questions];
         currentTestQuestions = shuffleArray(originalQuestions);
 
@@ -540,50 +595,22 @@
         document.getElementById('next-btn').innerText = currentQuestionIndex === currentTestQuestions.length - 1 ? 'Yakunlash' : 'Keyingi';
     }
 
-    // Расмни очиш ва зум қилиш функциялари
     function openImageModal(imgSrc) {
         let modal = document.getElementById('imageModal');
         let modalImg = document.getElementById('modalImage');
-        modal.style.display = 'flex';
+        modal.style.display = 'block';
         modalImg.src = imgSrc;
-        currentScale = 1;
-        translateX = 0;
-        translateY = 0;
-        updateImageTransform(modalImg);
+        modalImg.style.transform = 'scale(1)';
     }
 
     function closeImageModal() {
         document.getElementById('imageModal').style.display = 'none';
     }
 
-    function updateImageTransform(img) {
-        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    function toggleImageZoom(img) {
+        let currentScale = img.style.transform.includes('scale(2)') ? 1 : 2;
+        img.style.transform = `scale(${currentScale})`;
     }
-
-    // Модал ойна ичидаги расмга зум қилиш (колесо ва тап орқали)
-    document.addEventListener('DOMContentLoaded', () => {
-        const modalImg = document.getElementById('modalImage');
-        if (modalImg) {
-            modalImg.addEventListener('click', (e) => {
-                e.stopPropagation();
-                currentScale = currentScale === 1 ? 2.2 : 1;
-                translateX = 0;
-                translateY = 0;
-                updateImageTransform(modalImg);
-            });
-
-            modalImg.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    currentScale = Math.min(currentScale + 0.3, 4);
-                } else {
-                    currentScale = Math.max(currentScale - 0.3, 1);
-                    if (currentScale === 1) { translateX = 0; translateY = 0; }
-                }
-                updateImageTransform(modalImg);
-            });
-        }
-    });
 
     function selectOption(idx) {
         userAnswers[currentQuestionIndex] = idx;
