@@ -118,6 +118,7 @@
             color: #27ae60;
             background: #f4f9f4;
         }
+
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -134,6 +135,7 @@
         .nav-item { text-align: center; cursor: pointer; color: #666; font-size: 12px; }
         .nav-item.active { color: #27ae60; font-weight: bold; }
         .nav-item div { font-size: 18px; }
+
         .test-card {
             background: #f9f9f9;
             border: 1px solid #e1e1e1;
@@ -171,6 +173,17 @@
             color: #2c3e50;
         }
         .category-content { display: block; margin-top: 8px; }
+
+        .leaderboard-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -194,6 +207,14 @@
     <div id="tests-page" class="page">
         <h2>Mavjud testlar</h2>
         <div id="tests-list"><p style="text-align: center; color: #888;">Yuklanmoqda...</p></div>
+    </div>
+
+    <div id="rating-page" class="page">
+        <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
+        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan qatnashchilar natijalari:</p>
+        <div id="leaderboard-list" style="margin-top: 15px;">
+            <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
+        </div>
     </div>
 
     <div id="quiz-page" class="page">
@@ -229,6 +250,9 @@
     </div>
     <div class="nav-item" onclick="switchTab('tests')" id="nav-tests">
         <div>📝</div> Testlar
+    </div>
+    <div class="nav-item" onclick="switchTab('rating')" id="nav-rating">
+        <div>🏆</div> Reyting
     </div>
 </div>
 
@@ -309,6 +333,39 @@
         document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
     }
 
+    async function fetchLeaderboard() {
+        var listContainer = document.getElementById("leaderboard-list");
+        if (!listContainer) return;
+        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('leaderboard')
+                .select('*')
+                .eq('test_key', 'general')
+                .order('score', { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
+                return;
+            }
+
+            let html = "";
+            data.forEach((item, index) => {
+                html += '<div class="leaderboard-item">' +
+                    '<div><b>' + (index + 1) + '. ' + item.full_name + '</b>' +
+                    '<div style="font-size: 11px; color: #666;">📊 ' + (item.tests_count || 1) + ' ta test</div></div>' +
+                    '<div style="font-weight: bold; color: #16a34a;">' + item.score + ' ball</div>' +
+                    '</div>';
+            });
+            listContainer.innerHTML = html;
+        } catch (err) {
+            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
+        }
+    }
+
     function startQuiz(testId) {
         if (!testData[testId] || testData[testId].questions.length === 0) {
             alert("Bu тестда ҳали саволлар йўқ!");
@@ -346,8 +403,12 @@
 
     function displayQuestion() {
         let q = currentTestQuestions[currentQuestionIndex];
-        document.getElementById('question-box').innerText = `<b>${currentQuestionIndex + 1}.</b> ` + (q.question_text || q.question || "");
         
+        // Савол матнидан HTML тегларини тозалаб чиқариш
+        let rawQText = q.question_text || q.question || "";
+        document.getElementById('question-box.innerHTML') = `<b>${currentQuestionIndex + 1}.</b> ` + rawQText;
+        document.getElementById('question-box').innerHTML = `<b>${currentQuestionIndex + 1}.</b> ` + rawQText;
+
         // Rasm
         let imgContainer = document.getElementById('question-img-container');
         if (q.image_url) {
@@ -376,7 +437,7 @@
         document.getElementById('options-container').innerHTML = optHtml;
 
         document.getElementById('prev-btn').style.display = currentQuestionIndex === 0 ? 'none' : 'block';
-        document.getElementById('next-btn').innerText = currentQuestionIndex === currentTestQuestions.length - 1 ? 'Yakunлаш' : 'Кейинги';
+        document.getElementById('next-btn').innerText = currentQuestionIndex === currentTestQuestions.length - 1 ? 'Yakunlash' : 'Keyingi';
     }
 
     function selectOption(idx) {
@@ -428,6 +489,10 @@
             renderTestsList();
             document.getElementById('tests-page').classList.add('active');
             document.getElementById('nav-tests').classList.add('active');
+        } else if (tab === 'rating') {
+            fetchLeaderboard();
+            document.getElementById('rating-page').classList.add('active');
+            document.getElementById('nav-rating').classList.add('active');
         }
     }
 
