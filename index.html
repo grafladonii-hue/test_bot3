@@ -229,9 +229,9 @@
             align-items: center;
         }
         .test-card .vip-link-btn, .test-card button {
-            width: 110px;
-            padding: 8px 10px;
-            font-size: 13px;
+            width: 115px;
+            padding: 8px 8px;
+            font-size: 12px;
             font-weight: bold;
             border-radius: 6px;
             text-align: center;
@@ -397,7 +397,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            <button type="button" id="vip-status-btn" class="vip-link-btn" onclick="openVipBotDirect(event)">⭐ VIP obunani ulash</button>
+            <button type="button" id="vip-status-btn" class="vip-link-btn" onclick="openVipBotDirect(event)">⭐ VIP obuna</button>
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">Admin bilan bog'lanish</button>
         </div>
     </div>
@@ -417,11 +417,11 @@
         </div>
         
         <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
-            <button type="button" onclick="loadMoreLeaderboard()" style="background: #3498db; width: auto; padding: 10px 20px;">Яна 50 тани кўрсатиш</button>
+            <button type="button" onclick="loadMoreLeaderboard()" style="background: #3498db; width: auto; padding: 10px 20px;">Yana 50 tani ko'rsatish</button>
         </div>
     </div>
 
-    <!-- АДМИН ПАНЕЛЬ -->
+    <!-- ADMIN PANEL -->
     <div id="admin-page" class="page">
         <h2>⚙️ Boshqaruv paneli (Admin)</h2>
         <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
@@ -441,7 +441,7 @@
 
             <div id="new-test-title-box" style="display:block; margin-top: 10px;">
                 <label style="color:#27ae60;"><b>Yangi test nomini kiriting:</b></label>
-                <input type="text" id="admin-test-title" placeholder="Masalan: 4-Демо тест (Куз 2026)">
+                <input type="text" id="admin-test-title" placeholder="Masalan: 4-Demo test (Kuz 2026)">
             </div>
 
             <label><b>Matn (Ixtiyoriy, matnli savollar uchun):</b></label>
@@ -571,7 +571,6 @@
     var isUserPremium = false;
 
     async function checkUserVipStatus() {
-        // Фақат админ ёки URL да статус келса ёки базада VIP бўлсагина очилади
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
             isUserPremium = true;
             updateVipButtonUI();
@@ -588,9 +587,6 @@
             return;
         }
 
-        // Локаль хотирани тозалаймиз (агар базадан ўчирилган бўлса автоматик ўчиши учун)
-        // Бу ерда сиз хоҳласангиз supabase'даги ўз VIP жадвалингиздан текширишингиз мумкин.
-        // Ҳозирча оддий оддий фойдаланувчилар учун бепул қилиб қўйилди:
         isUserPremium = false;
         localStorage.removeItem('is_premium_user');
 
@@ -608,7 +604,7 @@
             btn.onclick = function(e) { e.preventDefault(); switchTab('tests'); };
         } else {
             btn.className = "vip-link-btn";
-            btn.innerText = "⭐ VIP obunani ulash";
+            btn.innerText = "⭐ VIP obuna";
             btn.onclick = openVipBotDirect;
         }
     }
@@ -660,7 +656,7 @@
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna talab etiladi">⭐ VIP</button>'
+                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna talab etiladi">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\')">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
@@ -818,7 +814,7 @@
         }
 
         if (!testData[testId] || testData[testId].questions.length === 0) {
-            alert("Bu тестда ҳали саволлар йўқ!");
+            alert("Bu testda hali savollar yo'q!");
             return;
         }
         let originalQuestions = [...testData[testId].questions];
@@ -930,7 +926,7 @@
         if (quizTimerInterval) clearInterval(quizTimerInterval);
         
         let correctCount = 0;
-        let reviewHtml = "<h3>Жавоблар таҳлили:</h3>";
+        let reviewHtml = "<h3>Javoblar tahlili:</h3>";
 
         currentTestQuestions.forEach((q, idx) => {
             let correctIdx = q.correct_option !== undefined ? q.correct_option : q.correct;
@@ -940,18 +936,18 @@
             if (isCorrect) correctCount++;
 
             let opts = q.options || [q.opt_0, q.opt_1, q.opt_2, q.opt_3];
-            let userAnsText = (userAnsIdx !== undefined && opts[userAnsIdx]) ? opts[userAnsIdx] : "Белгиланмаган";
-            let correctAnsText = opts[correctIdx] ? opts[correctIdx] : "Нўъмалум";
+            let userAnsText = (userAnsIdx !== undefined && opts[userAnsIdx]) ? opts[userAnsIdx] : "Belgilanmagan";
+            let correctAnsText = opts[correctIdx] ? opts[correctIdx] : "Noma'lum";
 
             let qText = q.question_text || q.question || "";
             let itemClass = isCorrect ? "review-item correct-ans" : "review-item wrong-ans";
-            let statusText = isCorrect ? "✅ Тўғри (+2 балл)" : "❌ Нотўғри";
+            let statusText = isCorrect ? "✅ To'g'ri (+2 ball)" : "❌ Noto'g'ri";
 
             reviewHtml += `<div class="${itemClass}">` +
                 `<b>${idx + 1}. ${qText}</b><br>` +
                 `<span style="color: ${isCorrect ? '#27ae60' : '#e74c3c'}; font-weight: bold;">${statusText}</span><br>` +
-                `Сизнинг жавобингиз: ${userAnsText}<br>` +
-                `Тўғри жавоб: <b>${correctAnsText}</b>` +
+                `Sizning javobingiz: ${userAnsText}<br>` +
+                `To'g'ri javob: <b>${correctAnsText}</b>` +
                 `</div>`;
         });
 
@@ -963,7 +959,7 @@
         
         document.getElementById('score-num-val').innerText = totalScore;
         document.getElementById('score-percent-val').innerText = `(${percent}%)`;
-        document.getElementById('score-text').innerText = `Сиз ${currentTestQuestions.length} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
+        document.getElementById('score-text').innerText = `Siz ${currentTestQuestions.length} ta savoldan ${correctCount} tasiga to'g'ri javob berdingiz!`;
         document.getElementById('answers-review').innerHTML = reviewHtml;
         
         if (typeof confetti === 'function') {
@@ -999,8 +995,6 @@
             document.getElementById('nav-admin').classList.add('active');
         }
     }
-
-    /* --- АДМИН ПАНЕЛЬ ФУНКЦИОНАЛИ --- */
 
     function populateTestSelect() {
         var select = document.getElementById("admin-test-select");
