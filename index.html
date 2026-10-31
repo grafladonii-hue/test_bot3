@@ -579,12 +579,32 @@
         }
 
         var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium') {
+        if (urlParams.get('status') === 'premium' || localStorage.getItem('is_premium_user') === 'true') {
             isUserPremium = true;
-            localStorage.setItem('is_premium_user', 'true');
             updateVipButtonUI();
             renderTestsList();
             return;
+        }
+
+        // SUPABASE BAZADAN TEKSHIRISH (Bot qaysi jadvalga yozsa, shu nomni qo'ying, masalan 'vip_users' yoki 'users')
+        if (currentUserId) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('vip_users') 
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .maybeSingle();
+                
+                if (data) {
+                    isUserPremium = true;
+                    localStorage.setItem('is_premium_user', 'true');
+                    updateVipButtonUI();
+                    renderTestsList();
+                    return;
+                }
+            } catch(e) {
+                console.log("VIP status xatosi:", e);
+            }
         }
 
         isUserPremium = false;
