@@ -147,8 +147,6 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
     if message.chat.type != "private":
         return
 
-    # Бот қайта запустить қилинганда энди автоматик премиум статус ёки хабар юбормайди.
-    # Фақат оддий кутиб олиш ва Mini App очиш тугмасини чиқаради:
     free_app_url = WEB_APP_URL
     
     keyboard = InlineKeyboardMarkup(
@@ -195,7 +193,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash', # ёки ўзингиз ишлатадиган модель
+            model='gemini-3.5-flash-lite',  # Янгиланган модель
             contents=[image, prompt]
         )
         
@@ -247,7 +245,7 @@ async def handle_payment_document(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash-lite',  # Янгиланган модель
             contents=[prompt]
         )
         
