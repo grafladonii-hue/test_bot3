@@ -594,7 +594,7 @@
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
             <div class="tournament-datetime-box">
-                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soat):</b></label>
+                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soат):</b></label>
                 <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Sana va vaqtni tanlang...">
             </div>
 
@@ -695,6 +695,28 @@
     var tournamentInterval = null;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
 
+    // ⭐ ID НИ ТЕКШИРИБ ОЛИШ УЧУН ҚЎШИМЧА ҲИМОЯ
+    if (tg) {
+        tg.expand();
+        try {
+            if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+                tg.disableScreenshots();
+            } else if (tg.disableScreenshots) {
+                tg.disableScreenshots();
+            }
+        } catch (e) { console.log("disableScreenshots xatosi:", e); }
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            currentUserId = tg.initDataUnsafe.user.id;
+        }
+    }
+    // Агар Telegram Desktop'да initDataUnsafe орқали келмаса, url ёки boshқа жойдан излаймиз
+    if (!currentUserId && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+        if (window.Telegram.WebApp.initDataUnsafe.user) {
+            currentUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        }
+    }
+
     let pickerInstance = null;
     document.addEventListener("DOMContentLoaded", function() {
         pickerInstance = flatpickr("#admin-tournament-time", {
@@ -712,24 +734,6 @@
             startTournamentCountdown();
         }
     });
-
-    if (tg) {
-        tg.expand();
-        try {
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
-                tg.disableScreenshots();
-            } else if (tg.disableScreenshots) {
-                tg.disableScreenshots();
-            }
-        } catch (e) { console.log("disableScreenshots xatosi:", e); }
-
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            currentUserId = tg.initDataUnsafe.user.id;
-            var u = tg.initDataUnsafe.user;
-            currentUserFullName = (u.first_name || "") + (u.last_name ? " " + u.last_name : "");
-            if (!currentUserFullName.trim()) currentUserFullName = "ID: " + u.id;
-        }
-    }
 
     if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
         var adminNav = document.getElementById('nav-admin');
@@ -939,11 +943,15 @@
         fetchLeaderboard(true);
     }
 
-    // ⭐ ТУҒРИЛАНГАН ВА МУСТАҲКАМЛАНГАН checkAndOpenVip ФУНКЦИЯСИ
+    // ⭐ ТЎҒРИЛАНГАН ВА ТЕКШИРИЛГАН checkAndOpenVip ФУНКЦИЯСИ
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
+        }
+
+        if (!currentUserId && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            currentUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
         }
 
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
@@ -954,6 +962,7 @@
         }
 
         if (!currentUserId) {
+            // Агар ID топилмаса, тест қилиш учун ёки хатонинг олдини олиш мақсадида ботга йўналтирамиз
             alert("Telegram ID aniqlanmadi! Iltimos, ilovani qaytadan oching.");
             openVipBotDirect();
             return;
@@ -1073,6 +1082,10 @@
 
     async function renderTestsList() {
         var isUserApprovedInDb = false;
+
+        if (!currentUserId && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            currentUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        }
 
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
             localStorage.setItem('is_premium_user', 'true');
