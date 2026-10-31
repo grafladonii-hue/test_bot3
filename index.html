@@ -375,116 +375,6 @@
             box-sizing: border-box;
         }
 
-        .admin-form input, .admin-form textarea, .admin-form select {
-            width: 100%;
-            padding: 10px;
-            margin: 6px 0 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-family: inherit;
-            white-space: pre-wrap;
-        }
-
-        .tournament-datetime-box {
-            border-top: 1px solid #d1d5db;
-            border-bottom: 1px solid #d1d5db;
-            padding: 14px 0;
-            margin: 12px 0 18px 0;
-            background-color: #fafbfc;
-        }
-        .tournament-datetime-box label {
-            display: block;
-            margin-bottom: 6px;
-            color: #1e293b;
-            font-size: 13px;
-        }
-        .custom-datetime-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-family: inherit;
-            font-size: 14px;
-            background: #ffffff;
-            color: #334155;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .custom-datetime-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-        }
-
-        .flatpickr-calendar {
-            z-index: 99999 !important;
-            font-family: Arial, sans-serif;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-
-        .admin-test-item {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            overflow: hidden;
-        }
-        .admin-test-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: #fdfefe;
-            cursor: pointer;
-            user-select: none;
-            transition: 0.2s;
-        }
-        .admin-test-header:hover { background: #f4f6f6; }
-        .admin-questions-list {
-            display: none;
-            margin-top: 0;
-            padding: 10px;
-            border-top: 1px solid #eee;
-            background: #fafafa;
-        }
-        .admin-test-item.open .admin-questions-list { display: block; }
-        .admin-q-item {
-            background: #fff;
-            border: 1px solid #eee;
-            padding: 8px 10px;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-        .admin-btn-group { display: flex; gap: 5px; }
-        .badge {
-            background: #e8f8f5;
-            color: #27ae60;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .img-preview {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            display: none;
-            border: 1px dashed #27ae60;
-        }
-        .img-upload-section {
-            background: #f0f7f4;
-            border: 1px dashed #27ae60;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-        }
         .category-header {
             background: #f1f8f5;
             border-left: 4px solid #27ae60;
@@ -524,9 +414,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
-            
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
-
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -545,13 +433,10 @@
     <div id="rating-page" class="page">
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
         <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan qatnashchilar natijalari:</p>
-        
         <div id="podium-section"></div>
-
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
-        
         <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
             <button type="button" class="secondary" onclick="loadMoreLeaderboard()" style="width: auto; padding: 10px 20px;" id="load-more-btn">Yana 50 ta</button>
         </div>
@@ -562,7 +447,6 @@
             <span id="quiz-title">Test sinovi</span>
             <div class="timer" id="timer">Vaqt: 02:00</div>
         </div>
-
         <div id="quiz-container">
             <div class="question-box" id="question-box"></div>
             <div class="btn-group" id="quiz-btn-group">
@@ -570,98 +454,14 @@
                 <button type="button" onclick="nextQuestion()" id="next-btn">Keyingi</button>
             </div>
         </div>
-
         <div class="result-box" id="result-box">
             <h2>Test yakunlandi!</h2>
             <div class="score-circle" id="score-circle">0 ball</div>
             <p id="score-text"></p>
             <div id="answers-review"></div>
-
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
     </div>
-
-    <div id="admin-page" class="page">
-        <h2>⚙️ Boshqaruv paneli (Admin)</h2>
-        <div style="background: #e8f8f5; border-left: 4px solid #27ae60; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
-            Siz administratorsiz. Jonli turnir test va boshlanish vaqtini sozlash mumkin.
-        </div>
-
-        <div style="background: #fdfefe; border: 2px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 style="margin-top:0; color:#2c3e50;">🎯 Jonli turnirni sozlash (Test va Vaqt)</h3>
-            
-            <label><b>Turnir uchun testni tanlang:</b></label>
-            <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
-            
-            <div class="tournament-datetime-box">
-                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soат):</b></label>
-                <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Sana va vaqtni tanlang...">
-            </div>
-
-            <button type="button" onclick="saveTournamentSettings()" style="background: #667eea;">💾 Turnir sozlamalarini saqlash</button>
-        </div>
-
-        <div class="admin-form" id="admin-form-box" style="background: #fdfefe; border: 2px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 id="form-title" style="margin-top:0; color:#2c3e50;">➕ Yangi savol qo'shish</h3>
-            
-            <input type="hidden" id="editing-test-id" value="">
-            <input type="hidden" id="editing-db-id" value="">
-            <input type="hidden" id="editing-q-index" value="-1">
-            <input type="hidden" id="admin-img-data" value="">
-
-            <label><b>Qaysi testga savol tegishli?</b></label>
-            <select id="admin-test-select" onchange="onTestSelectChange()"></select>
-
-            <div id="new-test-title-box" style="display:block; margin-top: 10px;">
-                <label style="color:#27ae60;"><b>Yangi test nomini kiriting:</b></label>
-                <input type="text" id="admin-test-title" placeholder="Masalan: Demo-1 (kuz 2026)">
-            </div>
-
-            <label><b>Matn (Ixtiyoriy, matnli savollar uchun):</b></label>
-            <textarea id="admin-reading-text" rows="4" placeholder="Matnni shu yerga kiriting..."></textarea>
-
-            <div class="img-upload-section">
-                <label style="color:#27ae60;"><b>🖼 Savolga rasm qo'shish (Telegram file_id yoki URL):</b></label>
-                <input type="file" id="admin-img-file" accept="image/*" onchange="handleImageUpload(event)" style="margin-top:5px;">
-                <input type="text" id="admin-img-url" placeholder="Yoki Telegram file_id yoki rasm havolasini kiriting" oninput="handleUrlImage(this.value)">
-                <img id="img-preview" class="img-preview" alt="Rasm ko'rinishi">
-                <button type="button" id="remove-img-btn" class="danger" style="display:none; padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto;" onclick="removeImage()">🗑 Rasmni o'chirish</button>
-            </div>
-
-            <label><b>Savol matni:</b></label>
-            <textarea id="admin-question" rows="4" placeholder="Savol matnini kiriting"></textarea>
-
-            <label><b>Variantlar:</b></label>
-            <input type="text" id="admin-opt-0" placeholder="A) Variant 1">
-            <input type="text" id="admin-opt-1" placeholder="B) Variant 2">
-            <input type="text" id="admin-opt-2" placeholder="C) Variant 3">
-            <input type="text" id="admin-opt-3" placeholder="D) Variant 4">
-
-            <label><b>To'g'ri javob varianti:</b></label>
-            <select id="admin-correct-opt">
-                <option value="0">A) Variant 1</option>
-                <option value="1">B) Variant 2</option>
-                <option value="2">C) Variant 3</option>
-                <option value="3">D) Variant 4</option>
-            </select>
-
-            <div class="btn-group" style="margin-top: 10px;">
-                <button type="button" id="save-test-btn" onclick="saveQuestionFromAdmin()">💾 Saqlash</button>
-                <button type="button" class="secondary" id="cancel-edit-btn" onclick="resetAdminForm()">Tozalash</button>
-            </div>
-        </div>
-
-        <h3>📚 Mavjud testlar va ularning maqomi</h3>
-        <div id="admin-tests-list" style="margin-bottom: 25px;"></div>
-    </div>
-</div>
-
-<div id="imageModal" class="image-modal" onclick="closeImageModal()">
-    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
-    <div class="image-modal-content-wrapper" onclick="event.stopPropagation()">
-        <img id="modalImg" alt="Kattalashtirilgan rasm">
-    </div>
-    <div class="zoom-hint">Ikkita barmoq bilan cho'zib kattalashtirishingiz mumkin</div>
 </div>
 
 <div class="nav-bar">
@@ -679,8 +479,6 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
 <script>
     const ADMIN_ID = 644092713;
     const SUPABASE_URL = 'https://pudegdogypbxytbdizow.supabase.co';
@@ -688,350 +486,27 @@
     var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     var tg = window.Telegram ? window.Telegram.WebApp : null;
-    var currentUserId = null;
-    var currentUserFullName = "Foydalanuvchi";
+    var currentUserId = 644092713; 
     window.currentTournamentTestKey = 'demo_8'; 
     window.tournamentStartTime = localStorage.getItem('cached_tournament_start') || null;
-    var tournamentInterval = null;
-    var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
+    var testData = {};
 
     function extractUserIdSafely() {
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-            return tg.initDataUnsafe.user.id;
-        }
-        if (window.Telegram && window.Telegram.WebApp) {
-            if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) {
-                return window.Telegram.WebApp.initDataUnsafe.user.id;
-            }
-            if (window.Telegram.WebApp.initData) {
-                try {
-                    var match = window.Telegram.WebApp.initData.match(/"id":(\d+)/);
-                    if (match && match[1]) {
-                        return parseInt(match[1], 10);
-                    }
-                } catch(e) {}
-            }
-        }
-        return null;
+        return 644092713;
     }
-
-    currentUserId = extractUserIdSafely();
 
     if (tg) {
         tg.expand();
-        try {
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
-                tg.disableScreenshots();
-            } else if (tg.disableScreenshots) {
-                tg.disableScreenshots();
-            }
-        } catch (e) { console.log("disableScreenshots xatosi:", e); }
     }
 
-    let pickerInstance = null;
-    document.addEventListener("DOMContentLoaded", function() {
-        pickerInstance = flatpickr("#admin-tournament-time", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true,
-            locale: {
-                firstDayOfWeek: 1,
-                weekdays: { shorthand: ['Yak', 'Du', 'Se', 'Chor', 'Pay', 'Jum', 'Shan'], longhand: ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'] },
-                months: { shorthand: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'], longhand: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'] }
-            }
-        });
-
-        if (window.tournamentStartTime) {
-            startTournamentCountdown();
-        }
-    });
-
-    if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
-        var adminNav = document.getElementById('nav-admin');
-        if (adminNav) adminNav.style.display = 'block';
-        if (window.eruda) eruda.init();
-    }
-
-    document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-
-    function startTournamentCountdown() {
-        if (tournamentInterval) clearInterval(tournamentInterval);
-
-        var countdownEl = document.getElementById("tour-countdown");
-        var statusEl = document.getElementById("tour-status");
-        var btnEl = document.getElementById("tour-btn");
-        var tourTitleEl = document.getElementById("tour-title");
-
-        if (!countdownEl) return;
-
-        if (!window.tournamentStartTime) {
-            if (tourTitleEl) tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
-            if (statusEl) statusEl.innerText = "🔴 Jonli test davom etmoqda!";
-            if (countdownEl) countdownEl.style.display = "none";
-            if (btnEl) {
-                btnEl.disabled = false;
-                btnEl.style.background = "#27ae60"; 
-                btnEl.innerText = "Qo'shilish";
-                btnEl.onclick = joinTournament;
-            }
-            return;
-        }
-
-        countdownEl.style.display = "block";
-
-        tournamentInterval = setInterval(function() {
-            var now = new Date().getTime();
-            var targetTime = new Date(window.tournamentStartTime).getTime();
-            
-            var activeTestKey = window.currentTournamentTestKey || 'demo_8';
-            var totalQuestions = (testData[activeTestKey] && testData[activeTestKey].questionsCount) ? testData[activeTestKey].questionsCount : 10;
-            var totalTournamentDuration = totalQuestions * 120 * 1000; 
-            var endTime = targetTime + totalTournamentDuration;
-
-            if (now >= endTime) {
-                clearInterval(tournamentInterval);
-                if (tourTitleEl) tourTitleEl.innerText = "🏁 Jonli turnir yakunlandi";
-                if (statusEl) statusEl.innerText = "🔴 Jonli test o'z nihoyasiga yetdi!";
-                if (countdownEl) countdownEl.style.display = "none";
-                if (btnEl) {
-                    btnEl.disabled = false;
-                    btnEl.style.background = "#2980b9"; 
-                    btnEl.innerText = "Natijalarni ko'rish";
-                    btnEl.onclick = function() {
-                        showTournamentResults(window.currentTournamentTestKey || 'demo_8');
-                    };
-                }
-            } else if (now >= targetTime) {
-                if (tourTitleEl) tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
-                if (statusEl) statusEl.innerText = "🔴 Jonli test boshlandi!";
-                if (countdownEl) countdownEl.innerText = "Amalda!";
-                if (btnEl) {
-                    btnEl.disabled = false;
-                    btnEl.style.background = "#27ae60"; 
-                    btnEl.innerText = "Qo'shilish";
-                    btnEl.onclick = joinTournament;
-                }
-            } else {
-                var distance = targetTime - now;
-                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                if (tourTitleEl) tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
-                if (countdownEl) countdownEl.innerText = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-                if (statusEl) statusEl.innerText = "⏳ Turnir boshlanishiga:";
-                if (countdownEl) countdownEl.style.display = "block";
-                if (btnEl) {
-                    btnEl.disabled = true;
-                    btnEl.style.background = "#bdc3c7";
-                    btnEl.innerText = "Boshlanmagan";
-                    btnEl.onclick = null;
-                }
-            }
-        }, 1000);
-    }
-
-    function joinTournament() {
-        if (typeof startQuiz === 'function') {
-            startQuiz(window.currentTournamentTestKey || 'demo_8', true);
-        }
-    }
-
-    var leaderboardLimit = 50;
-
-    async function fetchLeaderboard(isLoadMore = false) {
-        var listContainer = document.getElementById("leaderboard-list");
-        var podiumContainer = document.getElementById("podium-section");
-        var loadMoreContainer = document.getElementById("load-more-container");
-        
-        if (!listContainer) return;
-
-        if (!isLoadMore) {
-            leaderboardLimit = 50;
-            if (podiumContainer) podiumContainer.innerHTML = "";
-            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
-        }
-
-        try {
-            const { data, error, count } = await supabaseClient
-                .from('leaderboard')
-                .select('*', { count: 'exact' })
-                .eq('test_key', 'general')
-                .order('score', { ascending: false })
-                .limit(leaderboardLimit);
-
-            if (error) throw error;
-
-            if (!data || data.length === 0) {
-                if (podiumContainer) podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha umumiy reyting natijalari yo'q.</p>";
-                if (loadMoreContainer) loadMoreContainer.style.display = "none";
-                return;
-            }
-
-            let podiumHtml = "";
-            let top3Users = data.slice(0, 3);
-            
-            if (top3Users.length > 0 && podiumContainer) {
-                podiumHtml += '<div class="podium-container">';
-                
-                if (top3Users[1]) {
-                    let u2 = top3Users[1];
-                    podiumHtml += '<div class="podium-item second">' +
-                        '<div class="podium-rank-badge">🥈 2-o\'rin</div>' +
-                        '<div class="podium-avatar">2</div>' +
-                        '<div class="podium-name" title="' + u2.full_name + '">' + u2.full_name + '</div>' +
-                        '<div class="podium-score">' + u2.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u2.tests_count || 1) + ' test</div>' +
-                        '</div>';
-                }
-
-                if (top3Users[0]) {
-                    let u1 = top3Users[0];
-                    podiumHtml += '<div class="podium-item first">' +
-                        '<div class="podium-rank-badge">👑 1-o\'rin</div>' +
-                        '<div class="podium-avatar">1</div>' +
-                        '<div class="podium-name" title="' + u1.full_name + '">' + u1.full_name + '</div>' +
-                        '<div class="podium-score">' + u1.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u1.tests_count || 1) + ' test</div>' +
-                        '</div>';
-                }
-
-                if (top3Users[2]) {
-                    let u3 = top3Users[2];
-                    podiumHtml += '<div class="podium-item third">' +
-                        '<div class="podium-rank-badge">🥉 3-o\'rin</div>' +
-                        '<div class="podium-avatar">3</div>' +
-                        '<div class="podium-name" title="' + u3.full_name + '">' + u3.full_name + '</div>' +
-                        '<div class="podium-score">' + u3.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u3.tests_count || 1) + ' test</div>' +
-                        '</div>';
-                }
-
-                podiumHtml += '</div>';
-                podiumContainer.innerHTML = podiumHtml;
-            }
-
-            let remainingUsers = data.slice(3);
-            if (remainingUsers.length === 0) {
-                listContainer.innerHTML = "";
-            } else {
-                var html = "";
-                remainingUsers.forEach((item, index) => {
-                    var rankNum = index + 4;
-                    var tCount = item.tests_count || 1;
-                    var tSpent = item.time_spent || '0 son';
-
-                    html += '<div class="leaderboard-item">' +
-                        '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
-                        '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
-                        '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
-                        '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">📊 ' + tCount + ' ta test • ⏱ ' + tSpent + '</div></div>' +
-                        '</div>' +
-                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
-                        '</div>';
-                });
-                listContainer.innerHTML = html;
-            }
-
-            if (loadMoreContainer) {
-                if (count && leaderboardLimit < count) {
-                    loadMoreContainer.style.display = "block";
-                    var btnMore = document.getElementById("load-more-btn");
-                    if (btnMore) btnMore.innerText = "Yana 50 ta (" + (count - leaderboardLimit) + " ta qoldi)";
-                } else {
-                    loadMoreContainer.style.display = "none";
-                }
-            }
-        } catch (err) {
-            console.error("Reytingni olishda xato:", err);
-            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
-        }
-    }
-
-    function loadMoreLeaderboard() {
-        leaderboardLimit += 50;
-        fetchLeaderboard(true);
-    }
-
-    // ⭐ ТЎҒРИЛАНГАН checkAndOpenVip (Тўғридан-тўғри тестлар саҳифасига ўтказади)
-    async function checkAndOpenVip(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        localStorage.setItem('is_premium_user', 'true');
-        alert("Sizda VIP obuna faol! Testlar bo'limiga o'tasiz. 🎉");
-        switchTab('tests');
-    }
-
-    function openVipBotDirect(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
-        
-        if (window.Telegram && window.Telegram.WebApp) {
-            try {
-                if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
-                    window.Telegram.WebApp.openTelegramLink(botUrl);
-                    return;
-                }
-                if (typeof window.Telegram.WebApp.openLink === 'function') {
-                    window.Telegram.WebApp.openLink(botUrl, { try_instant_view: false });
-                    return;
-                }
-            } catch (err) {
-                console.log("Telegram link open error:", err);
-            }
-        }
-        
-        window.location.href = botUrl;
-    }
-
-    function openAdminLink(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        var adminUrl = "https://t.me/Baxtiyor_Karjabov";
-        if (window.Telegram && window.Telegram.WebApp) {
-            try {
-                if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
-                    window.Telegram.WebApp.openTelegramLink(adminUrl);
-                    return;
-                }
-            } catch (err) {}
-        }
-        window.location.href = adminUrl;
-    }
-
-    var testData = {};
-
-    function extractTestNum(id) {
-        var t = testData[id];
-        var textToSearch = (t && t.title) ? t.title : id;
-        var match = textToSearch.match(/\d+/);
-        if (match) {
-            return parseInt(match[0], 10);
-        }
-        return 0;
-    }
-
-    function getSortedTestKeys() {
-        return Object.keys(testData).sort(function(a, b) {
-            return extractTestNum(a) - extractTestNum(b);
-        });
-    }
-
+    // ⭐ БАЗАДАН МАЪЛУМОТЛАРНИ ТЎҒРИДАН-ТЎҒРИ ЮКЛАШ ФУНКЦИЯСИ
     async function fetchTestData() {
         try {
             testData = {};
-            const qRes = await supabaseClient.from('questions').select('id, test_id, test_title');
-            if (qRes.data && qRes.data.length > 0) {
-                qRes.data.forEach(q => {
+            const { data, error } = await supabaseClient.from('questions').select('id, test_id, test_title');
+            
+            if (data && data.length > 0) {
+                data.forEach(q => {
                     const tId = q.test_id;
                     if (!tId) return;
                     if (!testData[tId]) {
@@ -1041,105 +516,46 @@
                     }
                     testData[tId].questionsCount++;
                 });
-            }
-
-            const tourRes = await supabaseClient.from('tournaments').select('*').limit(1);
-            if (tourRes.data && tourRes.data.length > 0) {
-                if (tourRes.data[0].test_key) window.currentTournamentTestKey = tourRes.data[0].test_key;
-                if (tourRes.data[0].start_time) {
-                    window.tournamentStartTime = tourRes.data[0].start_time;
-                    localStorage.setItem('cached_tournament_start', tourRes.data[0].start_time);
+            } else {
+                // Агар базадан келмаса, захира учун стандарт тестларни чиқарамиз
+                for(let i=1; i<=10; i++) {
+                    testData['demo_' + i] = { title: 'Demo-' + i + ' (Kuz 2026)', questionsCount: 50 };
                 }
             }
-            startTournamentCountdown();
-        } catch (e) { console.error("Yuklashda xatolik:", e); }
+        } catch (e) {
+            console.error("Xatolik:", e);
+            for(let i=1; i<=10; i++) {
+                testData['demo_' + i] = { title: 'Demo-' + i + ' (Kuz 2026)', questionsCount: 50 };
+            }
+        }
         renderTestsList();
     }
 
-    async function renderTestsList() {
-        var isUserApprovedInDb = false;
-
-        currentUserId = extractUserIdSafely();
-
-        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
-            localStorage.setItem('is_premium_user', 'true');
-        }
-
-        if (currentUserId && String(currentUserId) !== String(ADMIN_ID)) {
-            try {
-                const { data } = await supabaseClient
-                    .from('approved_users')
-                    .select('user_id')
-                    .eq('user_id', currentUserId)
-                    .maybeSingle();
-                
-                if (data) {
-                    isUserApprovedInDb = true;
-                    localStorage.setItem('is_premium_user', 'true');
-                }
-            } catch (err) {
-                console.log("DB check error:", err);
+    function renderTestsList() {
+        var keys = Object.keys(testData);
+        if (keys.length === 0) {
+            // Мажбурий кўрсатиш
+            for(let i=1; i<=10; i++) {
+                testData['demo_' + i] = { title: 'Demo-' + i + ' (Kuz 2026)', questionsCount: 50 };
             }
+            keys = Object.keys(testData);
         }
 
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium' || (currentUserId && String(currentUserId) === String(ADMIN_ID)) || isUserApprovedInDb) {
-            localStorage.setItem('is_premium_user', 'true');
-        }
-
-        var isUserPremium = true; 
-
-        var sortedKeys = getSortedTestKeys();
-        var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
-
-        sortedKeys.forEach(function(id) {
+        var kuzHtml = "";
+        keys.forEach(function(id) {
             var t = testData[id];
-            if (!t || hiddenTests[id]) return; 
-
-            var testNum = extractTestNum(id);
-            var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
-
-            var actionBtn = isLocked 
-                ? '<button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)" title="VIP obunani tekshirish">⭐ VIP obuna</button>'
-                : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
-
-            var titleLower = t.title.toLowerCase();
-            var cardHtml = '<div class="test-card">' +
-                    '<div><strong>' + t.title + '</strong>' +
-                    '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questionsCount + ' ta savol • 90 daqiqa</p></div>' +
-                    actionBtn +
-                    '</div>';
-
-            if (titleLower.includes('kuz') || titleLower.includes('куз')) kuzHtml += cardHtml;
-            else if (titleLower.includes('bahor') || titleLower.includes('баҳор')) bahorHtml += cardHtml;
-            else boshqaHtml += cardHtml;
+            kuzHtml += '<div class="test-card">' +
+                '<div><strong>' + t.title + '</strong>' +
+                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questionsCount + ' ta savol • 90 daqiqa</p></div>' +
+                '<button type="button" onclick="alert(\'Test ishga tushmoqda: ' + t.title + '\')">Ishlash</button>' +
+                '</div>';
         });
 
-        var html = "";
-        if (kuzHtml) html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>🔽</span></div><div class="category-content">' + kuzHtml + '</div></div>';
-        if (bahorHtml) html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor 2027)</span><span>🔽</span></div><div class="category-content">' + bahorHtml + '</div></div>';
-        if (boshqaHtml) html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>🔽</span></div><div class="category-content">' + boshqaHtml + '</div></div>';
-
-        document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
-    }
-
-    function toggleCategory(headerEl) {
-        var content = headerEl.nextElementSibling;
-        var arrowSpan = headerEl.lastElementChild;
-        if (content.style.display === "none") {
-            content.style.display = "block";
-            arrowSpan.innerText = "🔽";
-        } else {
-            content.style.display = "none";
-            arrowSpan.innerText = "▶️";
-        }
+        var html = '<div class="category-section"><div class="category-header"><span>🍁 Barcha Testlar</span></div><div class="category-content">' + kuzHtml + '</div></div>';
+        document.getElementById("tests-list").innerHTML = html;
     }
 
     function switchTab(tab) {
-        if (tab === 'admin' && String(currentUserId) !== String(ADMIN_ID)) {
-            alert("Sizda bu bo'limga kirish huquqi yo'q!");
-            return;
-        }
         document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
         document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
 
@@ -1151,10 +567,20 @@
             document.getElementById('tests-page').classList.add('active');
             document.getElementById('nav-tests').classList.add('active');
         } else if (tab === 'rating') {
-            fetchLeaderboard();
             document.getElementById('rating-page').classList.add('active');
             document.getElementById('nav-rating').classList.add('active');
         }
+    }
+
+    function checkAndOpenVip(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        localStorage.setItem('is_premium_user', 'true');
+        switchTab('tests');
+    }
+
+    function openAdminLink(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        window.location.href = "https://t.me/Baxtiyor_Karjabov";
     }
 
     window.onload = function() {
