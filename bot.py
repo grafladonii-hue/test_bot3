@@ -166,7 +166,7 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
     # 1. Гуруҳ аъзоси эканлигини текшириб базага автоматик қўшиб қўямиз
     await check_and_auto_approve_group_member(user_id, bot)
     
-    # 2. Фойдаланувчи базада (VIP рўйхатда) борми ёки админми текширамиз
+    # 2. Фойдаланувчи базада (VIP рўйхатда) борми ёки админми олдиндан текширамиз
     is_vip = is_user_approved(user_id) or str(user_id) == "644092713"
 
     keyboard = InlineKeyboardMarkup(
@@ -175,6 +175,7 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
         ]
     )
     
+    # 3. Дарҳол битта аниқ (ўз статусига мос) хабарни юборамиз
     if is_vip:
         await message.answer(
             "Ассалому алайкум! Сизда **VIP обуна фаол** ✅\n\n"
