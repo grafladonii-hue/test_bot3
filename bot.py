@@ -147,24 +147,36 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
     if message.chat.type != "private":
         return
 
-    free_app_url = WEB_APP_URL
+    user_id = message.from_user.id
+    app_url = WEB_APP_URL
     
+    # Фойдаланувчи базада (VIP рўйхатда) борми ёки админми текширамиз
+    is_vip = is_user_approved(user_id) or str(user_id) == "644092713"
+
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Иловани очиш (Mini App)", web_app=WebAppInfo(url=free_app_url))]
+            [InlineKeyboardButton(text="🚀 Иловани очиш (Mini App)", web_app=WebAppInfo(url=app_url))]
         ]
     )
     
-    await message.answer(
-        "Ассалому алайкум! Demotestlar.uz платформасига хуш келибсиз.\n\n"
-        "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
-        "🔒 Барча тестларни тўлиқ очиш учун қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
-        "💳 **Карта рақами:** `9860120155197128`\n"
-        "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
-        "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда текшириб тестларни очиб беради.",
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    if is_vip:
+        await message.answer(
+            "Ассалому алайкум! Сизда **VIP обуна фаол** ✅\n\n"
+            "Барча тестлар ва имкониятлардан чеклаувларсиз фойдаланишингиз мумкин. Иловани очиш учун қуйидаги тугмани босинг:",
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    else:
+        await message.answer(
+            "Ассалому алайкум! Demotestlar.uz платформасига хуш келибсиз.\n\n"
+            "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
+            "🔒 Барча тестларни тўлиқ очиш учун қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
+            "💳 **Карта рақами:** `9860120155197128`\n"
+            "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
+            "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда текшириб тестларни очиб беради.",
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 # Расм кўринишидаги чекларни қабул қилиш
 @dp.message(F.photo)
@@ -193,7 +205,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',  # Янгиланган модель
+            model='gemini-3.5-flash-lite',
             contents=[image, prompt]
         )
         
@@ -245,7 +257,7 @@ async def handle_payment_document(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',  # Янгиланган модель
+            model='gemini-3.5-flash-lite',
             contents=[prompt]
         )
         
