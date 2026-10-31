@@ -246,20 +246,20 @@
         }
         .category-content { display: block; margin-top: 8px; }
 
-        /* ⭐ ПОДИУМ (ЭНИ ТЕНГ, БАЛАНДЛИГИ ФАРҚ ҚИЛАДИ ВА УЧ ХИЛ РАНГДА) */
+        /* ⭐ ПОДИУМ (GRID ОРҚАЛИ АНИҚ 3 ҚИСМ ВА ТЕНГ ЭНИ КАТАКЛАР) */
         .podium-container {
-            display: flex;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             align-items: flex-end;
             gap: 8px;
             margin-bottom: 25px;
             padding-top: 15px;
         }
         .podium-step {
-            flex: 1; /* Эни тенг бўлиши учун */
+            width: 100%;
             border-radius: 10px 10px 0 0;
             text-align: center;
-            padding: 10px 5px;
+            padding: 12px 4px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -267,20 +267,20 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.03);
         }
         .podium-1 {
-            order: 2;
-            min-height: 140px; /* Энг баланд */
+            grid-column: 2; /* Марказда, энг баланд */
+            min-height: 145px;
             background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
             border: 2px solid #eab308;
         }
         .podium-2 {
-            order: 1;
-            min-height: 115px; /* Ўртача баландлик */
+            grid-column: 1; /* Чапда, ўртача баландлик */
+            min-height: 120px;
             background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
             border: 2px solid #94a3b8;
         }
         .podium-3 {
-            order: 3;
-            min-height: 95px; /* Энг паст */
+            grid-column: 3; /* Ўнгда, пастроқ */
+            min-height: 100px;
             background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
             border: 2px solid #f97316;
         }
@@ -538,12 +538,12 @@
         var listContainer = document.getElementById("leaderboard-list");
         var loadMoreBtnContainer = document.getElementById("load-more-container");
 
-        // 1. Подиум (Эни тенг, баландлиги ҳар хил, 3 хил рангли)
+        // 1. Подиум (Grid орқали аниқ 3 та тенг энили устун)
         let podiumHtml = "";
         if (allLeaderboardData.length > 0) {
             podiumHtml += '<div class="podium-container">';
             
-            // 2-ўрин
+            // 2-ўрин (Чапда)
             if (allLeaderboardData[1]) {
                 podiumHtml += `<div class="podium-step podium-2">
                     <div class="podium-avatar">🥈</div>
@@ -552,7 +552,7 @@
                 </div>`;
             }
 
-            // 1-ўрин
+            // 1-ўрин (Марказда, энг баланд)
             if (allLeaderboardData[0]) {
                 podiumHtml += `<div class="podium-step podium-1">
                     <div class="podium-avatar">🥇</div>
@@ -561,7 +561,7 @@
                 </div>`;
             }
 
-            // 3-ўрин
+            // 3-ўрин (Ўнгда)
             if (allLeaderboardData[2]) {
                 podiumHtml += `<div class="podium-step podium-3">
                     <div class="podium-avatar">🥉</div>
