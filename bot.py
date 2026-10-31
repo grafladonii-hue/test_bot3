@@ -147,46 +147,26 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
     if message.chat.type != "private":
         return
 
-    user_id = message.from_user.id
-    is_member = await check_membership(user_id, bot)
-    is_allowed = is_user_approved(user_id)
-     
-    # Ёпиқ гуруҳ аъзоси ёки илгари тўлов қилган фойдаланувчилар учун
-    if is_member or is_allowed:
-        premium_app_url = f"{WEB_APP_URL}/?status=premium"
-        
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="📝 Тестларни бошлаш (Премиум)", web_app=WebAppInfo(url=premium_app_url))]
-            ]
-        )
-        await message.answer(
-            "Хуш келибсиз, Demotestlar.uz (Бахтиёр Каржабов Демо тестлар платформаси)га!\n\n"
-            "✅ Сизда мини-аппнинг **барча тестларидан** фойдаланиш ҳуқуқи мавжуд (Премиум).\n"
-            "Тестларни ишлаш учун қуйидаги тугмани босинг:",
-            reply_markup=keyboard,
-            parse_mode="Markdown"
-        )
-    else:
-        # Тўлов қилмаган оддий фойдаланувчилар учун стандарт линк (3 та тест бепул)
-        free_app_url = WEB_APP_URL
-        
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="📝 Бепул тестларни ишлаш", web_app=WebAppInfo(url=free_app_url))]
-            ]
-        )
-        
-        await message.answer(
-            "Хуш келибсиз, Demotestlar.uz платформасига!\n\n"
-            "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
-            "🔒 Барча тестларни тўлиқ очиш учун ёпиқ гуруҳимизга қўшилинг ёки қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
-            "💳 **Карта рақами:** `9860120155197128`\n"
-            "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
-            "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда барча тестларни очиб беради.",
-            reply_markup=keyboard,
-            parse_mode="Markdown"
-        )
+    # Бот қайта запустить қилинганда энди автоматик премиум статус ёки хабар юбормайди.
+    # Фақат оддий кутиб олиш ва Mini App очиш тугмасини чиқаради:
+    free_app_url = WEB_APP_URL
+    
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Иловани очиш (Mini App)", web_app=WebAppInfo(url=free_app_url))]
+        ]
+    )
+    
+    await message.answer(
+        "Ассалому алайкум! Demotestlar.uz платформасига хуш келибсиз.\n\n"
+        "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
+        "🔒 Барча тестларни тўлиқ очиш учун қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
+        "💳 **Карта рақами:** `9860120155197128`\n"
+        "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
+        "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда текшириб тестларни очиб беради.",
+        reply_markup=keyboard,
+        parse_mode="Markdown"
+    )
 
 # Расм кўринишидаги чекларни қабул қилиш
 @dp.message(F.photo)
@@ -197,13 +177,7 @@ async def handle_payment_screenshot(message: types.Message):
     user_id = message.from_user.id
      
     if await check_membership(user_id, bot) or is_user_approved(user_id):
-        premium_app_url = f"{WEB_APP_URL}/?status=premium"
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="🚀 Тестларни бошлаш (Премиум)", web_app=WebAppInfo(url=premium_app_url))]
-            ]
-        )
-        await message.answer("Сиз аллақачон мини-аппдан тўлиқ фойдаланиш ҳуқуқига эгасиз!", reply_markup=keyboard)
+        await message.answer("Сизда аллақачон фаол VIP обуна мавжуд!")
         return
 
     photo = message.photo[-1]
@@ -221,7 +195,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash', # ёки ўзингиз ишлатадиган модель
             contents=[image, prompt]
         )
         
@@ -244,13 +218,7 @@ async def handle_payment_document(message: types.Message):
     user_id = message.from_user.id
      
     if await check_membership(user_id, bot) or is_user_approved(user_id):
-        premium_app_url = f"{WEB_APP_URL}/?status=premium"
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="🚀 Тестларни бошлаш (Премиум)", web_app=WebAppInfo(url=premium_app_url))]
-            ]
-        )
-        await message.answer("Сиз аллақачон мини-аппдан тўлиқ фойдаланиш ҳуқуқига эгасиз!", reply_markup=keyboard)
+        await message.answer("Сизда аллақачон фаол VIP обуна мавжуд!")
         return
 
     doc = message.document
@@ -279,7 +247,7 @@ async def handle_payment_document(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',
             contents=[prompt]
         )
         
@@ -330,18 +298,10 @@ async def process_gemini_response(text_response: str, user_id: int, chat_id: int
             save_used_receipt(txn_id)
             save_approved_user(user_id)
              
-            # Тўлов тасдиқлангач, автоматик Премиум URL юборилади
-            premium_app_url = f"{WEB_APP_URL}/?status=premium"
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text="🚀 Тестларни бошлаш (Премиум)", web_app=WebAppInfo(url=premium_app_url))]
-                ]
-            )
             await bot.edit_message_text(
-                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`\n\nБарча тестлар очилди!",
+                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`\n\nЭнди Mini App'га кириб «⭐ VIP obuna bo'lish» тугмасини босинг, барча тестлар очилади!",
                 chat_id=chat_id,
                 message_id=message_id,
-                reply_markup=keyboard,
                 parse_mode="Markdown"
             )
         else:
