@@ -518,7 +518,6 @@
         renderTestsList();
     }
 
-    // ⭐ ТЕСТЛАРНИ РАҚАМЛАРИ БЎЙИЧА ТЎҒРИ ТАРТИБДА САРҲАЛАШ (1, 2, 3...)
     function extractTestNum(id) {
         var t = testData[id];
         var textToSearch = (t && t.title) ? t.title : id;
@@ -535,21 +534,54 @@
         });
     }
 
+    // ⭐ КАТЕГОРИЯЛАРГА БЎЛИБ ЧИҚАРИШ ФУНКЦИЯСИ
     function renderTestsList() {
         var sortedKeys = getSortedTestKeys();
-        var kuzHtml = "";
+        var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
 
         sortedKeys.forEach(function(id) {
             var t = testData[id];
-            kuzHtml += '<div class="test-card">' +
+            var titleLower = t.title.toLowerCase();
+
+            var cardHtml = '<div class="test-card">' +
                 '<div><strong>' + t.title + '</strong>' +
                 '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questionsCount + ' ta savol • 90 daqiqa</p></div>' +
                 '<button type="button" onclick="alert(\'Test ishga tushmoqda: ' + t.title + '\')">Ishlash</button>' +
                 '</div>';
+
+            if (titleLower.includes('kuz') || titleLower.includes('куз')) {
+                kuzHtml += cardHtml;
+            } else if (titleLower.includes('bahor') || titleLower.includes('баҳор')) {
+                bahorHtml += cardHtml;
+            } else {
+                boshqaHtml += cardHtml;
+            }
         });
 
-        var html = '<div class="category-section"><div class="category-header"><span>🍁 Barcha Testlar (Tartibli)</span></div><div class="category-content">' + kuzHtml + '</div></div>';
+        var html = "";
+        if (kuzHtml) {
+            html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>🔽</span></div><div class="category-content">' + kuzHtml + '</div></div>';
+        }
+        if (bahorHtml) {
+            html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor 2027)</span><span>🔽</span></div><div class="category-content">' + bahorHtml + '</div></div>';
+        }
+        if (boshqaHtml) {
+            html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>🔽</span></div><div class="category-content">' + boshqaHtml + '</div></div>';
+        }
+
         document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
+    }
+
+    function toggleCategory(headerEl) {
+        var content = headerEl.nextElementSibling;
+        var arrowSpan = headerEl.lastElementChild;
+        if (content.style.display === "none") {
+            content.style.display = "block";
+            arrowSpan.innerText = "🔽";
+        } else {
+            content.style.display = "none";
+            arrowSpan.innerText = "▶️";
+        }
     }
 
     function switchTab(tab) {
