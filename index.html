@@ -491,15 +491,10 @@
     window.tournamentStartTime = localStorage.getItem('cached_tournament_start') || null;
     var testData = {};
 
-    function extractUserIdSafely() {
-        return 644092713;
-    }
-
     if (tg) {
         tg.expand();
     }
 
-    // ⭐ БАЗАДАН МАЪЛУМОТЛАРНИ ТЎҒРИДАН-ТЎҒРИ ЮКЛАШ ФУНКЦИЯСИ
     async function fetchTestData() {
         try {
             testData = {};
@@ -516,33 +511,35 @@
                     }
                     testData[tId].questionsCount++;
                 });
-            } else {
-                // Агар базадан келмаса, захира учун стандарт тестларни чиқарамиз
-                for(let i=1; i<=10; i++) {
-                    testData['demo_' + i] = { title: 'Demo-' + i + ' (Kuz 2026)', questionsCount: 50 };
-                }
             }
         } catch (e) {
             console.error("Xatolik:", e);
-            for(let i=1; i<=10; i++) {
-                testData['demo_' + i] = { title: 'Demo-' + i + ' (Kuz 2026)', questionsCount: 50 };
-            }
         }
         renderTestsList();
     }
 
-    function renderTestsList() {
-        var keys = Object.keys(testData);
-        if (keys.length === 0) {
-            // Мажбурий кўрсатиш
-            for(let i=1; i<=10; i++) {
-                testData['demo_' + i] = { title: 'Demo-' + i + ' (Kuz 2026)', questionsCount: 50 };
-            }
-            keys = Object.keys(testData);
+    // ⭐ ТЕСТЛАРНИ РАҚАМЛАРИ БЎЙИЧА ТЎҒРИ ТАРТИБДА САРҲАЛАШ (1, 2, 3...)
+    function extractTestNum(id) {
+        var t = testData[id];
+        var textToSearch = (t && t.title) ? t.title : id;
+        var match = textToSearch.match(/\d+/);
+        if (match) {
+            return parseInt(match[0], 10);
         }
+        return 0;
+    }
 
+    function getSortedTestKeys() {
+        return Object.keys(testData).sort(function(a, b) {
+            return extractTestNum(a) - extractTestNum(b);
+        });
+    }
+
+    function renderTestsList() {
+        var sortedKeys = getSortedTestKeys();
         var kuzHtml = "";
-        keys.forEach(function(id) {
+
+        sortedKeys.forEach(function(id) {
             var t = testData[id];
             kuzHtml += '<div class="test-card">' +
                 '<div><strong>' + t.title + '</strong>' +
@@ -551,8 +548,8 @@
                 '</div>';
         });
 
-        var html = '<div class="category-section"><div class="category-header"><span>🍁 Barcha Testlar</span></div><div class="category-content">' + kuzHtml + '</div></div>';
-        document.getElementById("tests-list").innerHTML = html;
+        var html = '<div class="category-section"><div class="category-header"><span>🍁 Barcha Testlar (Tartibli)</span></div><div class="category-content">' + kuzHtml + '</div></div>';
+        document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
     }
 
     function switchTab(tab) {
