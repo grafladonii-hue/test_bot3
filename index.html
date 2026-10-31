@@ -574,7 +574,6 @@
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
             isUserPremium = true;
             updateVipButtonUI();
-            renderTestsList();
             return;
         }
 
@@ -582,11 +581,9 @@
         if (urlParams.get('status') === 'premium' || localStorage.getItem('is_premium_user') === 'true') {
             isUserPremium = true;
             updateVipButtonUI();
-            renderTestsList();
             return;
         }
 
-        // Baza xavfsizlik (RLS) muammosini chetlab o'tish uchun barcha approved_users ro'yxatini tortib olib tekshiramiz:
         if (currentUserId) {
             try {
                 const { data, error } = await supabaseClient
@@ -601,7 +598,6 @@
                         isUserPremium = true;
                         localStorage.setItem('is_premium_user', 'true');
                         updateVipButtonUI();
-                        renderTestsList();
                         return;
                     }
                 }
@@ -612,9 +608,7 @@
 
         isUserPremium = false;
         localStorage.removeItem('is_premium_user');
-
         updateVipButtonUI();
-        renderTestsList();
     }
 
     function updateVipButtonUI() {
@@ -651,7 +645,10 @@
         } catch (e) {
             console.error("Xatolik:", e);
         }
+        
+        // Аввал VIP статус юкланишини тўлиқ кутамиз, сўнг тестларни чиқарамиз!
         await checkUserVipStatus();
+        renderTestsList();
     }
 
     function extractTestNum(id) {
