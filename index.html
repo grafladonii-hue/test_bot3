@@ -577,29 +577,18 @@
             return;
         }
 
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium' || localStorage.getItem('is_premium_user') === 'true') {
-            isUserPremium = true;
-            updateVipButtonUI();
-            return;
-        }
-
         if (currentUserId) {
             try {
                 const { data, error } = await supabaseClient
                     .from('approved_users') 
-                    .select('user_id');
+                    .select('user_id')
+                    .eq('user_id', currentUserId);
                 
                 if (data && data.length > 0) {
-                    var found = data.some(function(row) {
-                        return String(row.user_id) === String(currentUserId);
-                    });
-                    if (found) {
-                        isUserPremium = true;
-                        localStorage.setItem('is_premium_user', 'true');
-                        updateVipButtonUI();
-                        return;
-                    }
+                    isUserPremium = true;
+                    localStorage.setItem('is_premium_user', 'true');
+                    updateVipButtonUI();
+                    return;
                 }
             } catch(e) {
                 console.log("VIP statusni o'qishda xatolik:", e);
@@ -608,6 +597,14 @@
 
         isUserPremium = false;
         localStorage.removeItem('is_premium_user');
+        
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'premium') {
+            if (currentUserId) {
+                isUserPremium = false;
+            }
+        }
+
         updateVipButtonUI();
     }
 
@@ -646,7 +643,6 @@
             console.error("Xatolik:", e);
         }
         
-        // Аввал VIP статус юкланишини тўлиқ кутамиз, сўнг тестларни чиқарамиз!
         await checkUserVipStatus();
         renderTestsList();
     }
