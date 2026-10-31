@@ -1023,13 +1023,17 @@
 
     var testData = {};
 
+    // ⭐ ТЎҒРИЛАНГАН extractTestNum ФУНКЦИЯСИ
     function extractTestNum(id) {
         var t = testData[id];
         var textToSearch = (t && t.title) ? t.title : id;
-        var match = textToSearch.match(/demo[-_]?(\d+)/i);
-        if (match && match[1]) return parseInt(match[1], 10);
-        var matchAnyNum = textToSearch.match(/\d+/);
-        return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
+        
+        // Ҳар қандай номланишдаги биринчи учраган рақамни топади (Масалан: "Demo-4" -> 4)
+        var match = textToSearch.match(/\d+/);
+        if (match) {
+            return parseInt(match[0], 10);
+        }
+        return 0;
     }
 
     function getSortedTestKeys() {
@@ -1068,11 +1072,9 @@
         renderTestsList();
     }
 
-    // ⭐ МУСТАҲКАМЛАНГАН ВА ТЎҒРИЛАНГАН RENDERTESTSLIST ФУНКЦИЯСИ
     async function renderTestsList() {
         var isUserApprovedInDb = false;
 
-        // ⭐ Агар фойдаланувчи Админ бўлса, даҳол локал хотирага ёзиб қўямиз
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
             localStorage.setItem('is_premium_user', 'true');
         }
@@ -1099,7 +1101,6 @@
             localStorage.setItem('is_premium_user', 'true');
         }
 
-        // ⭐ МУҲИМ КАФОЛАТ: Агар Админ бўлса ёки локал хотирада ёки базада тасдиқланса — тестлар очилади!
         var isUserPremium = (currentUserId && String(currentUserId) === String(ADMIN_ID)) || 
                             localStorage.getItem('is_premium_user') === 'true' || 
                             isUserApprovedInDb;
