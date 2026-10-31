@@ -105,18 +105,25 @@
 
         .result-box { display: none; text-align: center; }
         .score-circle {
-            width: 130px;
-            height: 130px;
+            width: 140px;
+            height: 140px;
             border: 6px solid #27ae60;
             border-radius: 50%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             margin: 20px auto;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: #27ae60;
             background: #f4f9f4;
+        }
+        .score-percent {
+            font-size: 14px;
+            color: #27ae60;
+            font-weight: normal;
+            margin-top: 4px;
         }
 
         .nav-bar {
@@ -237,7 +244,10 @@
 
         <div class="result-box" id="result-box">
             <h2>Test yakunlandi!</h2>
-            <div class="score-circle" id="score-circle">0 ball</div>
+            <div class="score-circle" id="score-circle">
+                <span id="score-text-val">0 / 0</span>
+                <span class="score-percent" id="score-percent-val">(0%)</span>
+            </div>
             <p id="score-text"></p>
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
@@ -466,10 +476,19 @@
             }
         });
 
+        let totalQ = currentTestQuestions.length;
+        let percent = Math.round((correctCount / totalQ) * 100);
+
         document.getElementById('quiz-container').style.display = 'none';
         document.getElementById('result-box').style.display = 'block';
-        document.getElementById('score-circle').innerText = `${correctCount} / ${currentTestQuestions.length}`;
-        document.getElementById('score-text').innerText = `Сиз ${currentTestQuestions.length} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
+        
+        document.getElementById('score-text-val').innerText = `${correctCount} / ${totalQ} ball`;
+        document.getElementById('score-percent-val').innerText = `(${percent}%)`;
+        document.getElementById('score-text').innerText = `Сиз ${totalQ} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
+        
+        if (typeof confetti === 'function') {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
     }
 
     function switchTab(tab) {
