@@ -939,22 +939,23 @@
         fetchLeaderboard(true);
     }
 
+    // ⭐ ТУҒРИЛАНГАН ВА МУСТАҲКАМЛАНГАН checkAndOpenVip ФУНКЦИЯСИ
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
 
-        if (!currentUserId) {
-            alert("Telegram ID aniqlanmadi!");
-            openVipBotDirect();
+        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
+            localStorage.setItem('is_premium_user', 'true');
+            alert("Sizda allaqachon VIP obuna (Admin) faol! 🎉");
+            renderTestsList();
             return;
         }
 
-        if (String(currentUserId) === String(ADMIN_ID)) {
-            alert("Sizda allaqachon VIP obuna faol!");
-            localStorage.setItem('is_premium_user', 'true');
-            renderTestsList();
+        if (!currentUserId) {
+            alert("Telegram ID aniqlanmadi! Iltimos, ilovani qaytadan oching.");
+            openVipBotDirect();
             return;
         }
 
@@ -971,6 +972,7 @@
                 renderTestsList();
             } else {
                 localStorage.removeItem('is_premium_user');
+                alert("Sizda hali VIP obuna faol emas. To'lov qilish uchun botga o'tasiz.");
                 openVipBotDirect();
             }
         } catch (err) {
@@ -1023,12 +1025,9 @@
 
     var testData = {};
 
-    // ⭐ ТЎҒРИЛАНГАН extractTestNum ФУНКЦИЯСИ
     function extractTestNum(id) {
         var t = testData[id];
         var textToSearch = (t && t.title) ? t.title : id;
-        
-        // Ҳар қандай номланишдаги биринчи учраган рақамни топади (Масалан: "Demo-4" -> 4)
         var match = textToSearch.match(/\d+/);
         if (match) {
             return parseInt(match[0], 10);
