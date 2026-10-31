@@ -525,7 +525,6 @@
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             
-            <!-- VIP obuna tugmasi (approved_users jadvalidan tekshiradi) -->
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna bo'lish</button>
 
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
@@ -595,7 +594,7 @@
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
             <div class="tournament-datetime-box">
-                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soat):</b></label>
+                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soат):</b></label>
                 <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Sana va vaqtni tanlang...">
             </div>
 
@@ -740,7 +739,6 @@
 
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
-    // ⭐ TURNIR VAXTINI HISOBLOVCHI FUNKSIYA
     function startTournamentCountdown() {
         if (tournamentInterval) clearInterval(tournamentInterval);
 
@@ -826,7 +824,6 @@
 
     var leaderboardLimit = 50;
 
-    // ⭐ REYTINGNI YUKLOVCHI FUNKSIYA
     async function fetchLeaderboard(isLoadMore = false) {
         var listContainer = document.getElementById("leaderboard-list");
         var podiumContainer = document.getElementById("podium-section");
@@ -942,7 +939,6 @@
         fetchLeaderboard(true);
     }
 
-    // ⭐ BAZADАН ПРЕМИУМНИ ТЕКШИРИШ ВА ОЧИШ (approved_users орқали)
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
@@ -962,7 +958,6 @@
         }
 
         try {
-            // approved_users jadvalidan user_id bo'yicha tekshiramiz
             const { data, error } = await supabaseClient
                 .from('approved_users')
                 .select('*')
@@ -983,7 +978,6 @@
         }
     }
 
-    // ⭐ БОТГА ЎТИШНИ ТАЪМИНЛОВЧИ МУСТАҲКАМ ФУНКЦИЯ
     function openVipBotDirect(e) {
         if (e) {
             e.preventDefault();
@@ -1073,8 +1067,13 @@
         renderTestsList();
     }
 
+    // ⭐ ТЎҒРИЛАНГАН ВА МУСТАҲКАМЛАНГАН RENDERTESTSLIST ФУНКЦИЯСИ
     async function renderTestsList() {
         var isUserApprovedInDb = false;
+
+        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
+            localStorage.setItem('is_premium_user', 'true');
+        }
 
         if (currentUserId && String(currentUserId) !== String(ADMIN_ID)) {
             try {
@@ -1087,8 +1086,6 @@
                 if (data) {
                     isUserApprovedInDb = true;
                     localStorage.setItem('is_premium_user', 'true');
-                } else {
-                    localStorage.removeItem('is_premium_user');
                 }
             } catch (err) {
                 console.log("DB check error:", err);
@@ -1100,7 +1097,8 @@
             localStorage.setItem('is_premium_user', 'true');
         }
 
-        var isUserPremium = localStorage.getItem('is_premium_user') === 'true';
+        // ⭐ Агар локал хотирада премиум бўлса ёки базадан тасдиқланса
+        var isUserPremium = localStorage.getItem('is_premium_user') === 'true' || isUserApprovedInDb;
         var sortedKeys = getSortedTestKeys();
 
         var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
