@@ -586,16 +586,16 @@
             return;
         }
 
-        // Tasdiqlangan VIP foydalanuvchilarni 'approved_users' jadvalidan 'user_id' orqali tekshiramiz
+        // approved_users jadvalidan to'g'ridan-to'g'ri o'qiymiz
         if (currentUserId) {
             try {
                 const { data, error } = await supabaseClient
                     .from('approved_users') 
                     .select('*')
-                    .eq('user_id', Number(currentUserId))
-                    .maybeSingle();
+                    .or(`user_id.eq.${currentUserId},user_id.eq.${String(currentUserId)}`)
+                    .limit(1);
                 
-                if (data) {
+                if (data && data.length > 0) {
                     isUserPremium = true;
                     localStorage.setItem('is_premium_user', 'true');
                     updateVipButtonUI();
