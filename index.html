@@ -11,10 +11,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <!-- Konfetti animatsiyasi uchun kutubxona -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <style>
@@ -527,8 +525,8 @@
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             
-            <!-- Бош саҳифага қўшилган VIP обуна тугмаси -->
-            <button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)">⭐ VIP obuna bo'lish</button>
+            <!-- VIP obuna tugmasi (Базадан автоматик текширади) -->
+            <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna bo'lish</button>
 
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -682,7 +680,6 @@
     </div>
 </div>
 
-<!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
@@ -707,14 +704,8 @@
             time_24hr: true,
             locale: {
                 firstDayOfWeek: 1,
-                weekdays: {
-                    shorthand: ['Yak', 'Du', 'Se', 'Chor', 'Pay', 'Jum', 'Shan'],
-                    longhand: ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-                },
-                months: {
-                    shorthand: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'],
-                    longhand: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr']
-                }
+                weekdays: { shorthand: ['Yak', 'Du', 'Se', 'Chor', 'Pay', 'Jum', 'Shan'], longhand: ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'] },
+                months: { shorthand: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'], longhand: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'] }
             }
         });
 
@@ -731,9 +722,7 @@
             } else if (tg.disableScreenshots) {
                 tg.disableScreenshots();
             }
-        } catch (e) {
-            console.log("disableScreenshots xatosi:", e);
-        }
+        } catch (e) { console.log("disableScreenshots xatosi:", e); }
 
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             currentUserId = tg.initDataUnsafe.user.id;
@@ -750,410 +739,51 @@
     }
 
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && ['c', 'u', 's', 'C', 'U', 'S'].includes(e.key)) e.preventDefault();
-        if (e.key === 'F12') e.preventDefault();
-    });
 
-    var testData = {};
-
-    function extractTestNum(id) {
-        var t = testData[id];
-        var textToSearch = (t && t.title) ? t.title : id;
-        var match = textToSearch.match(/demo[-_]?(\d+)/i);
-        if (match && match[1]) {
-            return parseInt(match[1], 10);
-        }
-        var matchAnyNum = textToSearch.match(/\d+/);
-        return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
-    }
-
-    function getSortedTestKeys() {
-        return Object.keys(testData).sort(function(a, b) {
-            return extractTestNum(a) - extractTestNum(b);
-        });
-    }
-
-    async function fetchTestData() {
-        try {
-            testData = {};
-            const qRes = await supabaseClient.from('questions').select('id, test_id, test_title');
-            if (qRes.data && qRes.data.length > 0) {
-                qRes.data.forEach(q => {
-                    const tId = q.test_id;
-                    if (!tId) return;
-
-                    if (!testData[tId]) {
-                        testData[tId] = {
-                            title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(),
-                            questionsCount: 0
-                        };
-                    } else if (q.test_title) {
-                        testData[tId].title = q.test_title;
-                    }
-                    testData[tId].questionsCount++;
-                });
-            }
-
-            const tourRes = await supabaseClient.from('tournaments').select('*').limit(1);
-            if (tourRes.data && tourRes.data.length > 0) {
-                if (tourRes.data[0].test_key) {
-                    window.currentTournamentTestKey = tourRes.data[0].test_key;
-                }
-                if (tourRes.data[0].start_time) {
-                    window.tournamentStartTime = tourRes.data[0].start_time;
-                    localStorage.setItem('cached_tournament_start', tourRes.data[0].start_time);
-                    setDatetimeInputValue(tourRes.data[0].start_time);
-                } else {
-                    window.tournamentStartTime = null;
-                    localStorage.removeItem('cached_tournament_start');
-                }
-            }
-            startTournamentCountdown();
-        } catch (e) {
-            console.error("Yuklashda xatolik:", e);
-        }
-        renderTestsList();
-    }
-
-    function setDatetimeInputValue(isoString) {
-        if (!isoString) return;
-        try {
-            var date = new Date(isoString);
-            var year = date.getFullYear();
-            var month = String(date.getMonth() + 1).padStart(2, '0');
-            var day = String(date.getDate()).padStart(2, '0');
-            var hours = String(date.getHours()).padStart(2, '0');
-            var minutes = String(date.getMinutes()).padStart(2, '0');
-            var localVal = year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
-            if (pickerInstance) {
-                pickerInstance.setDate(localVal, true);
-            }
-        } catch(e) {
-            console.log("Sanani qo'yishda xato:", e);
-        }
-    }
-
-    async function saveTournamentSettings() {
-        if (String(currentUserId) !== String(ADMIN_ID)) {
-            alert("Ushbu amalni faqat administrator bajarishi mumkin!");
-            return;
-        }
-
-        var selectedTestId = document.getElementById("admin-tournament-test-select").value;
-        var startTimeInput = document.getElementById("admin-tournament-time").value;
-
-        if (!selectedTestId) {
-            alert("Iltimos, testni tanlang!");
-            return;
-        }
-
-        try {
-            let isoString = null;
-            if (startTimeInput) {
-                isoString = new Date(startTimeInput).toISOString();
-            }
-
-            let payload = {
-                id: 1,
-                test_key: selectedTestId,
-                start_time: isoString,
-                title: 'Jonli turnir',
-                status: 'active'
-            };
-
-            const { error } = await supabaseClient
-                .from('tournaments')
-                .upsert(payload);
-
-            if (error) {
-                console.error("Supabase xatoligi:", error);
-                alert("Saqlashda xatolik: " + error.message);
-                return;
-            }
-
-            window.currentTournamentTestKey = selectedTestId;
-            window.tournamentStartTime = isoString;
-            if (isoString) {
-                localStorage.setItem('cached_tournament_start', isoString);
-            } else {
-                localStorage.removeItem('cached_tournament_start');
-            }
-            startTournamentCountdown();
-            alert("Turnir sozlamalari muvaffaqiyatli saqlandi!");
-        } catch (err) {
-            console.error("Catch xatoligi:", err);
-            alert("Saqlashda xatolik: " + err.message);
-        }
-    }
-
-    function startTournamentCountdown() {
-        if (tournamentInterval) clearInterval(tournamentInterval);
-
-        var countdownEl = document.getElementById("tour-countdown");
-        var statusEl = document.getElementById("tour-status");
-        var btnEl = document.getElementById("tour-btn");
-        var tourTitleEl = document.getElementById("tour-title");
-
-        if (!window.tournamentStartTime) {
-            tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
-            statusEl.innerText = "🔴 Jonli test davom etmoqda!";
-            countdownEl.style.display = "none";
-            btnEl.disabled = false;
-            btnEl.style.background = "#27ae60"; 
-            btnEl.innerText = "Qo'shilish";
-            btnEl.onclick = joinTournament;
-            return;
-        }
-
-        countdownEl.style.display = "block";
-
-        tournamentInterval = setInterval(function() {
-            var now = new Date().getTime();
-            var targetTime = new Date(window.tournamentStartTime).getTime();
-            
-            var activeTestKey = window.currentTournamentTestKey || 'demo_8';
-            var totalQuestions = (testData[activeTestKey] && testData[activeTestKey].questionsCount) ? testData[activeTestKey].questionsCount : 10;
-            var totalTournamentDuration = totalQuestions * 120 * 1000; 
-            var endTime = targetTime + totalTournamentDuration;
-
-            if (now >= endTime) {
-                clearInterval(tournamentInterval);
-                tourTitleEl.innerText = "🏁 Jonli turnir yakunlandi";
-                statusEl.innerText = "🔴 Jonli test o'z nihoyasiga yetdi!";
-                countdownEl.style.display = "none";
-                btnEl.disabled = false;
-                btnEl.style.background = "#2980b9"; 
-                btnEl.innerText = "Natijalarni ko'rish";
-                btnEl.onclick = function() {
-                    showTournamentResults(window.currentTournamentTestKey || 'demo_8');
-                };
-            } else if (now >= targetTime) {
-                tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
-                statusEl.innerText = "🔴 Jonli test boshlandi!";
-                countdownEl.innerText = "Amalda!";
-                btnEl.disabled = false;
-                btnEl.style.background = "#27ae60"; 
-                btnEl.innerText = "Qo'shilish";
-                btnEl.onclick = joinTournament;
-            } else {
-                var distance = targetTime - now;
-                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
-                countdownEl.innerText = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-                statusEl.innerText = "⏳ Turnir boshlanishiga:";
-                countdownEl.style.display = "block";
-                btnEl.disabled = true;
-                btnEl.style.background = "#bdc3c7";
-                btnEl.innerText = "Boshlanmagan";
-                btnEl.onclick = null;
-            }
-        }, 1000);
-    }
-
-    function toggleTestVisibility(testId) {
-        if (hiddenTests[testId]) {
-            delete hiddenTests[testId];
-        } else {
-            hiddenTests[testId] = true;
-        }
-        localStorage.setItem('hidden_tests', JSON.stringify(hiddenTests));
-        renderAdminTestsList();
-        renderTestsList();
-    }
-
-    function joinTournament() {
-        startQuiz(window.currentTournamentTestKey || 'demo_8', true);
-    }
-
-    var leaderboardLimit = 50;
-
-    async function fetchLeaderboard(isLoadMore = false) {
-        var listContainer = document.getElementById("leaderboard-list");
-        var podiumContainer = document.getElementById("podium-section");
-        var loadMoreContainer = document.getElementById("load-more-container");
-        
-        if (!isLoadMore) {
-            leaderboardLimit = 50;
-            podiumContainer.innerHTML = "";
-            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
-        }
-
-        try {
-            const { data, error, count } = await supabaseClient
-                .from('leaderboard')
-                .select('*', { count: 'exact' })
-                .eq('test_key', 'general')
-                .order('score', { ascending: false })
-                .limit(leaderboardLimit);
-
-            if (error) throw error;
-
-            if (!data || data.length === 0) {
-                podiumContainer.innerHTML = "";
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha umumiy reyting natijalari yo'q.</p>";
-                loadMoreContainer.style.display = "none";
-                return;
-            }
-
-            let podiumHtml = "";
-            let top3Users = data.slice(0, 3);
-            
-            if (top3Users.length > 0) {
-                podiumHtml += '<div class="podium-container">';
-                
-                if (top3Users[1]) {
-                    let u2 = top3Users[1];
-                    podiumHtml += '<div class="podium-item second">' +
-                        '<div class="podium-rank-badge">🥈 2-o\'rin</div>' +
-                        '<div class="podium-avatar">2</div>' +
-                        '<div class="podium-name" title="' + u2.full_name + '">' + u2.full_name + '</div>' +
-                        '<div class="podium-score">' + u2.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u2.tests_count || 1) + ' test</div>' +
-                        '</div>';
-                }
-
-                if (top3Users[0]) {
-                    let u1 = top3Users[0];
-                    podiumHtml += '<div class="podium-item first">' +
-                        '<div class="podium-rank-badge">👑 1-o\'rin</div>' +
-                        '<div class="podium-avatar">1</div>' +
-                        '<div class="podium-name" title="' + u1.full_name + '">' + u1.full_name + '</div>' +
-                        '<div class="podium-score">' + u1.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u1.tests_count || 1) + ' test</div>' +
-                        '</div>';
-                }
-
-                if (top3Users[2]) {
-                    let u3 = top3Users[2];
-                    podiumHtml += '<div class="podium-item third">' +
-                        '<div class="podium-rank-badge">🥉 3-o\'rin</div>' +
-                        '<div class="podium-avatar">3</div>' +
-                        '<div class="podium-name" title="' + u3.full_name + '">' + u3.full_name + '</div>' +
-                        '<div class="podium-score">' + u3.score + ' ball</div>' +
-                        '<div class="podium-info">' + (u3.tests_count || 1) + ' test</div>' +
-                        '</div>';
-                }
-
-                podiumHtml += '</div>';
-            }
-            podiumContainer.innerHTML = podiumHtml;
-
-            let remainingUsers = data.slice(3);
-            if (remainingUsers.length === 0) {
-                listContainer.innerHTML = "";
-            } else {
-                var html = "";
-                remainingUsers.forEach((item, index) => {
-                    var rankNum = index + 4;
-                    var tCount = item.tests_count || 1;
-                    var tSpent = item.time_spent || '0 son';
-
-                    html += '<div class="leaderboard-item">' +
-                        '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
-                        '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
-                        '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
-                        '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">📊 ' + tCount + ' ta test • ⏱ ' + tSpent + '</div></div>' +
-                        '</div>' +
-                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
-                        '</div>';
-                });
-                listContainer.innerHTML = html;
-            }
-
-            if (count && leaderboardLimit < count) {
-                loadMoreContainer.style.display = "block";
-                document.getElementById("load-more-btn").innerText = "Yana 50 ta (" + (count - leaderboardLimit) + " ta qoldi)";
-            } else {
-                loadMoreContainer.style.display = "none";
-            }
-        } catch (err) {
-            console.error("Reytingni olishda xato:", err);
-            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
-        }
-    }
-
-    async function showTournamentResults(testKey) {
-        switchTab('rating');
-        var listContainer = document.getElementById("leaderboard-list");
-        var podiumContainer = document.getElementById("podium-section");
-        var loadMoreContainer = document.getElementById("load-more-container");
-        
-        var testTitle = testData[testKey] ? testData[testKey].title : "Jonli test";
-        podiumContainer.innerHTML = "<h3 style='text-align: center; color: #2c3e50; margin: 10px 0;'>🎯 Jonli test natijalari: " + testTitle + "</h3>";
-        listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Natijalar yuklanmoqda...</p>";
-        loadMoreContainer.style.display = "none";
-
-        try {
-            const { data, error } = await supabaseClient
-                .from('leaderboard')
-                .select('*')
-                .eq('test_key', testKey)
-                .order('score', { ascending: false });
-
-            if (error) throw error;
-
-            if (!data || data.length === 0) {
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Bu jonli test bo'yicha hali natijalar yo'q.</p>";
-                return;
-            }
-
-            var html = "";
-            data.forEach((item, index) => {
-                var rankNum = index + 1;
-                var tSpent = item.time_spent || '0 son';
-
-                html += '<div class="leaderboard-item">' +
-                    '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
-                    '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
-                    '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
-                    '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">⏱ ' + tSpent + '</div></div>' +
-                    '</div>' +
-                    '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
-                    '</div>';
-            });
-            listContainer.innerHTML = html;
-        } catch (err) {
-            console.error("Turnir natijalarini olishda xato:", err);
-            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Natijalarni yuklab bo'lmadi.</p>";
-        }
-    }
-
-    function loadMoreLeaderboard() {
-        leaderboardLimit += 50;
-        fetchLeaderboard(true);
-    }
-
-    var activeQuestions = [];
-    var currentQuestion = 0;
-    var userAnswers = {}; 
-    var timeLeft = 120; 
-    var timerInterval;
-    var isTournamentMode = false;
-    var dynamicPercentInterval = null;
-
-    function shuffleArray(array) {
-        var arr = array.slice();
-        for (var i = arr.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
-        }
-        return arr;
-    }
-
-    // Ботга ўтиш функцияси
-    function openVipBotDirect(e) {
+    // ⭐ БАЗАДАН ПРЕМИУМНИ ТЕКШИРИШ ВА ОЧИШ ФУНКЦИЯСИ
+    async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
+
+        if (!currentUserId) {
+            alert("Telegram ID aniqlanmadi!");
+            openVipBotDirect();
+            return;
+        }
+
+        // Админ ёки олдин тасдиқланган бўлса
+        if (String(currentUserId) === String(ADMIN_ID) || localStorage.getItem('is_premium_user') === 'true') {
+            alert("Sizda allaqachon VIP obuna faol!");
+            renderTestsList();
+            return;
+        }
+
+        try {
+            // Supabase базасидан фойдаланувчи тўловини текширамиз (masalan: subscriptions jadvali)
+            const { data, error } = await supabaseClient
+                .from('subscriptions')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .maybeSingle();
+
+            if (data && data.is_paid === true) {
+                localStorage.setItem('is_premium_user', 'true');
+                alert("Tabriklaymiz! Sizning avvalgi VIP obunangiz bazadan topildi va faollashtirildi! 🎉");
+                renderTestsList();
+            } else {
+                // Агар базада топилмаса — тўлов қилиш учун ботга йўналтирамиз
+                openVipBotDirect();
+            }
+        } catch (err) {
+            console.error("Obunani tekshirishda xato:", err);
+            openVipBotDirect();
+        }
+    }
+
+    function openVipBotDirect() {
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
-        
         if (window.Telegram && window.Telegram.WebApp) {
             if (window.Telegram.WebApp.openTelegramLink) {
                 window.Telegram.WebApp.openTelegramLink(botUrl);
@@ -1173,22 +803,64 @@
             e.stopPropagation();
         }
         var adminUrl = "https://t.me/Baxtiyor_Karjabov";
-        
         if (window.Telegram && window.Telegram.WebApp) {
-            if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+            if (window.Telegram.WebApp.openTelegramLink) {
                 window.Telegram.WebApp.openTelegramLink(adminUrl);
-                return;
-            } else if (typeof window.Telegram.WebApp.openLink === 'function') {
-                window.Telegram.WebApp.openLink(adminUrl);
                 return;
             }
         }
         window.location.href = adminUrl;
     }
 
+    var testData = {};
+
+    function extractTestNum(id) {
+        var t = testData[id];
+        var textToSearch = (t && t.title) ? t.title : id;
+        var match = textToSearch.match(/demo[-_]?(\d+)/i);
+        if (match && match[1]) return parseInt(match[1], 10);
+        var matchAnyNum = textToSearch.match(/\d+/);
+        return matchAnyNum ? parseInt(matchAnyNum[0], 10) : 0;
+    }
+
+    function getSortedTestKeys() {
+        return Object.keys(testData).sort(function(a, b) {
+            return extractTestNum(a) - extractTestNum(b);
+        });
+    }
+
+    async function fetchTestData() {
+        try {
+            testData = {};
+            const qRes = await supabaseClient.from('questions').select('id, test_id, test_title');
+            if (qRes.data && qRes.data.length > 0) {
+                qRes.data.forEach(q => {
+                    const tId = q.test_id;
+                    if (!tId) return;
+                    if (!testData[tId]) {
+                        testData[tId] = { title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(), questionsCount: 0 };
+                    } else if (q.test_title) {
+                        testData[tId].title = q.test_title;
+                    }
+                    testData[tId].questionsCount++;
+                });
+            }
+
+            const tourRes = await supabaseClient.from('tournaments').select('*').limit(1);
+            if (tourRes.data && tourRes.data.length > 0) {
+                if (tourRes.data[0].test_key) window.currentTournamentTestKey = tourRes.data[0].test_key;
+                if (tourRes.data[0].start_time) {
+                    window.tournamentStartTime = tourRes.data[0].start_time;
+                    localStorage.setItem('cached_tournament_start', tourRes.data[0].start_time);
+                }
+            }
+            startTournamentCountdown();
+        } catch (e) { console.error("Yuklashda xatolik:", e); }
+        renderTestsList();
+    }
+
     function renderTestsList() {
         var urlParams = new URLSearchParams(window.location.search);
-        
         if (urlParams.get('status') === 'premium' || (currentUserId && String(currentUserId) === String(ADMIN_ID))) {
             localStorage.setItem('is_premium_user', 'true');
         }
@@ -1196,9 +868,7 @@
         var isUserPremium = localStorage.getItem('is_premium_user') === 'true';
         var sortedKeys = getSortedTestKeys();
 
-        var kuzHtml = "";
-        var bahorHtml = "";
-        var boshqaHtml = "";
+        var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
 
         sortedKeys.forEach(function(id) {
             var t = testData[id];
@@ -1208,7 +878,7 @@
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
-                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna bot orqali">⭐ VIP obuna</button>'
+                ? '<button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)" title="VIP obunani tekshirish">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\', false)">Ishlash</button>';
 
             var titleLower = t.title.toLowerCase();
@@ -1218,34 +888,15 @@
                     actionBtn +
                     '</div>';
 
-            if (titleLower.includes('kuz') || titleLower.includes('куз')) {
-                kuzHtml += cardHtml;
-            } else if (titleLower.includes('bahor') || titleLower.includes('баҳор')) {
-                bahorHtml += cardHtml;
-            } else {
-                boshqaHtml += cardHtml;
-            }
+            if (titleLower.includes('kuz') || titleLower.includes('куз')) kuzHtml += cardHtml;
+            else if (titleLower.includes('bahor') || titleLower.includes('баҳор')) bahorHtml += cardHtml;
+            else boshqaHtml += cardHtml;
         });
 
         var html = "";
-        if (kuzHtml) {
-            html += '<div class="category-section">' +
-                    '<div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>🔽</span></div>' +
-                    '<div class="category-content">' + kuzHtml + '</div>' +
-                    '</div>';
-        }
-        if (bahorHtml) {
-            html += '<div class="category-section">' +
-                    '<div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor 2027)</span><span>🔽</span></div>' +
-                    '<div class="category-content">' + bahorHtml + '</div>' +
-                    '</div>';
-        }
-        if (boshqaHtml) {
-            html += '<div class="category-section">' +
-                    '<div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>🔽</span></div>' +
-                    '<div class="category-content">' + boshqaHtml + '</div>' +
-                    '</div>';
-        }
+        if (kuzHtml) html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>🔽</span></div><div class="category-content">' + kuzHtml + '</div></div>';
+        if (bahorHtml) html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor 2027)</span><span>🔽</span></div><div class="category-content">' + bahorHtml + '</div></div>';
+        if (boshqaHtml) html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>🔽</span></div><div class="category-content">' + boshqaHtml + '</div></div>';
 
         document.getElementById("tests-list").innerHTML = html || "<p style='color:#777;'>Hozircha ochiq testlar yo'q.</p>";
     }
@@ -1267,11 +918,8 @@
             alert("Sizda bu bo'limga kirish huquqi yo'q!");
             return;
         }
-
         document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
         document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
-        clearInterval(timerInterval);
-        clearInterval(dynamicPercentInterval);
 
         if (tab === 'home') {
             document.getElementById('home-page').classList.add('active');
@@ -1284,798 +932,6 @@
             fetchLeaderboard();
             document.getElementById('rating-page').classList.add('active');
             document.getElementById('nav-rating').classList.add('active');
-        } else if (tab === 'admin') {
-            renderAdminTestsList();
-            populateTestSelect();
-            document.getElementById('admin-page').classList.add('active');
-            document.getElementById('nav-admin').classList.add('active');
-        }
-    }
-
-    async function startQuiz(testId, isTour = false) {
-        const { data: rawQuestions, error } = await supabaseClient
-            .from('questions')
-            .select('*')
-            .eq('test_id', testId);
-
-        if (error || !rawQuestions || rawQuestions.length === 0) {
-            alert("Bu test savollarini yuklab bo'lmadi!");
-            return;
-        }
-        
-        isTournamentMode = isTour;
-
-        if (isTournamentMode) {
-            activeQuestions = rawQuestions.map(function(q) {
-                return {
-                    db_id: q.id,
-                    readingText: q.reading_text,
-                    imageUrl: q.image_url,
-                    question: q.question,
-                    options: q.options,
-                    correct: q.correct
-                };
-            });
-
-            if (window.tournamentStartTime) {
-                var startTime = new Date(window.tournamentStartTime).getTime();
-                var now = new Date().getTime();
-                var elapsedSeconds = Math.floor((now - startTime) / 1000);
-                var questionDuration = 120; 
-                
-                if (elapsedSeconds < 0) {
-                    alert("Turnir hali boshlanmadi!");
-                    switchTab('home');
-                    return;
-                }
-
-                var targetQuestionIndex = Math.floor(elapsedSeconds / questionDuration);
-                
-                if (targetQuestionIndex >= activeQuestions.length) {
-                    alert("Jonli turnir allaqachon yakunlangan!");
-                    switchTab('home');
-                    return;
-                } 
-                
-                currentQuestion = targetQuestionIndex;
-                timeLeft = questionDuration - (elapsedSeconds % questionDuration);
-            } else {
-                currentQuestion = 0;
-                timeLeft = 120;
-            }
-            userAnswers = {};
-
-        } else {
-            activeQuestions = rawQuestions.map(function(q) {
-                var indexedOptions = q.options.map(function(opt, idx) {
-                    return { text: opt, isCorrect: (idx === q.correct) };
-                });
-                var shuffledOptions = shuffleArray(indexedOptions);
-                var newCorrectIndex = shuffledOptions.findIndex(function(o) { return o.isCorrect; });
-
-                return {
-                    readingText: q.reading_text,
-                    imageUrl: q.image_url,
-                    question: q.question,
-                    options: shuffledOptions.map(function(o) { return o.text; }),
-                    correct: newCorrectIndex
-                };
-            });
-            activeQuestions = shuffleArray(activeQuestions);
-            currentQuestion = 0;
-            timeLeft = 5400;
-            userAnswers = {};
-        }
-
-        document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-        document.getElementById('quiz-page').classList.add('active');
-        
-        document.getElementById('quiz-container').style.display = 'block';
-        document.getElementById('result-box').style.display = 'none';
-        document.getElementById('quiz-title').innerText = (testData[testId] ? testData[testId].title : "Test") + (isTournamentMode ? " (Jonli turnir)" : "");
-
-        await loadQuestion();
-        startTimer();
-    }
-
-    function startTimer() {
-        clearInterval(timerInterval);
-        clearInterval(dynamicPercentInterval);
-        
-        if (isTournamentMode) {
-            if (!timeLeft || timeLeft <= 0 || timeLeft > 120) {
-                timeLeft = 120;
-            }
-            
-            let basePercents = generateOptionPercents(activeQuestions[currentQuestion].options.length, activeQuestions[currentQuestion].correct);
-            
-            dynamicPercentInterval = setInterval(function() {
-                let q = activeQuestions[currentQuestion];
-                let elapsed = 120 - timeLeft;
-                let boost = Math.min(50, Math.floor((elapsed / 120) * 50));
-                
-                q.options.forEach((opt, idx) => {
-                    let pElem = document.getElementById("perc-" + idx);
-                    if (pElem) {
-                        let curVal = basePercents[idx];
-                        if (idx === q.correct) {
-                            curVal = Math.min(90, curVal + boost);
-                        } else {
-                            curVal = Math.max(2, curVal - Math.floor(boost / 3));
-                        }
-                        pElem.innerText = curVal + "%";
-                    }
-                });
-            }, 3000);
-
-        } else {
-            timeLeft = 5400; 
-        }
-
-        timerInterval = setInterval(function() {
-            var minutes = Math.floor(timeLeft / 60);
-            var seconds = timeLeft % 60;
-            document.getElementById("timer").innerText = "Vaqt: " + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-            
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                clearInterval(dynamicPercentInterval);
-                if (isTournamentMode) {
-                    proceedToNextQuestion();
-                } else {
-                    finishQuiz();
-                }
-            }
-            timeLeft--;
-        }, 1000);
-    }
-
-    async function loadQuestion() {
-        var q = activeQuestions[currentQuestion];
-        var optionsHtml = "";
-        
-        var percents = generateOptionPercents(q.options.length, q.correct);
-
-        q.options.forEach(function(opt, index) {
-            var checked = (userAnswers[currentQuestion] === index) ? "checked" : "";
-            
-            var onchangeAction = isTournamentMode ? 
-                "selectTournamentOption(" + index + ", " + q.correct + ")" : 
-                "selectNormalOption(" + index + ")";
-            
-            let percDisplay = isTournamentMode ? "inline-block" : "none";
-
-            optionsHtml += '<label><input type="radio" name="option" value="' + index + '" ' + checked + ' onchange="' + onchangeAction + '"> ' +
-                           '<span class="option-text">' + opt + '</span>' +
-                           '<span class="option-percent" id="perc-' + index + '" style="display:' + percDisplay + '">' + percents[index] + '%</span></label>';
-        });
-
-        var textBlockHtml = q.readingText ? '<div class="text-box">' + q.readingText + '</div>' : "";
-        
-        var imgBlockHtml = "";
-        if (q.imageUrl) {
-            let imgSrc = q.imageUrl;
-            if (!imgSrc.startsWith("http") && !imgSrc.startsWith("data:")) {
-                try {
-                    let response = await fetch('/get-image-url/' + imgSrc);
-                    let resJson = await response.json();
-                    if (resJson.url) {
-                        imgSrc = resJson.url;
-                    }
-                } catch (err) {
-                    console.error("Rasm havolasini olishda xato:", err);
-                }
-            }
-            imgBlockHtml = '<img src="' + imgSrc + '" class="question-img" alt="Rasmli savol" onclick="openImageModal(\'' + imgSrc + '\')" title="Kattalashtirish uchun bosing">';
-        }
-
-        document.getElementById("question-box").innerHTML = 
-            textBlockHtml + imgBlockHtml + '<h3 style="white-space: pre-wrap; font-size: 15px; line-height: 1.4;"><span>' + q.question + '</span></h3><div class="options">' + optionsHtml + '</div>';
-
-        if (isTournamentMode) {
-            document.getElementById("quiz-btn-group").style.display = "none";
-        } else {
-            document.getElementById("quiz-btn-group").style.display = "flex";
-            document.getElementById("prev-btn").style.display = currentQuestion === 0 ? "none" : "block";
-            document.getElementById("next-btn").innerText = currentQuestion === activeQuestions.length - 1 ? "Tugatish" : "Keyingi";
-        }
-    }
-
-    function selectNormalOption(optionIndex) {
-        userAnswers[currentQuestion] = optionIndex;
-    }
-
-    function generateOptionPercents(length, correctIdx) {
-        var arr = new Array(length).fill(0);
-        var remaining = 100;
-        var correctShare = Math.floor(Math.random() * 20) + 15; 
-        if (correctShare > remaining) correctShare = remaining;
-        arr[correctIdx] = correctShare;
-        remaining -= correctShare;
-
-        for (var i = 0; i < length; i++) {
-            if (i === correctIdx) continue;
-            if (i === length - 1) {
-                arr[i] = remaining;
-            } else {
-                var share = Math.floor(Math.random() * remaining);
-                arr[i] = share;
-                remaining -= share;
-            }
-        }
-        return arr;
-    }
-
-    function selectTournamentOption(optionIndex, correctIndex) {
-        userAnswers[currentQuestion] = optionIndex;
-        
-        var allLabels = document.querySelectorAll('.options label');
-        allLabels.forEach((lbl, idx) => {
-            lbl.style.pointerEvents = 'none'; 
-            if (idx === correctIndex) lbl.classList.add('correct-answer');
-            else if (idx === optionIndex && idx !== correctIndex) lbl.classList.add('wrong-answer');
-        });
-
-        if (optionIndex === correctIndex) {
-            confetti({
-                particleCount: 80,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
-        }
-    }
-
-    async function proceedToNextQuestion() {
-        if (currentQuestion < activeQuestions.length - 1) {
-            currentQuestion++;
-            await loadQuestion();
-            startTimer(); 
-        } else {
-            finishQuiz();
-        }
-    }
-
-    let scale = 1;
-    let panning = false;
-    let pointX = 0;
-    let pointY = 0;
-    let startX = 0;
-    let startY = 0;
-
-    function openImageModal(imgSrc) {
-        var modal = document.getElementById("imageModal");
-        var modalImg = document.getElementById("modalImg");
-        modal.style.display = "flex";
-        modalImg.src = imgSrc;
-        
-        scale = 1;
-        pointX = 0;
-        pointY = 0;
-        setTransform(modalImg);
-
-        modalImg.onwheel = function(e) {
-            e.preventDefault();
-            const xs = (e.clientX - pointX) / scale;
-            const ys = (e.clientY - pointY) / scale;
-            
-            if (e.deltaY < 0) scale *= 1.2;
-            else {
-                scale /= 1.2;
-                if (scale < 1) scale = 1;
-            }
-            
-            pointX = e.clientX - xs * scale;
-            pointY = e.clientY - ys * scale;
-            if (scale === 1) { pointX = 0; pointY = 0; }
-            setTransform(modalImg);
-        };
-
-        modalImg.onmousedown = function(e) {
-            e.preventDefault();
-            startX = e.clientX - pointX;
-            startY = e.clientY - pointY;
-            panning = true;
-        };
-
-        window.onmousemove = function(e) {
-            if (!panning) return;
-            e.preventDefault();
-            pointX = e.clientX - startX;
-            pointY = e.clientY - startY;
-            setTransform(modalImg);
-        };
-
-        window.onmouseup = function() { panning = false; };
-    }
-
-    function setTransform(img) {
-        img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
-    }
-
-    function closeImageModal() {
-        document.getElementById("imageModal").style.display = "none";
-        scale = 1;
-        pointX = 0;
-        pointY = 0;
-    }
-
-    function saveCurrentAnswer() {
-        var selectedOption = document.querySelector('input[name="option"]:checked');
-        if (selectedOption) {
-            userAnswers[currentQuestion] = parseInt(selectedOption.value);
-        }
-    }
-
-    async function nextQuestion() {
-        saveCurrentAnswer();
-        if (userAnswers[currentQuestion] === undefined && !isTournamentMode) {
-            alert("Iltimos, javobni belgilang!");
-            return;
-        }
-
-        if (currentQuestion < activeQuestions.length - 1) {
-            currentQuestion++;
-            await loadQuestion();
-            if (isTournamentMode) startTimer();
-        } else {
-            finishQuiz();
-        }
-    }
-
-    async function prevQuestion() {
-        saveCurrentAnswer();
-        if (currentQuestion > 0) {
-            currentQuestion--;
-            await loadQuestion();
-        }
-    }
-
-    async function finishQuiz() {
-        saveCurrentAnswer();
-        clearInterval(timerInterval);
-        clearInterval(dynamicPercentInterval);
-        
-        document.getElementById("quiz-container").style.display = "none";
-        document.getElementById("result-box").style.display = "block";
-
-        var score = 0;
-        var reviewHtml = "<h3>Javoblar tahlili:</h3>";
-
-        activeQuestions.forEach(function(q, index) {
-            var selected = userAnswers[index];
-            var isCorrect = (selected === q.correct);
-            if (isCorrect) score++;
-
-            var className = isCorrect ? "correct" : "incorrect";
-            var icon = isCorrect ? "🟢" : "🔴";
-            var pointsText = isCorrect ? "(+2 ball)" : "(0 ball)";
-            var userOptText = (selected !== undefined && selected >= 0) ? q.options[selected] : "Belgilanmagan (Vaqt o'tdi)";
-
-            reviewHtml += '<div class="result-item ' + className + '">' +
-                icon + ' <b>Savol ' + (index + 1) + ':</b> ' + q.question + ' ' + pointsText + '<br>' +
-                'Sizning javobingiz: ' + userOptText + '<br>' +
-                (!isCorrect ? 'To\'g\'ri javob: <b>' + q.options[q.correct] + '</b>' : '') +
-                '</div>';
-        });
-
-        var earnedPoints = score * 2;
-        document.getElementById("score-circle").innerText = earnedPoints + " ball";
-        document.getElementById("score-text").innerHTML = "To'g'ri javoblar: " + score + " ta / Noto'g'ri: " + (activeQuestions.length - score) + " ta";
-        document.getElementById("answers-review").innerHTML = reviewHtml;
-
-        var secondsSpent = 5400 - timeLeft;
-        var spentMinutes = Math.floor(secondsSpent / 60);
-        var spentSecs = secondsSpent % 60;
-        var timeSpentStr = spentMinutes + " daq " + spentSecs + " son";
-
-        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) return;
-
-        try {
-            let activeTestKeyForLeaderboard = 'general';
-            if (isTournamentMode && window.currentTournamentTestKey) {
-                activeTestKeyForLeaderboard = window.currentTournamentTestKey;
-            }
-
-            const { data: existingUser } = await supabaseClient
-                .from('leaderboard')
-                .select('score, tests_count')
-                .eq('user_id', currentUserId || 0)
-                .eq('test_key', activeTestKeyForLeaderboard)
-                .maybeSingle();
-
-            let finalScore = earnedPoints;
-            let finalTestsCount = 1;
-
-            if (existingUser) {
-                finalScore = (existingUser.score || 0) + earnedPoints;
-                finalTestsCount = (existingUser.tests_count || 1) + 1;
-            }
-
-            await supabaseClient
-                .from('leaderboard')
-                .upsert({
-                    user_id: currentUserId || 0,
-                    full_name: currentUserFullName,
-                    score: finalScore,
-                    tests_count: finalTestsCount,
-                    time_spent: timeSpentStr,
-                    test_key: activeTestKeyForLeaderboard
-                }, { onConflict: 'user_id, test_key' });
-        } catch (e) {
-            console.error("Natijani saqlashda xato:", e);
-        }
-    }
-
-    function handleImageUpload(event) {
-        var file = event.target.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var img = new Image();
-                img.onload = function() {
-                    var canvas = document.createElement('canvas');
-                    var ctx = canvas.getContext('2d');
-                    var maxWidth = 1000;
-                    var scale = maxWidth / img.width;
-                    if (scale < 1) {
-                        canvas.width = maxWidth;
-                        canvas.height = img.height * scale;
-                    } else {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var compressedBase64 = canvas.toDataURL('image/jpeg', 0.9);
-                    
-                    document.getElementById("admin-img-data").value = compressedBase64;
-                    document.getElementById("admin-img-url").value = "";
-                    showImagePreview(compressedBase64);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    async function handleUrlImage(val) {
-        let trimmed = val.trim();
-        if (trimmed !== "") {
-            document.getElementById("admin-img-data").value = trimmed;
-            document.getElementById("admin-img-file").value = "";
-
-            if (!trimmed.startsWith("http") && !trimmed.startsWith("data:")) {
-                try {
-                    let response = await fetch('/get-image-url/' + trimmed);
-                    let resJson = await response.json();
-                    if (resJson.url) {
-                        showImagePreview(resJson.url);
-                    } else {
-                        showImagePreview("");
-                    }
-                } catch (err) {
-                    console.error("Preview olishda xato:", err);
-                    showImagePreview("");
-                }
-            } else {
-                showImagePreview(trimmed);
-            }
-        } else {
-            showImagePreview("");
-        }
-    }
-
-    function showImagePreview(src) {
-        var preview = document.getElementById("img-preview");
-        var removeBtn = document.getElementById("remove-img-btn");
-        if (src) {
-            preview.src = src;
-            preview.style.display = "block";
-            removeBtn.style.display = "inline-block";
-        } else {
-            preview.style.display = "none";
-            removeBtn.style.display = "none";
-        }
-    }
-
-    function removeImage() {
-        document.getElementById("admin-img-data").value = "";
-        document.getElementById("admin-img-file").value = "";
-        document.getElementById("admin-img-url").value = "";
-        showImagePreview("");
-    }
-
-    function populateTestSelect() {
-        var select = document.getElementById("admin-test-select");
-        var tourSelect = document.getElementById("admin-tournament-test-select");
-        
-        var html = '<option value="new">➕ Mutlaqo yangi test yaratish</option>';
-        var tourHtml = '';
-        var sortedKeys = getSortedTestKeys();
-
-        sortedKeys.forEach(function(id) {
-            if (testData[id]) {
-                var titleText = testData[id].title + ' (' + testData[id].questionsCount + ' ta savol)';
-                html += '<option value="' + id + '">' + titleText + '</option>';
-                tourHtml += '<option value="' + id + '" ' + (window.currentTournamentTestKey === id ? 'selected' : '') + '>' + titleText + '</option>';
-            }
-        });
-        select.innerHTML = html;
-        tourSelect.innerHTML = tourHtml || '<option value="">Avval test qo\'shing</option>';
-        onTestSelectChange();
-    }
-
-    function onTestSelectChange() {
-        var val = document.getElementById("admin-test-select").value;
-        var titleBox = document.getElementById("new-test-title-box");
-
-        if (val === "new") {
-            titleBox.style.display = "block";
-            document.getElementById("editing-test-id").value = "";
-            document.getElementById("form-title").innerText = "➕ Yangi test yaratish va savol qo'shish";
-        } else {
-            titleBox.style.display = "none";
-            document.getElementById("editing-test-id").value = val;
-            var qIndex = parseInt(document.getElementById("editing-q-index").value);
-            if (qIndex >= 0) {
-                document.getElementById("form-title").innerText = "✏️ " + (testData[val] ? testData[val].title : "") + " — Savolni tahrirlash (№" + (qIndex + 1) + ")";
-            } else {
-                document.getElementById("form-title").innerText = "➕ " + (testData[val] ? testData[val].title : "") + " testiga yangi savol qo'shish";
-            }
-        }
-    }
-
-    function toggleTestAccordion(headerElement) {
-        headerElement.closest('.admin-test-item').classList.toggle('open');
-    }
-
-    async function renderAdminTestsList() {
-        var listContainer = document.getElementById("admin-tests-list");
-        listContainer.innerHTML = "<p style='color:#777;'>Yuklanmoqda...</p>";
-
-        try {
-            const { data: allQuestions } = await supabaseClient.from('questions').select('*');
-            let adminTestData = {};
-
-            if (allQuestions) {
-                allQuestions.forEach(q => {
-                    let tId = q.test_id;
-                    if (!tId) return;
-                    if (!adminTestData[tId]) {
-                        adminTestData[tId] = {
-                            title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(),
-                            questions: []
-                        };
-                    }
-                    adminTestData[tId].questions.push({
-                        db_id: q.id,
-                        readingText: q.reading_text,
-                        imageUrl: q.image_url,
-                        question: q.question,
-                        options: q.options,
-                        correct: q.correct
-                    });
-                });
-            }
-
-            testData = adminTestData; 
-            var sortedKeys = getSortedTestKeys();
-
-            var html = "";
-            sortedKeys.forEach(function(id) {
-                var t = adminTestData[id];
-                if (!t) return;
-                var questionsHtml = "";
-
-                var isHidden = hiddenTests[id];
-                var visibilityBtnText = isHidden ? "🔓 Ochish (Ko'rsatish)" : "🔒 Yashirish (Turnir uchun)";
-                var visibilityBtnClass = isHidden ? "info" : "dark";
-
-                if (t.questions) {
-                    t.questions.forEach(function(q, qIndex) {
-                        var imgIcon = q.imageUrl ? "🖼 " : "";
-                        questionsHtml += '<div class="admin-q-item">' +
-                            '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + q.question.substring(0, 35) + '...</span>' +
-                            '<div class="admin-btn-group">' +
-                            '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Tahrirlash</button>' +
-                            '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 O\'chirish</button>' +
-                            '</div></div>';
-                    });
-                }
-
-                html += '<div class="admin-test-item">' +
-                    '<div class="admin-test-header" onclick="toggleTestAccordion(this)">' +
-                    '<div><strong>📁 ' + t.title + '</strong><span class="badge" style="margin-left: 8px;">' + (t.questions ? t.questions.length : 0) + ' ta savol</span> ' +
-                    (isHidden ? '<span style="color:#e74c3c; font-size:11px; font-weight:bold;">(🔒 Yashirin)</span>' : '<span style="color:#27ae60; font-size:11px; font-weight:bold;">(👁 Ochiq)</span>') +
-                    '</div>' +
-                    '<div class="admin-btn-group" onclick="event.stopPropagation()">' +
-                    '<button type="button" class="' + visibilityBtnClass + '" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="toggleTestVisibility(\'' + id + '\')">' + visibilityBtnText + '</button>' +
-                    '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Savol qo\'shish</button>' +
-                    '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 O\'chirish</button>' +
-                    '</div></div>' +
-                    '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Hozircha savollar yo'q.</p>") + '</div>' +
-                    '</div>';
-            });
-            listContainer.innerHTML = html || "<p style='color:#777;'>Hech qanday test mavjud emas.</p>";
-        } catch(e) {
-            console.error("Admin ro'yxatini olishda xato:", e);
-            listContainer.innerHTML = "<p style='color:#e74c3c;'>Xatolik yuz berdi.</p>";
-        }
-    }
-
-    async function addNewQuestionToTest(testId) {
-        if (String(currentUserId) !== String(ADMIN_ID)) return;
-        resetAdminForm();
-        document.getElementById("admin-test-select").value = testId;
-        document.getElementById("editing-test-id").value = testId;
-        document.getElementById("editing-q-index").value = "-1";
-        document.getElementById("editing-db-id").value = "";
-        onTestSelectChange();
-        window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
-    }
-
-    async function editQuestionFromAdmin(testId, qIndex) {
-        if (String(currentUserId) !== String(ADMIN_ID)) return;
-        
-        const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
-        if (!questions || !questions[qIndex]) return;
-        var q = questions[qIndex];
-
-        document.getElementById("admin-test-select").value = testId;
-        document.getElementById("editing-test-id").value = testId;
-        document.getElementById("editing-q-index").value = qIndex;
-        document.getElementById("editing-db-id").value = q.id || "";
-
-        document.getElementById("admin-reading-text").value = q.reading_text || "";
-        document.getElementById("admin-question").value = q.question || "";
-        document.getElementById("admin-opt-0").value = q.options && q.options[0] ? q.options[0] : "";
-        document.getElementById("admin-opt-1").value = q.options && q.options[1] ? q.options[1] : "";
-        document.getElementById("admin-opt-2").value = q.options && q.options[2] ? q.options[2] : "";
-        document.getElementById("admin-opt-3").value = q.options && q.options[3] ? q.options[3] : "";
-        document.getElementById("admin-correct-opt").value = q.correct !== undefined ? q.correct : 0;
-
-        var imgUrl = q.image_url || "";
-        document.getElementById("admin-img-data").value = imgUrl;
-        document.getElementById("admin-img-url").value = imgUrl;
-        
-        if (imgUrl) {
-            handleUrlImage(imgUrl);
-        } else {
-            showImagePreview("");
-        }
-
-        onTestSelectChange();
-        window.scrollTo({ top: document.getElementById("admin-form-box").offsetTop - 20, behavior: 'smooth' });
-    }
-
-    function resetAdminForm() {
-        document.getElementById("editing-test-id").value = "";
-        document.getElementById("editing-db-id").value = "";
-        document.getElementById("editing-q-index").value = "-1";
-        document.getElementById("admin-test-title").value = "";
-        document.getElementById("admin-reading-text").value = "";
-        document.getElementById("admin-question").value = "";
-        document.getElementById("admin-opt-0").value = "";
-        document.getElementById("admin-opt-1").value = "";
-        document.getElementById("admin-opt-2").value = "";
-        document.getElementById("admin-opt-3").value = "";
-        document.getElementById("admin-correct-opt").value = 0;
-        
-        removeImage();
-        populateTestSelect();
-        onTestSelectChange();
-    }
-
-    async function saveQuestionFromAdmin() {
-        if (String(currentUserId) !== String(ADMIN_ID)) {
-            alert("Ushbu amalni faqat administrator bajarishi mumkin!");
-            return;
-        }
-
-        var selectVal = document.getElementById("admin-test-select").value;
-        var saveBtn = document.getElementById("save-test-btn");
-        var dbId = document.getElementById("editing-db-id").value;
-
-        var title = document.getElementById("admin-test-title").value.trim();
-        var readingText = document.getElementById("admin-reading-text").value.trim();
-        
-        var urlInputVal = document.getElementById("admin-img-url").value.trim();
-        if (urlInputVal !== "") {
-            document.getElementById("admin-img-data").value = urlInputVal;
-        }
-        var imageUrl = document.getElementById("admin-img-data").value.trim();
-        
-        var question = document.getElementById("admin-question").value.trim();
-
-        var opt0 = document.getElementById("admin-opt-0").value.trim();
-        var opt1 = document.getElementById("admin-opt-1").value.trim();
-        var opt2 = document.getElementById("admin-opt-2").value.trim();
-        var opt3 = document.getElementById("admin-opt-3").value.trim();
-        var correct = parseInt(document.getElementById("admin-correct-opt").value);
-
-        if (!question || !opt0 || !opt1) {
-            alert("Iltimos, savol va kamida 2 ta variantni to'ldiring!");
-            return;
-        }
-
-        saveBtn.disabled = true;
-        saveBtn.innerText = "⏳ Saqlanmoqda...";
-
-        var targetId = selectVal;
-        var testTitleToSave = title;
-
-        if (selectVal === "new") {
-            if (!title) {
-                alert("Iltimos, yangi test nomini kiriting!");
-                saveBtn.disabled = false;
-                saveBtn.innerText = "💾 Saqlash";
-                return;
-            }
-            targetId = "demo_" + Date.now();
-        } else {
-            const { data: tempQ } = await supabaseClient.from('questions').select('test_title').eq('test_id', selectVal).limit(1);
-            if (tempQ && tempQ.length > 0) {
-                testTitleToSave = tempQ[0].test_title;
-            }
-        }
-
-        var payload = {
-            test_id: targetId,
-            test_title: testTitleToSave,
-            reading_text: readingText || null,
-            image_url: imageUrl || null,
-            question: question,
-            options: [opt0, opt1, opt2, opt3].filter(Boolean),
-            correct: correct
-        };
-
-        let err = null;
-        if (dbId) {
-            const res = await supabaseClient.from('questions').update(payload).eq('id', dbId);
-            err = res.error;
-        } else {
-            const res = await supabaseClient.from('questions').insert([payload]);
-            err = res.error;
-        }
-
-        saveBtn.disabled = false;
-        saveBtn.innerText = "💾 Saqlash";
-
-        if (err) {
-            alert("Saqlashda xatolik: " + err.message);
-        } else {
-            alert("Muvaffaqiyatli saqlandi!");
-            resetAdminForm();
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-        }
-    }
-
-    async function deleteQuestionFromAdmin(testId, qIndex) {
-        if (String(currentUserId) !== String(ADMIN_ID)) return;
-        if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
-            const { data: questions } = await supabaseClient.from('questions').select('*').eq('test_id', testId);
-            if (questions && questions.length > qIndex) {
-                var q = questions[qIndex];
-                if (q && q.id) {
-                    await supabaseClient.from('questions').delete().eq('id', q.id);
-                }
-            }
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-            populateTestSelect();
-        }
-    }
-
-    async function deleteTestFromAdmin(id) {
-        if (String(currentUserId) !== String(ADMIN_ID)) return;
-        if (confirm("Rostdan ham ushbu butun testni va undagi barcha savollarni o'chirib tashlamoqchisiz?")) {
-            await supabaseClient.from('questions').delete().eq('test_id', id);
-            await fetchTestData();
-            renderAdminTestsList();
-            renderTestsList();
-            populateTestSelect();
         }
     }
 
@@ -2083,6 +939,5 @@
         fetchTestData();
     };
 </script>
-
 </body>
 </html>
