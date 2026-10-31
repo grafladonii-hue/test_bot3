@@ -139,6 +139,19 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
         logging.error(f"Аъзоликни текшириш хатоси: {e}")
     return False
 
+# ⭐ Ёпиқ гуруҳ аъзосини текшириб автоматик базага қўшиш функцияси
+async def check_and_auto_approve_group_member(user_id: int, bot: Bot) -> bool:
+    if not supabase:
+        return False
+    try:
+        member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
+        if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
+            supabase.table("approved_users").upsert({"user_id": user_id}).execute()
+            return True
+    except Exception as e:
+        logging.error(f"Гуруҳ аъзолигини текшириш ва авто-қўшиш хатоси: {e}")
+    return False
+
 # ==========================================
 # 4. БОТ ХЭНДЛЕРЛАРИ
 # ==========================================
@@ -149,8 +162,11 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
 
     user_id = message.from_user.id
     app_url = WEB_APP_URL
+
+    # 1. Гуруҳ аъзоси эканлигини текшириб базага автоматик қўшиб қўямиз
+    await check_and_auto_approve_group_member(user_id, bot)
     
-    # Фойдаланувчи базада (VIP рўйхатда) борми ёки админми текширамиз
+    # 2. Фойдаланувчи базада (VIP рўйхатда) борми ёки админми текширамиз
     is_vip = is_user_approved(user_id) or str(user_id) == "644092713"
 
     keyboard = InlineKeyboardMarkup(
@@ -170,7 +186,7 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
         await message.answer(
             "Ассалому алайкум! Demotestlar.uz платформасига хуш келибсиз.\n\n"
             "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
-            "🔒 Барча тестларни тўлиқ очиш учун қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини (скриншот ёки PDF) шу ерга юборинг:\n\n"
+            "🔒 Барча тестларни тўлиқ очиш учун ёпиқ гуруҳимиз аъзоси бўлинг ёки қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини шу ерга юборинг:\n\n"
             "💳 **Карта рақами:** `9860120155197128`\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
             "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда текшириб тестларни очиб беради.",
