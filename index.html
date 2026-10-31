@@ -740,7 +740,7 @@
 
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
-    // ⭐ TURNIR VAXTINI HISOBLOVCHI FUNKSIYA (Qo'shildi)
+    // ⭐ TURNIR VAXTINI HISOBLOVCHI FUNKSIYA
     function startTournamentCountdown() {
         if (tournamentInterval) clearInterval(tournamentInterval);
 
@@ -826,7 +826,7 @@
 
     var leaderboardLimit = 50;
 
-    // ⭐ REYTINGNI YUKLOVCHI FUNKSIYA (Qo'shildi)
+    // ⭐ REYTINGNI YUKLOVCHI FUNKSIYA
     async function fetchLeaderboard(isLoadMore = false) {
         var listContainer = document.getElementById("leaderboard-list");
         var podiumContainer = document.getElementById("podium-section");
@@ -981,19 +981,30 @@
         }
     }
 
-    function openVipBotDirect() {
+    // ⭐ БОТГА ЎТИШНИ ТАЪМИНЛОВЧИ МУСТАҲКАМ ФУНКЦИЯ (Барча телефонлар учун)
+    function openVipBotDirect(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
+        
         if (window.Telegram && window.Telegram.WebApp) {
-            if (window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(botUrl);
-                return;
-            }
-            if (window.Telegram.WebApp.openLink) {
-                window.Telegram.WebApp.openLink(botUrl);
-                return;
+            try {
+                if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+                    window.Telegram.WebApp.openTelegramLink(botUrl);
+                    return;
+                }
+                if (typeof window.Telegram.WebApp.openLink === 'function') {
+                    window.Telegram.WebApp.openLink(botUrl, { try_instant_view: false });
+                    return;
+                }
+            } catch (err) {
+                console.log("Telegram link open error:", err);
             }
         }
-        window.open(botUrl, '_blank');
+        
+        window.location.href = botUrl;
     }
 
     function openAdminLink(e) {
@@ -1003,10 +1014,12 @@
         }
         var adminUrl = "https://t.me/Baxtiyor_Karjabov";
         if (window.Telegram && window.Telegram.WebApp) {
-            if (window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(adminUrl);
-                return;
-            }
+            try {
+                if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+                    window.Telegram.WebApp.openTelegramLink(adminUrl);
+                    return;
+                }
+            } catch (err) {}
         }
         window.location.href = adminUrl;
     }
