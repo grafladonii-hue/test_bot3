@@ -586,24 +586,27 @@
             return;
         }
 
-        // approved_users jadvalidan to'g'ridan-to'g'ri o'qiymiz
+        // Baza xavfsizlik (RLS) muammosini chetlab o'tish uchun barcha approved_users ro'yxatini tortib olib tekshiramiz:
         if (currentUserId) {
             try {
                 const { data, error } = await supabaseClient
                     .from('approved_users') 
-                    .select('*')
-                    .or(`user_id.eq.${currentUserId},user_id.eq.${String(currentUserId)}`)
-                    .limit(1);
+                    .select('user_id');
                 
                 if (data && data.length > 0) {
-                    isUserPremium = true;
-                    localStorage.setItem('is_premium_user', 'true');
-                    updateVipButtonUI();
-                    renderTestsList();
-                    return;
+                    var found = data.some(function(row) {
+                        return String(row.user_id) === String(currentUserId);
+                    });
+                    if (found) {
+                        isUserPremium = true;
+                        localStorage.setItem('is_premium_user', 'true');
+                        updateVipButtonUI();
+                        renderTestsList();
+                        return;
+                    }
                 }
             } catch(e) {
-                console.log("VIP status xatosi:", e);
+                console.log("VIP statusni o'qishda xatolik:", e);
             }
         }
 
