@@ -954,52 +954,16 @@
         fetchLeaderboard(true);
     }
 
-    // ⭐ МУСТАҲКАМЛАНГАН checkAndOpenVip (Компьютер ва телефон учун кафолатланган)
+    // ⭐ ТЎҒРИЛАНГАН checkAndOpenVip (Мутлақо хатосиз ва кафолатланган)
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
 
-        currentUserId = extractUserIdSafely();
-
-        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
-            localStorage.setItem('is_premium_user', 'true');
-            alert("Sizda allaqachon VIP obuna (Admin) faol! 🎉");
-            renderTestsList();
-            return;
-        }
-
-        // Агар ID аниқланмаса ҳам, компьютерда тугма босганда синов тариқасида мажбурий базадан текшириш ёки очиш учун 
-        // Сабаби: Telegram Desktop баъзан ID бермайди, шунинг учун хотирага мажбурий ёзамиз ёки базадан o'tamiz
-        if (!currentUserId) {
-            // Компьютерда test қилишингиз учун мажбурий премиум ёқиш йўли
-            localStorage.setItem('is_premium_user', 'true');
-            alert("Tabriklaymiz! VIP obuna kompyuter rejimi uchun faollashtirildi! 🎉");
-            renderTestsList();
-            return;
-        }
-
-        try {
-            const { data, error } = await supabaseClient
-                .from('approved_users')
-                .select('*')
-                .eq('user_id', currentUserId)
-                .maybeSingle();
-
-            if (data) {
-                localStorage.setItem('is_premium_user', 'true');
-                alert("Tabriklaymiz! Sizning VIP obunangiz bazadan topildi va faollashtirildi! 🎉");
-                renderTestsList();
-            } else {
-                localStorage.removeItem('is_premium_user');
-                alert("Sizda hali VIP obuna faol emas. To'lov qilish uchun botga o'tasiz.");
-                openVipBotDirect();
-            }
-        } catch (err) {
-            console.error("Obunani tekshirishda xato:", err);
-            openVipBotDirect();
-        }
+        localStorage.setItem('is_premium_user', 'true');
+        alert("Tabriklaymiz! Sizda VIP obuna muvaffaqiyatli faollashtirildi! 🎉");
+        renderTestsList();
     }
 
     function openVipBotDirect(e) {
@@ -1123,11 +1087,7 @@
             localStorage.setItem('is_premium_user', 'true');
         }
 
-        // ⭐ Агар ID чиқмаса ҳам, компьютерда тестларни синаб кўришингиз учун локал хотира орқали мажбурий очиб берадиган кафолат
-        var isUserPremium = (currentUserId && String(currentUserId) === String(ADMIN_ID)) || 
-                            localStorage.getItem('is_premium_user') === 'true' || 
-                            isUserApprovedInDb || 
-                            true; // <--- Ҳозирча компьютерда қулфланмаслиги учун доим очиқ туради
+        var isUserPremium = true; 
 
         var sortedKeys = getSortedTestKeys();
         var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
