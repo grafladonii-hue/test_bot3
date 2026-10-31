@@ -105,8 +105,8 @@
 
         .result-box { display: none; text-align: center; }
         .score-circle {
-            width: 140px;
-            height: 140px;
+            width: 150px;
+            height: 150px;
             border: 6px solid #27ae60;
             border-radius: 50%;
             display: flex;
@@ -114,17 +114,29 @@
             align-items: center;
             justify-content: center;
             margin: 20px auto;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             color: #27ae60;
             background: #f4f9f4;
         }
         .score-percent {
-            font-size: 14px;
+            font-size: 13px;
             color: #27ae60;
             font-weight: normal;
             margin-top: 4px;
         }
+
+        .review-item {
+            text-align: left;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .review-item.correct-ans { border-left: 5px solid #2ed573; background: #f0fff4; }
+        .review-item.wrong-ans { border-left: 5px solid #ff4757; background: #fff5f5; }
 
         .nav-bar {
             position: fixed;
@@ -245,10 +257,13 @@
         <div class="result-box" id="result-box">
             <h2>Test yakunlandi!</h2>
             <div class="score-circle" id="score-circle">
-                <span id="score-text-val">0 / 0</span>
+                <span id="score-text-val">0 ball</span>
                 <span class="score-percent" id="score-percent-val">(0%)</span>
             </div>
             <p id="score-text"></p>
+            
+            <div id="answers-review" style="margin-top: 20px; text-align: left;"></div>
+
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
     </div>
@@ -469,22 +484,42 @@
         if (quizTimerInterval) clearInterval(quizTimerInterval);
         
         let correctCount = 0;
+        let reviewHtml = "<h3>Жавоблар таҳлили:</h3>";
+
         currentTestQuestions.forEach((q, idx) => {
             let correctIdx = q.correct_option !== undefined ? q.correct_option : q.correct;
-            if (userAnswers[idx] === correctIdx) {
-                correctCount++;
-            }
+            let userAnsIdx = userAnswers[idx];
+            let isCorrect = (userAnsIdx === correctIdx);
+            
+            if (isCorrect) correctCount++;
+
+            let opts = q.options || [q.opt_0, q.opt_1, q.opt_2, q.opt_3];
+            let userAnsText = (userAnsIdx !== undefined && opts[userAnsIdx]) ? opts[userAnsIdx] : "Белгиланмаган";
+            let correctAnsText = opts[correctIdx] ? opts[correctIdx] : "Нўъмалум";
+
+            let qText = q.question_text || q.question || "";
+            let itemClass = isCorrect ? "review-item correct-ans" : "review-item wrong-ans";
+            let statusText = isCorrect ? "✅ Тўғри (+2 балл)" : "❌ Нотўғри";
+
+            reviewHtml += `<div class="${itemClass}">` +
+                `<b>${idx + 1}. ${qText}</b><br>` +
+                `<span style="color: ${isCorrect ? '#27ae60' : '#e74c3c'}; font-weight: bold;">${statusText}</span><br>` +
+                `Сизнинг жавобингиз: ${userAnsText}<br>` +
+                `Тўғри жавоб: <b>${correctAnsText}</b>` +
+                `</div>`;
         });
 
-        let totalQ = currentTestQuestions.length;
-        let percent = Math.round((correctCount / totalQ) * 100);
+        let totalScore = correctCount * 2;
+        let maxPossibleScore = currentTestQuestions.length * 2;
+        let percent = Math.round((correctCount / currentTestQuestions.length) * 100);
 
         document.getElementById('quiz-container').style.display = 'none';
         document.getElementById('result-box').style.display = 'block';
         
-        document.getElementById('score-text-val').innerText = `${correctCount} / ${totalQ} ball`;
+        document.getElementById('score-text-val').innerText = `${totalScore} / ${maxPossibleScore} балл`;
         document.getElementById('score-percent-val').innerText = `(${percent}%)`;
-        document.getElementById('score-text').innerText = `Сиз ${totalQ} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
+        document.getElementById('score-text').innerText = `Сиз ${currentTestQuestions.length} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
+        document.getElementById('answers-review').innerHTML = reviewHtml;
         
         if (typeof confetti === 'function') {
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
