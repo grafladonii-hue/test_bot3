@@ -586,13 +586,13 @@
             return;
         }
 
-        // SUPABASE BAZADAN TEKSHIRISH (Bot qaysi jadvalga yozsa, shu nomni qo'ying, masalan 'vip_users' yoki 'users')
+        // Tasdiqlangan VIP foydalanuvchilarni 'approved_users' jadvalidan 'user_id' orqali tekshiramiz
         if (currentUserId) {
             try {
                 const { data, error } = await supabaseClient
-                    .from('vip_users') 
+                    .from('approved_users') 
                     .select('*')
-                    .eq('user_id', currentUserId)
+                    .eq('user_id', Number(currentUserId))
                     .maybeSingle();
                 
                 if (data) {
