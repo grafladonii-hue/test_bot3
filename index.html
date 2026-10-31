@@ -246,7 +246,66 @@
         }
         .category-content { display: block; margin-top: 8px; }
 
-        /* РЕЙТИНГ ДИЗАЙНЛАРИ ВА ТОП-3 */
+        /* ⭐ ПОДИУМ ДИЗАЙНИ (ТОП-3 ШОҲСУПАСИ) */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding-top: 15px;
+        }
+        .podium-step {
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+            padding: 10px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .podium-1 {
+            order: 2;
+            background: linear-gradient(135deg, #fffdf0 0%, #fef3c7 100%);
+            border: 2px solid #fbbf24;
+            min-height: 130px;
+        }
+        .podium-2 {
+            order: 1;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #cbd5e1;
+            min-height: 110px;
+        }
+        .podium-3 {
+            order: 3;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 2px solid #f6ad55;
+            min-height: 95px;
+        }
+        .podium-avatar {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        .podium-name {
+            font-weight: bold;
+            font-size: 12px;
+            color: #2c3e50;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+        .podium-score {
+            font-size: 13px;
+            color: #16a34a;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        /* ОДДИЙ РЕЙТИНГ РЎЙХАТИ */
         .leaderboard-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -257,19 +316,6 @@
             justify-content: space-between;
             align-items: center;
             box-sizing: border-box;
-        }
-        .leaderboard-item.rank-1 {
-            background: linear-gradient(135deg, #fffdf0 0%, #fef3c7 100%);
-            border: 2px solid #fbbf24;
-            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
-        }
-        .leaderboard-item.rank-2 {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 2px solid #cbd5e1;
-        }
-        .leaderboard-item.rank-3 {
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            border: 2px solid #f6ad55;
         }
     </style>
 </head>
@@ -299,11 +345,17 @@
     <div id="rating-page" class="page">
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
         <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan barcha qatnashchilar natijalari:</p>
+        
+        <!-- ПОДИУМ (ТОП-3 ЎРИН) -->
+        <div id="podium-section"></div>
+
+        <!-- ҚОЛГАН РЎЙХАТ -->
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
+        
         <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
-            <button type="button" onclick="loadMoreLeaderboard()" style="background: #3498db; width: auto; padding: 10px 20px;">Yна 50 тани кўрсатиш</button>
+            <button type="button" onclick="loadMoreLeaderboard()" style="background: #3498db; width: auto; padding: 10px 20px;">Яна 50 тани кўрсатиш</button>
         </div>
     </div>
 
@@ -374,7 +426,6 @@
     var quizTimerInterval = null;
     var timeLeftSeconds = 90 * 60;
 
-    // Рейтингда ҳар сафар 50 тадан кўрсатиш учун ўзгарувчилар
     var allLeaderboardData = [];
     var leaderboardDisplayLimit = 50;
 
@@ -453,11 +504,14 @@
         return array;
     }
 
-    // РЕЙТИНГНИ ЮКЛАШ ВА 50 ТАДАН ОШИРИБ БОРИШ
+    // РЕЙТИНГНИ ЮКЛАШ ВА ПОДИУМНИ ТУЗИШ
     async function fetchLeaderboard() {
         var listContainer = document.getElementById("leaderboard-list");
+        var podiumContainer = document.getElementById("podium-section");
         if (!listContainer) return;
+
         listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
+        podiumContainer.innerHTML = "";
         leaderboardDisplayLimit = 50;
 
         try {
@@ -475,43 +529,68 @@
             }
 
             allLeaderboardData = data;
-            renderLeaderboardList();
+            renderPodiumAndList();
         } catch (err) {
             listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
         }
     }
 
-    function renderLeaderboardList() {
+    function renderPodiumAndList() {
+        var podiumContainer = document.getElementById("podium-section");
         var listContainer = document.getElementById("leaderboard-list");
         var loadMoreBtnContainer = document.getElementById("load-more-container");
-        
-        let sliceData = allLeaderboardData.slice(0, leaderboardDisplayLimit);
-        let html = "";
 
-        sliceData.forEach((item, index) => {
-            let rankClass = "";
-            let medal = "";
-            if (index === 0) {
-                rankClass = "rank-1";
-                medal = "🥇 ";
-            } else if (index === 1) {
-                rankClass = "rank-2";
-                medal = "🥈 ";
-            } else if (index === 2) {
-                rankClass = "rank-3";
-                medal = "🥉 ";
+        // 1. Подиум чиқариш (Агар камида 1 та одам бўлса)
+        let podiumHtml = "";
+        if (allLeaderboardData.length > 0) {
+            podiumHtml += '<div class="podium-container">';
+            
+            // 2-ўрин
+            if (allLeaderboardData[1]) {
+                podiumHtml += `<div class="podium-step podium-2">
+                    <div class="podium-avatar">🥈</div>
+                    <div class="podium-name">${allLeaderboardData[1].full_name}</div>
+                    <div class="podium-score">${allLeaderboardData[1].score} ball</div>
+                </div>`;
             }
 
-            html += '<div class="leaderboard-item ' + rankClass + '">' +
+            // 1-ўрин
+            if (allLeaderboardData[0]) {
+                podiumHtml += `<div class="podium-step podium-1">
+                    <div class="podium-avatar">🥇</div>
+                    <div class="podium-name">${allLeaderboardData[0].full_name}</div>
+                    <div class="podium-score">${allLeaderboardData[0].score} ball</div>
+                </div>`;
+            }
+
+            // 3-ўрин
+            if (allLeaderboardData[2]) {
+                podiumHtml += `<div class="podium-step podium-3">
+                    <div class="podium-avatar">🥉</div>
+                    <div class="podium-name">${allLeaderboardData[2].full_name}</div>
+                    <div class="podium-score">${allLeaderboardData[2].score} ball</div>
+                </div>`;
+            }
+
+            podiumHtml += '</div>';
+        }
+        podiumContainer.innerHTML = podiumHtml;
+
+        // 2. Қолган рўйхатни чиқариш (4-ўриндан бошлаб ёки ҳаммасини 50 тадан)
+        let sliceData = allLeaderboardData.slice(0, leaderboardDisplayLimit);
+        let listHtml = "";
+
+        sliceData.forEach((item, index) => {
+            let medal = index === 0 ? "🥇 " : (index === 1 ? "🥈 " : (index === 2 ? "🥉 " : ""));
+            listHtml += '<div class="leaderboard-item">' +
                 '<div><b>' + medal + (index + 1) + '. ' + item.full_name + '</b>' +
-                '<div style="font-size: 11px; color: #666; margin-left: ' + (index < 3 ? '20px' : '0') + ';">📊 ' + (item.tests_count || 1) + ' ta test</div></div>' +
+                '<div style="font-size: 11px; color: #666;">📊 ' + (item.tests_count || 1) + ' ta test</div></div>' +
                 '<div style="font-weight: bold; color: #16a34a; font-size: 15px;">' + item.score + ' ball</div>' +
                 '</div>';
         });
 
-        listContainer.innerHTML = html;
+        listContainer.innerHTML = listHtml;
 
-        // Агар яна кўрсатадиган одамлар қолган бўлса, тугмани чиқарамиз
         if (leaderboardDisplayLimit < allLeaderboardData.length) {
             loadMoreBtnContainer.style.display = "block";
         } else {
@@ -521,7 +600,7 @@
 
     function loadMoreLeaderboard() {
         leaderboardDisplayLimit += 50;
-        renderLeaderboardList();
+        renderPodiumAndList();
     }
 
     function startQuiz(testId) {
