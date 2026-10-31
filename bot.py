@@ -325,10 +325,18 @@ async def process_gemini_response(text_response: str, user_id: int, chat_id: int
             save_used_receipt(txn_id)
             save_approved_user(user_id)
              
+            # ⭐ Алоҳида VIP obuna тугмасини яратиш
+            vip_keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⭐ VIP obuna", web_app=WebAppInfo(url=WEB_APP_URL))]
+                ]
+            )
+
             await bot.edit_message_text(
-                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`\n\nЭнди Mini App'га кириб «⭐ VIP obuna bo'lish» тугмасини босинг, барча тестлар очилади!",
+                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`\n\nБарча тестлар очилди!",
                 chat_id=chat_id,
                 message_id=message_id,
+                reply_markup=vip_keyboard,
                 parse_mode="Markdown"
             )
         else:
