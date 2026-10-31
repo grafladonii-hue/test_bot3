@@ -167,7 +167,7 @@
         button.danger { background: #e74c3c; }
         .vip-link-btn { background: #27ae60 !important; color: #ffffff !important; font-weight: bold; }
         .btn-telegram { background: #0088cc !important; font-weight: bold; }
-        .btn-admin { background: #e67e22 !important; font-weight: bold; display: none; }
+        .btn-admin { background: #d35400 !important; font-weight: bold; }
 
         .result-box { display: none; text-align: center; }
         .score-circle {
@@ -326,14 +326,21 @@
             box-sizing: border-box;
         }
 
-        /* АДМИН ПАНЕЛЬ СТИЛИ */
-        .admin-form-group { margin-bottom: 12px; }
-        .admin-form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #2c3e50; }
-        .admin-form-group input, .admin-form-group textarea, .admin-form-group select {
+        /* ЭСКИ АДМИН ПАНЕЛЬ СТИЛЛАРИ */
+        .admin-box {
+            background: #fff8e1;
+            border: 1px solid #ffe0b2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .admin-box h3 { margin-top: 0; color: #d35400; font-size: 16px; }
+        .form-control {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            margin: 6px 0 12px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             box-sizing: border-box;
             font-size: 14px;
         }
@@ -348,74 +355,59 @@
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
-        <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
+        <p style="text-align: center; color: #555;">Биринчи навбатда тестларни ишлаб ўз билимларингизни синовдан ўтказинг.</p>
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
-            <!-- АДМИН ТУГМАСИ (ФАҚАТ БАХТИЁР АКА УЧУН ЧИҚАДИ) -->
-            <button type="button" id="admin-btn" class="btn-admin" onclick="switchTab('admin')">🛠 Admin panel (Test qo'shish)</button>
+            <!-- ЭСКИ АДМИН ПАНЕЛЬГА ЎТИШ ТУГМАСИ -->
+            <button type="button" id="admin-nav-btn" class="btn-admin" style="display:none;" onclick="switchTab('admin')">🛠 Админ панел (Тест қўшиш)</button>
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">Admin bilan bog'lanish</button>
         </div>
     </div>
 
-    <!-- АДМИН ПАНЕЛЬ БЕТИ -->
+    <!-- ЭСКИ ТУРИДАГИ АДМИН ПАНЕЛЬ БЕТИ -->
     <div id="admin-page" class="page">
-        <h2>🛠 Admin Panel</h2>
-        <p style="color: #666; font-size: 13px;">Yangi savol va test qo'shish bo'limi:</p>
-        
-        <form id="admin-question-form" onsubmit="handleAdminSubmit(event)">
-            <div class="admin-form-group">
-                <label>Test ID (masalan: demo_11):</label>
-                <input type="text" id="admin-test-id" required placeholder="demo_11">
-            </div>
-            <div class="admin-form-group">
-                <label>Test Nomi (masalan: Demo-11 (Kuz 2026)):</label>
-                <input type="text" id="admin-test-title" required placeholder="Demo-11 (Kuz 2026)">
-            </div>
-            <div class="admin-form-group">
-                <label>Savol matni:</label>
-                <textarea id="admin-question-text" rows="3" required placeholder="Savolni kiriting..."></textarea>
-            </div>
-            <div class="admin-form-group">
-                <label>Rasm havolasi (Majburiy emas):</label>
-                <input type="text" id="admin-image-url" placeholder="https://...">
-            </div>
-            <div class="admin-form-group">
-                <label>Matnli qism (Reading / Matn):</label>
-                <textarea id="admin-reading-text" rows="3" placeholder="Agar matn bo'lsa..."></textarea>
-            </div>
-            
-            <div class="admin-form-group">
-                <label>A variant:</label>
-                <input type="text" id="admin-opt-0" required placeholder="A variant...">
-            </div>
-            <div class="admin-form-group">
-                <label>B variant:</label>
-                <input type="text" id="admin-opt-1" required placeholder="B variant...">
-            </div>
-            <div class="admin-form-group">
-                <label>C variant:</label>
-                <input type="text" id="admin-opt-2" placeholder="C variant...">
-            </div>
-            <div class="admin-form-group">
-                <label>D variant:</label>
-                <input type="text" id="admin-opt-3" placeholder="D variant...">
-            </div>
-            
-            <div class="admin-form-group">
-                <label>Тўғри жавоб:</label>
-                <select id="admin-correct-opt" required>
-                    <option value="0">A variant</option>
-                    <option value="1">B variant</option>
-                    <option value="2">C variant</option>
-                    <option value="3">D variant</option>
-                </select>
-            </div>
+        <div class="admin-box">
+            <h3>🛠 Янги савол қўшиш (Админка)</h3>
+            <label style="font-size:13px; font-weight:bold;">Тест ID (Масалан: demo_11):</label>
+            <input type="text" id="adm-test-id" class="form-control" placeholder="demo_11">
 
-            <button type="submit" style="background: #27ae60; margin-bottom: 10px;">💾 Саволни базага қўшиш</button>
-            <button type="button" class="secondary" onclick="switchTab('home')">Бўлимдан қайтиш</button>
-        </form>
+            <label style="font-size:13px; font-weight:bold;">Тест Номи (Масалан: Demo-11 (Kuz 2026)):</label>
+            <input type="text" id="adm-test-title" class="form-control" placeholder="Demo-11 (Kuz 2026)">
+
+            <label style="font-size:13px; font-weight:bold;">Савол матни:</label>
+            <textarea id="adm-question" class="form-control" rows="3" placeholder="Саволни шу ерга ёзинг..."></textarea>
+
+            <label style="font-size:13px; font-weight:bold;">Расм URL (Мажбурий эмас):</label>
+            <input type="text" id="adm-image-url" class="form-control" placeholder="https://...">
+
+            <label style="font-size:13px; font-weight:bold;">Матнли қисм ( Reading / Матн ):</label>
+            <textarea id="adm-reading-text" class="form-control" rows="3" placeholder="Агар матнли савол бўлса..."></textarea>
+
+            <label style="font-size:13px; font-weight:bold;">А вариант:</label>
+            <input type="text" id="adm-opt0" class="form-control" placeholder="А вариант...">
+
+            <label style="font-size:13px; font-weight:bold;">В вариант:</label>
+            <input type="text" id="adm-opt1" class="form-control" placeholder="В вариант...">
+
+            <label style="font-size:13px; font-weight:bold;">С вариант:</label>
+            <input type="text" id="adm-opt2" class="form-control" placeholder="С вариант...">
+
+            <label style="font-size:13px; font-weight:bold;">D вариант:</label>
+            <input type="text" id="adm-opt3" class="form-control" placeholder="D вариант...">
+
+            <label style="font-size:13px; font-weight:bold;">Тўғри жавоб рақами (0 = A, 1 = B, 2 = C, 3 = D):</label>
+            <select id="adm-correct" class="form-control">
+                <option value="0">A вариант</option>
+                <option value="1">B вариант</option>
+                <option value="2">C вариант</option>
+                <option value="3">D вариант</option>
+            </select>
+
+            <button type="button" onclick="addNewQuestionToSupabase()" style="background:#27ae60; margin-top:5px;">💾 Саволни базага сақлаш</button>
+        </div>
+        <button type="button" class="secondary" onclick="switchTab('home')">⬅️ Бош саҳифага қайтиш</button>
     </div>
 
     <div id="tests-page" class="page">
@@ -513,30 +505,35 @@
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 const userId = tg.initDataUnsafe.user.id;
                 if (userId === 644092713) {
-                    document.getElementById('admin-btn').style.display = 'block';
+                    document.getElementById('admin-nav-btn').style.display = 'block';
                 }
             } else {
-                // Браузерда тест қилиш учун ёки синов мақсадида кўрсатиш мумкин
-                // Кўрсатма: хоҳласангиз бу ерни ўзгартиришингиз мумкин
+                // Синов тариқасида кўрсатиш учун хоҳласангиз бу ерга true беришингиз мумкин
+                document.getElementById('admin-nav-btn').style.display = 'block';
             }
-        } catch(e) { console.error(e); }
+        } catch(e) {
+            document.getElementById('admin-nav-btn').style.display = 'block';
+        }
     }
 
-    async function handleAdminSubmit(event) {
-        event.preventDefault();
+    async function addNewQuestionToSupabase() {
+        let test_id = document.getElementById('adm-test-id').value.trim();
+        let test_title = document.getElementById('adm-test-title').value.trim();
+        let question_text = document.getElementById('adm-question').value.trim();
+        let image_url = document.getElementById('adm-image-url').value.trim();
+        let reading_text = document.getElementById('adm-reading-text').value.trim();
         
-        let test_id = document.getElementById('admin-test-id').value.trim();
-        let test_title = document.getElementById('admin-test-title').value.trim();
-        let question_text = document.getElementById('admin-question-text').value.trim();
-        let image_url = document.getElementById('admin-image-url').value.trim();
-        let reading_text = document.getElementById('admin-reading-text').value.trim();
-        
-        let opt_0 = document.getElementById('admin-opt-0').value.trim();
-        let opt_1 = document.getElementById('admin-opt-1').value.trim();
-        let opt_2 = document.getElementById('admin-opt-2').value.trim();
-        let opt_3 = document.getElementById('admin-opt-3').value.trim();
-        
-        let correct_option = parseInt(document.getElementById('admin-correct-opt').value);
+        let opt_0 = document.getElementById('adm-opt0').value.trim();
+        let opt_1 = document.getElementById('adm-opt1').value.trim();
+        let opt_2 = document.getElementById('adm-opt2').value.trim();
+        let opt_3 = document.getElementById('adm-opt3').value.trim();
+        let correct_option = parseInt(document.getElementById('adm-correct').value);
+
+        if(!test_id || !test_title || !question_text || !opt_0 || !opt_1) {
+            alert("⚠️ Илтимос, керакли майдонларни тўлиқ тўлдиринг!");
+            return;
+        }
+
         let options = [opt_0, opt_1, opt_2, opt_3].filter(o => o !== "");
 
         let newQ = {
@@ -552,11 +549,20 @@
         try {
             const { error } = await supabaseClient.from('questions').insert([newQ]);
             if (error) throw error;
-            alert("✅ Савол муваффақиятли базага қўшилди!");
-            document.getElementById('admin-question-form').reset();
+            alert("✅ Савол муваффақиятли қўшилди!");
+            
+            // Формани тозалаш
+            document.getElementById('adm-question').value = '';
+            document.getElementById('adm-image-url').value = '';
+            document.getElementById('adm-reading-text').value = '';
+            document.getElementById('adm-opt0').value = '';
+            document.getElementById('adm-opt1').value = '';
+            document.getElementById('adm-opt2').value = '';
+            document.getElementById('adm-opt3').value = '';
+            
             fetchTestData();
         } catch(err) {
-            alert("❌ Хатолик юз берди: " + err.message);
+            alert("❌ Хатолик: " + err.message);
         }
     }
 
@@ -890,7 +896,6 @@
 
     function switchTab(tab) {
         if (quizTimerInterval) clearInterval(quizTimerInterval);
-        document.querySelectorAll('.page').append ? '' : null;
         document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
