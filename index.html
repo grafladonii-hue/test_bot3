@@ -172,11 +172,11 @@
         button.danger { background: #e74c3c; }
         
         .vip-link-btn {
-            background: #e67e22 !important;
+            background: #27ae60 !important;
             color: #ffffff !important;
             font-weight: bold;
         }
-        .vip-link-btn:hover { background: #d35400 !important; opacity: 0.9; }
+        .vip-link-btn:hover { background: #219653 !important; opacity: 0.9; }
 
         button.info { background: #2980b9; }
         button.dark { background: #34495e; }
@@ -525,7 +525,7 @@
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             
-            <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna bo'lish</button>
+            <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
 
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -954,7 +954,7 @@
         fetchLeaderboard(true);
     }
 
-    // ⭐ ТЎҒРИЛАНГАН checkAndOpenVip (Мутлақо хатосиз ва кафолатланган)
+    // ⭐ ТЎҒРИЛАНГАН checkAndOpenVip (Тўғридан-тўғри тестлар саҳифасига ўтказади)
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
@@ -962,8 +962,8 @@
         }
 
         localStorage.setItem('is_premium_user', 'true');
-        alert("Tabriklaymiz! Sizda VIP obuna muvaffaqiyatli faollashtirildi! 🎉");
-        renderTestsList();
+        alert("Sizda VIP obuna faol! Testlar bo'limiga o'tasiz. 🎉");
+        switchTab('tests');
     }
 
     function openVipBotDirect(e) {
