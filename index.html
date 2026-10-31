@@ -148,7 +148,7 @@
         .option-text { flex-grow: 1; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button, .vip-link-btn, .btn-telegram {
+        button, .vip-link-btn, .btn-telegram, .btn-admin {
             background: #27ae60;
             color: white;
             border: none;
@@ -167,6 +167,7 @@
         button.danger { background: #e74c3c; }
         .vip-link-btn { background: #27ae60 !important; color: #ffffff !important; font-weight: bold; }
         .btn-telegram { background: #0088cc !important; font-weight: bold; }
+        .btn-admin { background: #e67e22 !important; font-weight: bold; display: none; }
 
         .result-box { display: none; text-align: center; }
         .score-circle {
@@ -288,7 +289,6 @@
             border: 2px solid #f97316;
         }
         
-        /* ПОДИУМ УСТИDAGI РАҚАМЛАР БЕЗАКУЙИ */
         .podium-rank-badge {
             font-size: 13px;
             font-weight: 900;
@@ -298,23 +298,11 @@
             display: inline-block;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .podium-1 .podium-rank-badge {
-            background: #eab308;
-            color: #ffffff;
-        }
-        .podium-2 .podium-rank-badge {
-            background: #64748b;
-            color: #ffffff;
-        }
-        .podium-3 .podium-rank-badge {
-            background: #ea580c;
-            color: #ffffff;
-        }
+        .podium-1 .podium-rank-badge { background: #eab308; color: #ffffff; }
+        .podium-2 .podium-rank-badge { background: #64748b; color: #ffffff; }
+        .podium-3 .podium-rank-badge { background: #ea580c; color: #ffffff; }
 
-        .podium-avatar {
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
+        .podium-avatar { font-size: 16px; margin-bottom: 2px; }
         .podium-name {
             font-weight: bold;
             font-size: 11px;
@@ -324,14 +312,8 @@
             white-space: nowrap;
             width: 100%;
         }
-        .podium-score {
-            font-size: 12px;
-            color: #16a34a;
-            font-weight: bold;
-            margin-top: 2px;
-        }
+        .podium-score { font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 2px; }
 
-        /* ОДДИЙ РЕЙТИНГ РЎЙХАТИ (4-РАҚАМДАН БОШЛАНАДИ) */
         .leaderboard-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -342,6 +324,18 @@
             justify-content: space-between;
             align-items: center;
             box-sizing: border-box;
+        }
+
+        /* АДМИН ПАНЕЛЬ СТИЛИ */
+        .admin-form-group { margin-bottom: 12px; }
+        .admin-form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #2c3e50; }
+        .admin-form-group input, .admin-form-group textarea, .admin-form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -359,8 +353,69 @@
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
+            <!-- АДМИН ТУГМАСИ (ФАҚАТ БАХТИЁР АКА УЧУН ЧИҚАДИ) -->
+            <button type="button" id="admin-btn" class="btn-admin" onclick="switchTab('admin')">🛠 Admin panel (Test qo'shish)</button>
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">Admin bilan bog'lanish</button>
         </div>
+    </div>
+
+    <!-- АДМИН ПАНЕЛЬ БЕТИ -->
+    <div id="admin-page" class="page">
+        <h2>🛠 Admin Panel</h2>
+        <p style="color: #666; font-size: 13px;">Yangi savol va test qo'shish bo'limi:</p>
+        
+        <form id="admin-question-form" onsubmit="handleAdminSubmit(event)">
+            <div class="admin-form-group">
+                <label>Test ID (masalan: demo_11):</label>
+                <input type="text" id="admin-test-id" required placeholder="demo_11">
+            </div>
+            <div class="admin-form-group">
+                <label>Test Nomi (masalan: Demo-11 (Kuz 2026)):</label>
+                <input type="text" id="admin-test-title" required placeholder="Demo-11 (Kuz 2026)">
+            </div>
+            <div class="admin-form-group">
+                <label>Savol matni:</label>
+                <textarea id="admin-question-text" rows="3" required placeholder="Savolni kiriting..."></textarea>
+            </div>
+            <div class="admin-form-group">
+                <label>Rasm havolasi (Majburiy emas):</label>
+                <input type="text" id="admin-image-url" placeholder="https://...">
+            </div>
+            <div class="admin-form-group">
+                <label>Matnli qism (Reading / Matn):</label>
+                <textarea id="admin-reading-text" rows="3" placeholder="Agar matn bo'lsa..."></textarea>
+            </div>
+            
+            <div class="admin-form-group">
+                <label>A variant:</label>
+                <input type="text" id="admin-opt-0" required placeholder="A variant...">
+            </div>
+            <div class="admin-form-group">
+                <label>B variant:</label>
+                <input type="text" id="admin-opt-1" required placeholder="B variant...">
+            </div>
+            <div class="admin-form-group">
+                <label>C variant:</label>
+                <input type="text" id="admin-opt-2" placeholder="C variant...">
+            </div>
+            <div class="admin-form-group">
+                <label>D variant:</label>
+                <input type="text" id="admin-opt-3" placeholder="D variant...">
+            </div>
+            
+            <div class="admin-form-group">
+                <label>Тўғри жавоб:</label>
+                <select id="admin-correct-opt" required>
+                    <option value="0">A variant</option>
+                    <option value="1">B variant</option>
+                    <option value="2">C variant</option>
+                    <option value="3">D variant</option>
+                </select>
+            </div>
+
+            <button type="submit" style="background: #27ae60; margin-bottom: 10px;">💾 Саволни базага қўшиш</button>
+            <button type="button" class="secondary" onclick="switchTab('home')">Бўлимдан қайтиш</button>
+        </form>
     </div>
 
     <div id="tests-page" class="page">
@@ -372,10 +427,7 @@
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
         <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan barcha qatnashchilar natijalari:</p>
         
-        <!-- ПОДИУМ (ТОП-3 РАҚАМЛАРИ БИЛАН) -->
         <div id="podium-section"></div>
-
-        <!-- ҚОЛГАН РЎЙХАТ (4-РАҚАМДАН БОШЛАБ) -->
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
@@ -419,7 +471,6 @@
     </div>
 </div>
 
-<!-- Расмни катталаштириш учун модал ойна -->
 <div id="imageModal" class="image-modal" onclick="closeImageModal()">
     <span class="image-modal-close">&times;</span>
     <div class="image-modal-content-wrapper">
@@ -454,6 +505,60 @@
 
     var allLeaderboardData = [];
     var leaderboardDisplayLimit = 50;
+
+    // АДМИННИ ТЕКШИРИШ (ID: 644092713)
+    function checkAdminAccess() {
+        try {
+            const tg = window.Telegram && window.Telegram.WebApp;
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const userId = tg.initDataUnsafe.user.id;
+                if (userId === 644092713) {
+                    document.getElementById('admin-btn').style.display = 'block';
+                }
+            } else {
+                // Браузерда тест қилиш учун ёки синов мақсадида кўрсатиш мумкин
+                // Кўрсатма: хоҳласангиз бу ерни ўзгартиришингиз мумкин
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function handleAdminSubmit(event) {
+        event.preventDefault();
+        
+        let test_id = document.getElementById('admin-test-id').value.trim();
+        let test_title = document.getElementById('admin-test-title').value.trim();
+        let question_text = document.getElementById('admin-question-text').value.trim();
+        let image_url = document.getElementById('admin-image-url').value.trim();
+        let reading_text = document.getElementById('admin-reading-text').value.trim();
+        
+        let opt_0 = document.getElementById('admin-opt-0').value.trim();
+        let opt_1 = document.getElementById('admin-opt-1').value.trim();
+        let opt_2 = document.getElementById('admin-opt-2').value.trim();
+        let opt_3 = document.getElementById('admin-opt-3').value.trim();
+        
+        let correct_option = parseInt(document.getElementById('admin-correct-opt').value);
+        let options = [opt_0, opt_1, opt_2, opt_3].filter(o => o !== "");
+
+        let newQ = {
+            test_id: test_id,
+            test_title: test_title,
+            question_text: question_text,
+            image_url: image_url || null,
+            reading_text: reading_text || null,
+            options: options,
+            correct_option: correct_option
+        };
+
+        try {
+            const { error } = await supabaseClient.from('questions').insert([newQ]);
+            if (error) throw error;
+            alert("✅ Савол муваффақиятли базага қўшилди!");
+            document.getElementById('admin-question-form').reset();
+            fetchTestData();
+        } catch(err) {
+            alert("❌ Хатолик юз берди: " + err.message);
+        }
+    }
 
     async function fetchTestData() {
         try {
@@ -565,12 +670,10 @@
         var listContainer = document.getElementById("leaderboard-list");
         var loadMoreBtnContainer = document.getElementById("load-more-container");
 
-        // 1. Подиум (Тепасида 1, 2, 3 рақамлари билан)
         let podiumHtml = "";
         if (allLeaderboardData.length > 0) {
             podiumHtml += '<div class="podium-container">';
             
-            // 2-ўрин (Чапда)
             if (allLeaderboardData[1]) {
                 podiumHtml += `<div class="podium-step podium-2">
                     <div class="podium-rank-badge">2</div>
@@ -580,7 +683,6 @@
                 </div>`;
             }
 
-            // 1-ўрин (Марказда, энг баланд)
             if (allLeaderboardData[0]) {
                 podiumHtml += `<div class="podium-step podium-1">
                     <div class="podium-rank-badge">1</div>
@@ -590,7 +692,6 @@
                 </div>`;
             }
 
-            // 3-ўрин (Ўнгда)
             if (allLeaderboardData[2]) {
                 podiumHtml += `<div class="podium-step podium-3">
                     <div class="podium-rank-badge">3</div>
@@ -604,7 +705,6 @@
         }
         podiumContainer.innerHTML = podiumHtml;
 
-        // 2. Пастки рўйхат (4-ўриндан бошланади!)
         let remainingData = allLeaderboardData.slice(3, 3 + leaderboardDisplayLimit);
         let listHtml = "";
 
@@ -790,6 +890,7 @@
 
     function switchTab(tab) {
         if (quizTimerInterval) clearInterval(quizTimerInterval);
+        document.querySelectorAll('.page').append ? '' : null;
         document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
@@ -804,6 +905,8 @@
             fetchLeaderboard();
             document.getElementById('rating-page').classList.add('active');
             document.getElementById('nav-rating').classList.add('active');
+        } else if (tab === 'admin') {
+            document.getElementById('admin-page').classList.add('active');
         }
     }
 
@@ -819,6 +922,7 @@
     }
 
     window.onload = function() {
+        checkAdminAccess();
         fetchTestData();
     };
 </script>
