@@ -167,6 +167,7 @@
         button.danger { background: #e74c3c; }
         .vip-link-btn { background: #27ae60 !important; color: #ffffff !important; font-weight: bold; }
         .btn-telegram { background: #0088cc !important; font-weight: bold; }
+        .btn-admin { background: #8e44ad !important; font-weight: bold; }
 
         .result-box { display: none; text-align: center; }
         .score-circle {
@@ -246,7 +247,7 @@
         }
         .category-content { display: block; margin-top: 8px; }
 
-        /* ⭐ ПОДИУМ ДИЗАЙНИ (РАҚАМЛАРИ БИЛАН) */
+        /* ПОДИУМ ДИЗАЙНИ */
         .podium-container {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -269,26 +270,10 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.03);
             position: relative;
         }
-        .podium-1 {
-            grid-column: 2;
-            min-height: 145px;
-            background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
-            border: 2px solid #eab308;
-        }
-        .podium-2 {
-            grid-column: 1;
-            min-height: 120px;
-            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-            border: 2px solid #94a3b8;
-        }
-        .podium-3 {
-            grid-column: 3;
-            min-height: 100px;
-            background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
-            border: 2px solid #f97316;
-        }
+        .podium-1 { grid-column: 2; min-height: 145px; background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%); border: 2px solid #eab308; }
+        .podium-2 { grid-column: 1; min-height: 120px; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); border: 2px solid #94a3b8; }
+        .podium-3 { grid-column: 3; min-height: 100px; background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); border: 2px solid #f97316; }
         
-        /* ПОДИУМ УСТИDAGI РАҚАМЛАР БЕЗАКУЙИ */
         .podium-rank-badge {
             font-size: 13px;
             font-weight: 900;
@@ -298,40 +283,14 @@
             display: inline-block;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .podium-1 .podium-rank-badge {
-            background: #eab308;
-            color: #ffffff;
-        }
-        .podium-2 .podium-rank-badge {
-            background: #64748b;
-            color: #ffffff;
-        }
-        .podium-3 .podium-rank-badge {
-            background: #ea580c;
-            color: #ffffff;
-        }
+        .podium-1 .podium-rank-badge { background: #eab308; color: #ffffff; }
+        .podium-2 .podium-rank-badge { background: #64748b; color: #ffffff; }
+        .podium-3 .podium-rank-badge { background: #ea580c; color: #ffffff; }
 
-        .podium-avatar {
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-        .podium-name {
-            font-weight: bold;
-            font-size: 11px;
-            color: #1e293b;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            width: 100%;
-        }
-        .podium-score {
-            font-size: 12px;
-            color: #16a34a;
-            font-weight: bold;
-            margin-top: 2px;
-        }
+        .podium-avatar { font-size: 16px; margin-bottom: 2px; }
+        .podium-name { font-weight: bold; font-size: 11px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
+        .podium-score { font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 2px; }
 
-        /* ОДДИЙ РЕЙТИНГ РЎЙХАТИ (4-РАҚАМДАН БОШЛАНАДИ) */
         .leaderboard-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -342,6 +301,13 @@
             justify-content: space-between;
             align-items: center;
             box-sizing: border-box;
+        }
+
+        /* Админка стиллари */
+        .admin-form-group { margin-bottom: 12px; }
+        .admin-form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #444; }
+        .admin-form-group input, .admin-form-group textarea, .admin-form-group select {
+            width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 13px;
         }
     </style>
 </head>
@@ -360,7 +326,63 @@
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
             <button type="button" onclick="openAdminLink(event)" class="btn-telegram">Admin bilan bog'lanish</button>
+            <button type="button" onclick="checkAdminAccess()" class="btn-admin">⚙️ Admin Panel</button>
         </div>
+    </div>
+
+    <!-- Админка саҳифаси -->
+    <div id="admin-page" class="page">
+        <h2>⚙️ Admin Panel</h2>
+        <p style="font-size: 13px; color: #666;">Yangi savol қўшиш ёки мавжуд тестларни бошқариш.</p>
+        
+        <div class="admin-form-group">
+            <label>Test ID (масалан: demo_kuz_1)</label>
+            <input type="text" id="adm-test-id" placeholder="demo_kuz_1">
+        </div>
+        <div class="admin-form-group">
+            <label>Test Номи (масалан: 1-Демо тест (Куз 2026))</label>
+            <input type="text" id="adm-test-title" placeholder="1-Демо тест (Куз 2026)">
+        </div>
+        <div class="admin-form-group">
+            <label>Матн (Агар матнли савол бўлса)</label>
+            <textarea id="adm-reading-text" rows="3" placeholder="Матнни шу ерга киритинг..."></textarea>
+        </div>
+        <div class="admin-form-group">
+            <label>Савол матни</label>
+            <textarea id="adm-question" rows="2" placeholder="Савол..."></textarea>
+        </div>
+        <div class="admin-form-group">
+            <label>Расм URL (ихтиёрий)</label>
+            <input type="text" id="adm-image-url" placeholder="https://...">
+        </div>
+        <div class="admin-form-group">
+            <label>А вариант</label>
+            <input type="text" id="adm-opt-0" placeholder="Вариант А">
+        </div>
+        <div class="admin-form-group">
+            <label>Б вариант</label>
+            <input type="text" id="adm-opt-1" placeholder="Вариант Б">
+        </div>
+        <div class="admin-form-group">
+            <label>В вариант</label>
+            <input type="text" id="adm-opt-2" placeholder="Вариант В">
+        </div>
+        <div class="admin-form-group">
+            <label>Г вариант</label>
+            <input type="text" id="adm-opt-3" placeholder="Вариант Г">
+        </div>
+        <div class="admin-form-group">
+            <label>Тўғри жавоб индекси (0 - А, 1 - Б, 2 - В, 3 - Г)</label>
+            <select id="adm-correct">
+                <option value="0">0 (А)</option>
+                <option value="1">1 (Б)</option>
+                <option value="2">2 (В)</option>
+                <option value="3">3 (Г)</option>
+            </select>
+        </div>
+
+        <button type="button" onclick="saveQuestionToSupabase()" style="margin-top: 10px;">💾 Саволни базага қўшиш</button>
+        <button type="button" class="secondary" onclick="switchTab('home')" style="margin-top: 10px;">Бош саҳифага қайтиш</button>
     </div>
 
     <div id="tests-page" class="page">
@@ -372,10 +394,7 @@
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
         <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan barcha qatnashchilar natijalari:</p>
         
-        <!-- ПОДИУМ (ТОП-3 РАҚАМЛАРИ БИЛАН) -->
         <div id="podium-section"></div>
-
-        <!-- ҚОЛГАН РЎЙХАТ (4-РАҚАМДАН БОШЛАБ) -->
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
@@ -565,12 +584,10 @@
         var listContainer = document.getElementById("leaderboard-list");
         var loadMoreBtnContainer = document.getElementById("load-more-container");
 
-        // 1. Подиум (Тепасида 1, 2, 3 рақамлари билан)
         let podiumHtml = "";
         if (allLeaderboardData.length > 0) {
             podiumHtml += '<div class="podium-container">';
             
-            // 2-ўрин (Чапда)
             if (allLeaderboardData[1]) {
                 podiumHtml += `<div class="podium-step podium-2">
                     <div class="podium-rank-badge">2</div>
@@ -580,7 +597,6 @@
                 </div>`;
             }
 
-            // 1-ўрин (Марказда, энг баланд)
             if (allLeaderboardData[0]) {
                 podiumHtml += `<div class="podium-step podium-1">
                     <div class="podium-rank-badge">1</div>
@@ -590,7 +606,6 @@
                 </div>`;
             }
 
-            // 3-ўрин (Ўнгда)
             if (allLeaderboardData[2]) {
                 podiumHtml += `<div class="podium-step podium-3">
                     <div class="podium-rank-badge">3</div>
@@ -604,7 +619,6 @@
         }
         podiumContainer.innerHTML = podiumHtml;
 
-        // 2. Пастки рўйхат (4-ўриндан бошланади!)
         let remainingData = allLeaderboardData.slice(3, 3 + leaderboardDisplayLimit);
         let listHtml = "";
 
@@ -804,6 +818,66 @@
             fetchLeaderboard();
             document.getElementById('rating-page').classList.add('active');
             document.getElementById('nav-rating').classList.add('active');
+        } else if (tab === 'admin') {
+            document.getElementById('admin-page').classList.add('active');
+        }
+    }
+
+    function checkAdminAccess() {
+        let pwd = prompt("Админ паролини киритинг:");
+        if (pwd === "12345") { // Паролни ўзингизга мос равишда ўзгартиришингиз мумкин
+            switchTab('admin');
+        } else if (pwd !== null) {
+            alert("Парол нотўғри!");
+        }
+    }
+
+    async function saveQuestionToSupabase() {
+        let testId = document.getElementById('adm-test-id').value.trim();
+        let testTitle = document.getElementById('adm-test-title').value.trim();
+        let readingText = document.getElementById('adm-reading-text').value.trim();
+        let questionText = document.getElementById('adm-question').value.trim();
+        let imageUrl = document.getElementById('adm-image-url').value.trim();
+        let opt0 = document.getElementById('adm-opt-0').value.trim();
+        let opt1 = document.getElementById('adm-opt-1').value.trim();
+        let opt2 = document.getElementById('adm-opt-2').value.trim();
+        let opt3 = document.getElementById('adm-opt-3').value.trim();
+        let correctOption = parseInt(document.getElementById('adm-correct').value);
+
+        if (!testId || !questionText || !opt0 || !opt1) {
+            alert("Илтимос, мажбурий майдонларни тўлдиринг!");
+            return;
+        }
+
+        let newRow = {
+            test_id: testId,
+            test_title: testTitle || testId,
+            reading_text: readingText || null,
+            question_text: questionText,
+            image_url: imageUrl || null,
+            opt_0: opt0,
+            opt_1: opt1,
+            opt_2: opt2 || null,
+            opt_3: opt3 || null,
+            correct_option: correctOption
+        };
+
+        try {
+            const { data, error } = await supabaseClient.from('questions').insert([newRow]);
+            if (error) throw error;
+            alert("Савол муваффақиятли қўшилди! ✅");
+            
+            // Майдонларни тозалаш
+            document.getElementById('adm-question').value = "";
+            document.getElementById('adm-image-url').value = "";
+            document.getElementById('adm-opt-0').value = "";
+            document.getElementById('adm-opt-1').value = "";
+            document.getElementById('adm-opt-2').value = "";
+            document.getElementById('adm-opt-3').value = "";
+            fetchTestData();
+        } catch (err) {
+            console.error(err);
+            alert("Хатолик юз берди: " + err.message);
         }
     }
 
