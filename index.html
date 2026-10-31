@@ -246,7 +246,7 @@
         }
         .category-content { display: block; margin-top: 8px; }
 
-        /* ⭐ ПОДИУМ (ЭНИ АНИҚ ТЕНГ, БАЛАНДЛИГИ ФАРҚ ҚИЛАДИ ВА УЧ ХИЛ РАНГДА) */
+        /* ⭐ ПОДИУМ ДИЗАЙНИ (РАҚАМЛАРИ БИЛАН) */
         .podium-container {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -267,27 +267,52 @@
             align-items: center;
             box-sizing: border-box;
             box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            position: relative;
         }
         .podium-1 {
             grid-column: 2;
-            min-height: 140px;
+            min-height: 145px;
             background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
             border: 2px solid #eab308;
         }
         .podium-2 {
             grid-column: 1;
-            min-height: 115px;
+            min-height: 120px;
             background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
             border: 2px solid #94a3b8;
         }
         .podium-3 {
             grid-column: 3;
-            min-height: 95px;
+            min-height: 100px;
             background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
             border: 2px solid #f97316;
         }
+        
+        /* ПОДИУМ УСТИDAGI РАҚАМЛАР БЕЗАКУЙИ */
+        .podium-rank-badge {
+            font-size: 13px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-bottom: 4px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .podium-1 .podium-rank-badge {
+            background: #eab308;
+            color: #ffffff;
+        }
+        .podium-2 .podium-rank-badge {
+            background: #64748b;
+            color: #ffffff;
+        }
+        .podium-3 .podium-rank-badge {
+            background: #ea580c;
+            color: #ffffff;
+        }
+
         .podium-avatar {
-            font-size: 18px;
+            font-size: 16px;
             margin-bottom: 2px;
         }
         .podium-name {
@@ -347,7 +372,7 @@
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
         <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan barcha qatnashchilar natijalari:</p>
         
-        <!-- ПОДИУМ (ТОП-3) -->
+        <!-- ПОДИУМ (ТОП-3 РАҚАМЛАРИ БИЛАН) -->
         <div id="podium-section"></div>
 
         <!-- ҚОЛГАН РЎЙХАТ (4-РАҚАМДАН БОШЛАБ) -->
@@ -540,7 +565,7 @@
         var listContainer = document.getElementById("leaderboard-list");
         var loadMoreBtnContainer = document.getElementById("load-more-container");
 
-        // 1. Подиум (Grid орқали аниқ тенг энили устунлар)
+        // 1. Подиум (Тепасида 1, 2, 3 рақамлари билан)
         let podiumHtml = "";
         if (allLeaderboardData.length > 0) {
             podiumHtml += '<div class="podium-container">';
@@ -548,6 +573,7 @@
             // 2-ўрин (Чапда)
             if (allLeaderboardData[1]) {
                 podiumHtml += `<div class="podium-step podium-2">
+                    <div class="podium-rank-badge">2</div>
                     <div class="podium-avatar">🥈</div>
                     <div class="podium-name">${allLeaderboardData[1].full_name}</div>
                     <div class="podium-score">${allLeaderboardData[1].score} ball</div>
@@ -557,6 +583,7 @@
             // 1-ўрин (Марказда, энг баланд)
             if (allLeaderboardData[0]) {
                 podiumHtml += `<div class="podium-step podium-1">
+                    <div class="podium-rank-badge">1</div>
                     <div class="podium-avatar">🥇</div>
                     <div class="podium-name">${allLeaderboardData[0].full_name}</div>
                     <div class="podium-score">${allLeaderboardData[0].score} ball</div>
@@ -566,6 +593,7 @@
             // 3-ўрин (Ўнгда)
             if (allLeaderboardData[2]) {
                 podiumHtml += `<div class="podium-step podium-3">
+                    <div class="podium-rank-badge">3</div>
                     <div class="podium-avatar">🥉</div>
                     <div class="podium-name">${allLeaderboardData[2].full_name}</div>
                     <div class="podium-score">${allLeaderboardData[2].score} ball</div>
