@@ -259,7 +259,6 @@
         }
         .category-content { display: block; margin-top: 8px; }
 
-        /* ПОДИУМ ДИЗАЙНИ */
         .podium-container {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -315,7 +314,6 @@
             box-sizing: border-box;
         }
 
-        /* Админка элементлари стиллари */
         .admin-form input, .admin-form textarea, .admin-form select {
             width: 100%;
             padding: 10px;
@@ -518,7 +516,6 @@
     </div>
 </div>
 
-<!-- Расмни катталаштириш учун модал ойна -->
 <div id="imageModal" class="image-modal" onclick="closeImageModal()">
     <span class="image-modal-close">&times;</span>
     <div class="image-modal-content-wrapper">
@@ -574,7 +571,7 @@
     var isUserPremium = false;
 
     async function checkUserVipStatus() {
-        // Админ доимо VIP ҳуқуқига эга
+        // Фақат админ ёки URL да статус келса ёки базада VIP бўлсагина очилади
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
             isUserPremium = true;
             updateVipButtonUI();
@@ -582,33 +579,21 @@
             return;
         }
 
-        // URL ёки қисқа хотирада статус бўлса
         var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium' || localStorage.getItem('is_premium_user') === 'true') {
+        if (urlParams.get('status') === 'premium') {
             isUserPremium = true;
+            localStorage.setItem('is_premium_user', 'true');
             updateVipButtonUI();
             renderTestsList();
             return;
         }
 
-        // Акс ҳолда базадан (leaderboard ёки алоҳида обуна жадвалидан) текшириш
-        if (currentUserId) {
-            try {
-                const { data } = await supabaseClient
-                    .from('leaderboard')
-                    .select('score')
-                    .eq('user_id', currentUserId)
-                    .limit(1);
-                
-                // Масалан, агар базада мавжуд бўлса ёки VIP рўйхатида бўлса
-                // Ҳозирги мантиқда тест сотиб олганлар ёки натижаси борлар ёхуд махсус флаг текширилади
-                // Керак бўлса бу ерга алоҳида obuna таблицасини ҳам улашингиз мумкин.
-            } catch(e) {
-                console.log(e);
-            }
-        }
-        
+        // Локаль хотирани тозалаймиз (агар базадан ўчирилган бўлса автоматик ўчиши учун)
+        // Бу ерда сиз хоҳласангиз supabase'даги ўз VIP жадвалингиздан текширишингиз мумкин.
+        // Ҳозирча оддий оддий фойдаланувчилар учун бепул қилиб қўйилди:
         isUserPremium = false;
+        localStorage.removeItem('is_premium_user');
+
         updateVipButtonUI();
         renderTestsList();
     }
@@ -672,7 +657,6 @@
             if (!t || hiddenTests[id]) return;
 
             var testNum = extractTestNum(id);
-            // Дастлабки 3 та тест бепул, қолганлари VIP учун
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
