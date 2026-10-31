@@ -740,7 +740,209 @@
 
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
-    // ⭐ БАЗАДАН ПРЕМИУМНИ ТЕКШИРИШ ВА ОЧИШ ФУНКЦИЯСИ
+    // ⭐ TURNIR VAXTINI HISOBLOVCHI FUNKSIYA (Qo'shildi)
+    function startTournamentCountdown() {
+        if (tournamentInterval) clearInterval(tournamentInterval);
+
+        var countdownEl = document.getElementById("tour-countdown");
+        var statusEl = document.getElementById("tour-status");
+        var btnEl = document.getElementById("tour-btn");
+        var tourTitleEl = document.getElementById("tour-title");
+
+        if (!countdownEl) return;
+
+        if (!window.tournamentStartTime) {
+            if (tourTitleEl) tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
+            if (statusEl) statusEl.innerText = "🔴 Jonli test davom etmoqda!";
+            if (countdownEl) countdownEl.style.display = "none";
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.style.background = "#27ae60"; 
+                btnEl.innerText = "Qo'shilish";
+                btnEl.onclick = joinTournament;
+            }
+            return;
+        }
+
+        countdownEl.style.display = "block";
+
+        tournamentInterval = setInterval(function() {
+            var now = new Date().getTime();
+            var targetTime = new Date(window.tournamentStartTime).getTime();
+            
+            var activeTestKey = window.currentTournamentTestKey || 'demo_8';
+            var totalQuestions = (testData[activeTestKey] && testData[activeTestKey].questionsCount) ? testData[activeTestKey].questionsCount : 10;
+            var totalTournamentDuration = totalQuestions * 120 * 1000; 
+            var endTime = targetTime + totalTournamentDuration;
+
+            if (now >= endTime) {
+                clearInterval(tournamentInterval);
+                if (tourTitleEl) tourTitleEl.innerText = "🏁 Jonli turnir yakunlandi";
+                if (statusEl) statusEl.innerText = "🔴 Jonli test o'z nihoyasiga yetdi!";
+                if (countdownEl) countdownEl.style.display = "none";
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.style.background = "#2980b9"; 
+                    btnEl.innerText = "Natijalarni ko'rish";
+                    btnEl.onclick = function() {
+                        showTournamentResults(window.currentTournamentTestKey || 'demo_8');
+                    };
+                }
+            } else if (now >= targetTime) {
+                if (tourTitleEl) tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
+                if (statusEl) statusEl.innerText = "🔴 Jonli test boshlandi!";
+                if (countdownEl) countdownEl.innerText = "Amalda!";
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.style.background = "#27ae60"; 
+                    btnEl.innerText = "Qo'shilish";
+                    btnEl.onclick = joinTournament;
+                }
+            } else {
+                var distance = targetTime - now;
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                if (tourTitleEl) tourTitleEl.innerText = "🎯 Jonli turnir (Sinov)";
+                if (countdownEl) countdownEl.innerText = String(hours).padStart(2, '0') + ":" + String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+                if (statusEl) statusEl.innerText = "⏳ Turnir boshlanishiga:";
+                if (countdownEl) countdownEl.style.display = "block";
+                if (btnEl) {
+                    btnEl.disabled = true;
+                    btnEl.style.background = "#bdc3c7";
+                    btnEl.innerText = "Boshlanmagan";
+                    btnEl.onclick = null;
+                }
+            }
+        }, 1000);
+    }
+
+    function joinTournament() {
+        if (typeof startQuiz === 'function') {
+            startQuiz(window.currentTournamentTestKey || 'demo_8', true);
+        }
+    }
+
+    var leaderboardLimit = 50;
+
+    // ⭐ REYTINGNI YUKLOVCHI FUNKSIYA (Qo'shildi)
+    async function fetchLeaderboard(isLoadMore = false) {
+        var listContainer = document.getElementById("leaderboard-list");
+        var podiumContainer = document.getElementById("podium-section");
+        var loadMoreContainer = document.getElementById("load-more-container");
+        
+        if (!listContainer) return;
+
+        if (!isLoadMore) {
+            leaderboardLimit = 50;
+            if (podiumContainer) podiumContainer.innerHTML = "";
+            listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
+        }
+
+        try {
+            const { data, error, count } = await supabaseClient
+                .from('leaderboard')
+                .select('*', { count: 'exact' })
+                .eq('test_key', 'general')
+                .order('score', { ascending: false })
+                .limit(leaderboardLimit);
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                if (podiumContainer) podiumContainer.innerHTML = "";
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha umumiy reyting natijalari yo'q.</p>";
+                if (loadMoreContainer) loadMoreContainer.style.display = "none";
+                return;
+            }
+
+            let podiumHtml = "";
+            let top3Users = data.slice(0, 3);
+            
+            if (top3Users.length > 0 && podiumContainer) {
+                podiumHtml += '<div class="podium-container">';
+                
+                if (top3Users[1]) {
+                    let u2 = top3Users[1];
+                    podiumHtml += '<div class="podium-item second">' +
+                        '<div class="podium-rank-badge">🥈 2-o\'rin</div>' +
+                        '<div class="podium-avatar">2</div>' +
+                        '<div class="podium-name" title="' + u2.full_name + '">' + u2.full_name + '</div>' +
+                        '<div class="podium-score">' + u2.score + ' ball</div>' +
+                        '<div class="podium-info">' + (u2.tests_count || 1) + ' test</div>' +
+                        '</div>';
+                }
+
+                if (top3Users[0]) {
+                    let u1 = top3Users[0];
+                    podiumHtml += '<div class="podium-item first">' +
+                        '<div class="podium-rank-badge">👑 1-o\'rin</div>' +
+                        '<div class="podium-avatar">1</div>' +
+                        '<div class="podium-name" title="' + u1.full_name + '">' + u1.full_name + '</div>' +
+                        '<div class="podium-score">' + u1.score + ' ball</div>' +
+                        '<div class="podium-info">' + (u1.tests_count || 1) + ' test</div>' +
+                        '</div>';
+                }
+
+                if (top3Users[2]) {
+                    let u3 = top3Users[2];
+                    podiumHtml += '<div class="podium-item third">' +
+                        '<div class="podium-rank-badge">🥉 3-o\'rin</div>' +
+                        '<div class="podium-avatar">3</div>' +
+                        '<div class="podium-name" title="' + u3.full_name + '">' + u3.full_name + '</div>' +
+                        '<div class="podium-score">' + u3.score + ' ball</div>' +
+                        '<div class="podium-info">' + (u3.tests_count || 1) + ' test</div>' +
+                        '</div>';
+                }
+
+                podiumHtml += '</div>';
+                podiumContainer.innerHTML = podiumHtml;
+            }
+
+            let remainingUsers = data.slice(3);
+            if (remainingUsers.length === 0) {
+                listContainer.innerHTML = "";
+            } else {
+                var html = "";
+                remainingUsers.forEach((item, index) => {
+                    var rankNum = index + 4;
+                    var tCount = item.tests_count || 1;
+                    var tSpent = item.time_spent || '0 son';
+
+                    html += '<div class="leaderboard-item">' +
+                        '<div style="display: flex; align-items: center; gap: 8px; min-width: 0;">' +
+                        '<div style="font-weight: 800; color: #64748b; width: 20px; text-align: center; flex-shrink: 0;">' + rankNum + '</div>' +
+                        '<div style="min-width: 0;"><b style="color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + item.full_name + '</b>' +
+                        '<div style="font-size: 11px; color: #64748b; margin-top: 2px;">📊 ' + tCount + ' ta test • ⏱ ' + tSpent + '</div></div>' +
+                        '</div>' +
+                        '<div style="font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 8px; border-radius: 20px; font-size: 12px; flex-shrink: 0;">' + item.score + ' ball</div>' +
+                        '</div>';
+                });
+                listContainer.innerHTML = html;
+            }
+
+            if (loadMoreContainer) {
+                if (count && leaderboardLimit < count) {
+                    loadMoreContainer.style.display = "block";
+                    var btnMore = document.getElementById("load-more-btn");
+                    if (btnMore) btnMore.innerText = "Yana 50 ta (" + (count - leaderboardLimit) + " ta qoldi)";
+                } else {
+                    loadMoreContainer.style.display = "none";
+                }
+            }
+        } catch (err) {
+            console.error("Reytingni olishda xato:", err);
+            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
+        }
+    }
+
+    function loadMoreLeaderboard() {
+        leaderboardLimit += 50;
+        fetchLeaderboard(true);
+    }
+
+    // ⭐ BAZADАН ПРЕМИУМНИ ТЕКШИРИШ ВА ОЧИШ ФУНКЦИЯСИ
     async function checkAndOpenVip(e) {
         if (e) {
             e.preventDefault();
@@ -753,7 +955,6 @@
             return;
         }
 
-        // Админ ёки олдин тасдиқланган бўлса
         if (String(currentUserId) === String(ADMIN_ID) || localStorage.getItem('is_premium_user') === 'true') {
             alert("Sizda allaqachon VIP obuna faol!");
             renderTestsList();
@@ -761,7 +962,6 @@
         }
 
         try {
-            // Supabase базасидан фойдаланувчи тўловини текширамиз (masalan: subscriptions jadvali)
             const { data, error } = await supabaseClient
                 .from('subscriptions')
                 .select('*')
@@ -773,7 +973,6 @@
                 alert("Tabriklaymiz! Sizning avvalgi VIP obunangiz bazadan topildi va faollashtirildi! 🎉");
                 renderTestsList();
             } else {
-                // Агар базада топилмаса — тўлов қилиш учун ботга йўналтирамиз
                 openVipBotDirect();
             }
         } catch (err) {
