@@ -404,12 +404,9 @@
     function displayQuestion() {
         let q = currentTestQuestions[currentQuestionIndex];
         
-        // Савол матнидан HTML тегларини тозалаб чиқариш
         let rawQText = q.question_text || q.question || "";
-        document.getElementById('question-box.innerHTML') = `<b>${currentQuestionIndex + 1}.</b> ` + rawQText;
         document.getElementById('question-box').innerHTML = `<b>${currentQuestionIndex + 1}.</b> ` + rawQText;
 
-        // Rasm
         let imgContainer = document.getElementById('question-img-container');
         if (q.image_url) {
             imgContainer.innerHTML = `<img src="${q.image_url}" class="question-img" alt="Rasm">`;
@@ -417,7 +414,6 @@
             imgContainer.innerHTML = '';
         }
 
-        // Matn
         let textBox = document.getElementById('reading-text-box');
         if (q.reading_text) {
             textBox.style.display = 'block';
@@ -426,7 +422,6 @@
             textBox.style.display = 'none';
         }
 
-        // Variantlar
         let opts = q.options || [q.opt_0, q.opt_1, q.opt_2, q.opt_3];
         let optHtml = '';
         opts.forEach((opt, idx) => {
