@@ -63,8 +63,71 @@
             display: block;
             border: 1px solid #ddd;
             cursor: pointer;
+            transition: 0.2s;
         }
+        .question-img:hover { opacity: 0.95; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
         
+        /* Расмни катталаштириш (Modal) ойнаси */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            overflow: hidden;
+            touch-action: none;
+        }
+        .image-modal-content-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .image-modal img {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 6px;
+            object-fit: contain;
+            cursor: grab;
+            transition: transform 0.1s ease-out;
+        }
+        .image-modal img:active { cursor: grabbing; }
+        .image-modal-close {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            color: #fff;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0,0,0,0.6);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .zoom-hint {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
         .options label {
             display: flex;
             justify-content: space-between;
@@ -114,17 +177,11 @@
             align-items: center;
             justify-content: center;
             margin: 20px auto;
-            font-size: 26px;
-            font-weight: bold;
-            color: #27ae60;
             background: #f4f9f4;
         }
-        .score-percent {
-            font-size: 13px;
-            color: #27ae60;
-            font-weight: normal;
-            margin-top: 4px;
-        }
+        .score-num { font-size: 32px; font-weight: bold; color: #27ae60; line-height: 1; }
+        .score-word { font-size: 14px; font-weight: bold; color: #27ae60; text-transform: lowercase; margin-top: 4px; }
+        .score-percent { font-size: 12px; color: #7f8c8d; font-weight: normal; margin-top: 2px; }
 
         .review-item {
             text-align: left;
@@ -165,13 +222,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .test-card button {
-            width: 110px;
-            padding: 8px 10px;
-            font-size: 13px;
-            font-weight: bold;
-            border-radius: 6px;
-        }
+        .test-card button { width: 110px; padding: 8px 10px; font-size: 13px; font-weight: bold; border-radius: 6px; }
         .page { display: none; }
         .page.active { display: block; }
         .brand-header { text-align: center; margin-bottom: 20px; }
@@ -257,7 +308,8 @@
         <div class="result-box" id="result-box">
             <h2>Test yakunlandi!</h2>
             <div class="score-circle" id="score-circle">
-                <span id="score-text-val">0 балл</span>
+                <span class="score-num" id="score-num-val">0</span>
+                <span class="score-word">ball</span>
                 <span class="score-percent" id="score-percent-val">(0%)</span>
             </div>
             <p id="score-text"></p>
@@ -267,6 +319,15 @@
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
     </div>
+</div>
+
+<!-- Расмни катталаштириш учун модал ойна -->
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <span class="image-modal-close">&times;</span>
+    <div class="image-modal-content-wrapper">
+        <img id="modalImage" src="" alt="Zoom Image">
+    </div>
+    <div class="zoom-hint">Kattalashtirish uchun ikki marta bosing yoki suring</div>
 </div>
 
 <div class="nav-bar">
@@ -292,6 +353,11 @@
     var userAnswers = {};
     var quizTimerInterval = null;
     var timeLeftSeconds = 90 * 60;
+
+    // Zoom ўзгарувчилари
+    let currentScale = 1;
+    let isDragging = false;
+    let startX = 0, startY = 0, translateX = 0, translateY = 0;
 
     async function fetchTestData() {
         try {
@@ -358,6 +424,17 @@
         document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
     }
 
+    // Саволларни тасодифий аралаштириш (Fisher-Yates shuffle)
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            let temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+        return array;
+    }
+
     async function fetchLeaderboard() {
         var listContainer = document.getElementById("leaderboard-list");
         if (!listContainer) return;
@@ -396,7 +473,10 @@
             alert("Bu тестда ҳали саволлар йўқ!");
             return;
         }
-        currentTestQuestions = testData[testId].questions;
+        // Тест бошланганда саволлар тартибини аралаштирамиз
+        let originalQuestions = [...testData[testId].questions];
+        currentTestQuestions = shuffleArray(originalQuestions);
+
         currentQuestionIndex = 0;
         userAnswers = {};
         timeLeftSeconds = 90 * 60;
@@ -434,7 +514,7 @@
 
         let imgContainer = document.getElementById('question-img-container');
         if (q.image_url) {
-            imgContainer.innerHTML = `<img src="${q.image_url}" class="question-img" alt="Rasm">`;
+            imgContainer.innerHTML = `<img src="${q.image_url}" class="question-img" alt="Rasm" onclick="openImageModal('${q.image_url}')">`;
         } else {
             imgContainer.innerHTML = '';
         }
@@ -459,6 +539,51 @@
         document.getElementById('prev-btn').style.display = currentQuestionIndex === 0 ? 'none' : 'block';
         document.getElementById('next-btn').innerText = currentQuestionIndex === currentTestQuestions.length - 1 ? 'Yakunlash' : 'Keyingi';
     }
+
+    // Расмни очиш ва зум қилиш функциялари
+    function openImageModal(imgSrc) {
+        let modal = document.getElementById('imageModal');
+        let modalImg = document.getElementById('modalImage');
+        modal.style.display = 'flex';
+        modalImg.src = imgSrc;
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateImageTransform(modalImg);
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    function updateImageTransform(img) {
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    }
+
+    // Модал ойна ичидаги расмга зум қилиш (колесо ва тап орқали)
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalImg = document.getElementById('modalImage');
+        if (modalImg) {
+            modalImg.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentScale = currentScale === 1 ? 2.2 : 1;
+                translateX = 0;
+                translateY = 0;
+                updateImageTransform(modalImg);
+            });
+
+            modalImg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    currentScale = Math.min(currentScale + 0.3, 4);
+                } else {
+                    currentScale = Math.max(currentScale - 0.3, 1);
+                    if (currentScale === 1) { translateX = 0; translateY = 0; }
+                }
+                updateImageTransform(modalImg);
+            });
+        }
+    });
 
     function selectOption(idx) {
         userAnswers[currentQuestionIndex] = idx;
@@ -515,8 +640,7 @@
         document.getElementById('quiz-container').style.display = 'none';
         document.getElementById('result-box').style.display = 'block';
         
-        // Айлана ичида фақат балл чиқарилди
-        document.getElementById('score-text-val').innerText = `${totalScore} балл`;
+        document.getElementById('score-num-val').innerText = totalScore;
         document.getElementById('score-percent-val').innerText = `(${percent}%)`;
         document.getElementById('score-text').innerText = `Сиз ${currentTestQuestions.length} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
         document.getElementById('answers-review').innerHTML = reviewHtml;
