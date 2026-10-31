@@ -114,7 +114,7 @@
             align-items: center;
             justify-content: center;
             margin: 20px auto;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             color: #27ae60;
             background: #f4f9f4;
@@ -257,7 +257,7 @@
         <div class="result-box" id="result-box">
             <h2>Test yakunlandi!</h2>
             <div class="score-circle" id="score-circle">
-                <span id="score-text-val">0 ball</span>
+                <span id="score-text-val">0 балл</span>
                 <span class="score-percent" id="score-percent-val">(0%)</span>
             </div>
             <p id="score-text"></p>
@@ -510,13 +510,13 @@
         });
 
         let totalScore = correctCount * 2;
-        let maxPossibleScore = currentTestQuestions.length * 2;
         let percent = Math.round((correctCount / currentTestQuestions.length) * 100);
 
         document.getElementById('quiz-container').style.display = 'none';
         document.getElementById('result-box').style.display = 'block';
         
-        document.getElementById('score-text-val').innerText = `${totalScore} / ${maxPossibleScore} балл`;
+        // Айлана ичида фақат балл чиқарилди
+        document.getElementById('score-text-val').innerText = `${totalScore} балл`;
         document.getElementById('score-percent-val').innerText = `(${percent}%)`;
         document.getElementById('score-text').innerText = `Сиз ${currentTestQuestions.length} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
         document.getElementById('answers-review').innerHTML = reviewHtml;
