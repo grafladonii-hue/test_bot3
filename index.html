@@ -43,7 +43,7 @@
             font-weight: bold;
         }
         .timer { color: #e74c3c; font-size: 16px; }
-        .question-box { margin-bottom: 20px; }
+        .question-box { margin-bottom: 20px; font-size: 15px; line-height: 1.4; }
         .text-box {
             background: #f8f9fa;
             border-left: 4px solid #27ae60;
@@ -63,75 +63,8 @@
             display: block;
             border: 1px solid #ddd;
             cursor: pointer;
-            transition: 0.2s;
-        }
-        .question-img:hover {
-            opacity: 0.95;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
-        .image-modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
-            overflow: hidden;
-            touch-action: none;
-        }
-        .image-modal-content-wrapper {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .image-modal img {
-            max-width: 90%;
-            max-height: 85vh;
-            border-radius: 6px;
-            object-fit: contain;
-            cursor: grab;
-            transform-origin: center center;
-            will-change: transform;
-        }
-        .image-modal img:active { cursor: grabbing; }
-        .image-modal-close {
-            position: fixed;
-            top: 15px;
-            right: 20px;
-            color: #fff;
-            font-size: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            background: rgba(0,0,0,0.6);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        .zoom-hint {
-            position: fixed;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            pointer-events: none;
-            z-index: 10000;
-        }
-
         .options label {
             display: flex;
             justify-content: space-between;
@@ -148,9 +81,8 @@
         .options label:hover { background: #eef2f7; }
         .options input { margin-right: 10px; }
         .option-text { flex-grow: 1; }
-        .option-percent { font-size: 12px; font-weight: bold; color: #555; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; }
         
-        .btn-group { display: flex; gap: 10px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button, .vip-link-btn, .btn-telegram {
             background: #27ae60;
             color: white;
@@ -161,8 +93,6 @@
             cursor: pointer;
             width: 100%;
             transition: 0.2s;
-            position: relative;
-            z-index: 10;
             text-align: center;
             text-decoration: none;
             box-sizing: border-box;
@@ -170,32 +100,8 @@
         }
         button.secondary { background: #95a5a6; }
         button.danger { background: #e74c3c; }
-        
-        .vip-link-btn {
-            background: #27ae60 !important;
-            color: #ffffff !important;
-            font-weight: bold;
-        }
-        .vip-link-btn:hover { background: #219653 !important; opacity: 0.9; }
-
-        button.info { background: #2980b9; }
-        button.dark { background: #34495e; }
-        button:hover, .btn-telegram:hover, .vip-link-btn:hover { opacity: 0.9; }
-        button:disabled { background: #bdc3c7; cursor: not-allowed; }
-        
-        .btn-telegram {
-            background: #0088cc !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: bold;
-        }
-
-        .options label.correct-answer { background: #2ed573 !important; color: white; border-color: #2ed573; }
-        .options label.correct-answer .option-percent { background: rgba(255,255,255,0.3); color: white; }
-        .options label.wrong-answer { background: #ff4757 !important; color: white; border-color: #ff4757; }
-        .options label.wrong-answer .option-percent { background: rgba(255,255,255,0.3); color: white; }
+        .vip-link-btn { background: #27ae60 !important; color: #ffffff !important; font-weight: bold; }
+        .btn-telegram { background: #0088cc !important; font-weight: bold; }
 
         .result-box { display: none; text-align: center; }
         .score-circle {
@@ -212,15 +118,6 @@
             color: #27ae60;
             background: #f4f9f4;
         }
-        .result-item {
-            text-align: left;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -247,15 +144,12 @@
             justify-content: space-between;
             align-items: center;
         }
-        .test-card .vip-link-btn, .test-card button {
+        .test-card button {
             width: 110px;
             padding: 8px 10px;
             font-size: 13px;
             font-weight: bold;
             border-radius: 6px;
-            text-align: center;
-            white-space: nowrap;
-            flex-shrink: 0;
         }
         .page { display: none; }
         .page.active { display: block; }
@@ -263,118 +157,6 @@
         .brand-header h2 { margin: 0; font-size: 24px; color: #2c3e50; }
         .brand-header p.sub-title { margin: 5px 0 0; font-size: 13px; color: #7f8c8d; }
         
-        .podium-container {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            gap: 6px;
-            margin: 20px 0 15px;
-            padding-top: 15px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .podium-item {
-            background: #ffffff;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px 6px;
-            text-align: center;
-            flex: 1;
-            min-width: 0;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-            box-sizing: border-box;
-        }
-        .podium-item.first {
-            background: linear-gradient(135deg, #fffdf0 0%, #fef3c7 100%);
-            border-color: #fbbf24;
-            transform: translateY(-10px);
-            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.15);
-            z-index: 2;
-        }
-        .podium-item.second {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-color: #cbd5e1;
-        }
-        .podium-item.third {
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            border-color: #f6ad55;
-        }
-        
-        .podium-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 20px;
-            margin: 0 auto 8px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
-        }
-        .podium-item.first .podium-avatar { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .podium-item.second .podium-avatar { background: linear-gradient(135deg, #64748b, #475569); }
-        .podium-item.third .podium-avatar { background: linear-gradient(135deg, #d97706, #b45309); }
-        
-        .podium-name {
-            font-size: 11px;
-            font-weight: 700;
-            color: #1e293b;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-            width: 100%;
-        }
-        .podium-score {
-            font-size: 12px;
-            font-weight: 800;
-            color: #16a34a;
-            background: #dcfce7;
-            padding: 2px 6px;
-            border-radius: 12px;
-            display: inline-block;
-        }
-        .podium-info {
-            font-size: 9px;
-            color: #64748b;
-            margin-top: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .podium-rank-badge {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 9px;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 8px;
-            white-space: nowrap;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .podium-item.first .podium-rank-badge { background: #f59e0b; }
-        .podium-item.second .podium-rank-badge { background: #64748b; }
-        .podium-item.third .podium-rank-badge { background: #d97706; }
-
-        .leaderboard-item {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 10px 12px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            box-sizing: border-box;
-        }
-
         .category-header {
             background: #f1f8f5;
             border-left: 4px solid #27ae60;
@@ -387,10 +169,7 @@
             align-items: center;
             font-weight: bold;
             color: #2c3e50;
-            user-select: none;
-            transition: 0.2s;
         }
-        .category-header:hover { background: #e1f3ec; }
         .category-content { display: block; margin-top: 8px; }
     </style>
 </head>
@@ -403,25 +182,12 @@
             <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
-        <div id="tournament-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px; color: white; margin-bottom: 20px; text-align: center; display: block;">
-            <h3 id="tour-title" style="margin: 0 0 5px 0; font-size: 16px;">🎯 Jonli turnir (Sinov)</h3>
-            <p id="tour-status" style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.9;">⏳ Turnir boshlanishiga:</p>
-            <div id="tour-countdown" style="font-size: 18px; font-weight: bold; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;">00:00:00</div>
-            <button id="tour-btn" onclick="joinTournament()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-block; width: auto;" disabled>Qo'shilish (Boshlanmagan)</button>
-        </div>
-
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
         
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <button type="button" onclick="switchTab('tests')">📝 Testlarni boshlash</button>
             <button type="button" class="vip-link-btn" onclick="checkAndOpenVip(event)">⭐ VIP obuna faol ✅</button>
-            <button type="button" onclick="openAdminLink(event)" class="btn-telegram">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-                Admin bilan bog'lanish
-            </button>
+            <button type="button" onclick="openAdminLink(event)" class="btn-telegram">Admin bilan bog'lanish</button>
         </div>
     </div>
 
@@ -430,35 +196,28 @@
         <div id="tests-list"><p style="text-align: center; color: #888;">Yuklanmoqda...</p></div>
     </div>
 
-    <div id="rating-page" class="page">
-        <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
-        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan qatnashchilar natijalari:</p>
-        <div id="podium-section"></div>
-        <div id="leaderboard-list" style="margin-top: 15px;">
-            <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
-        </div>
-        <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
-            <button type="button" class="secondary" onclick="loadMoreLeaderboard()" style="width: auto; padding: 10px 20px;" id="load-more-btn">Yana 50 ta</button>
-        </div>
-    </div>
-
     <div id="quiz-page" class="page">
         <div class="header">
-            <span id="quiz-title">Test sinovi</span>
-            <div class="timer" id="timer">Vaqt: 02:00</div>
+            <span id="quiz-title" style="font-size: 14px;">Test sinovi</span>
+            <div class="timer" id="timer">Vaqt: 90:00</div>
         </div>
+
         <div id="quiz-container">
-            <div class="question-box" id="question-box"></div>
-            <div class="btn-group" id="quiz-btn-group">
+            <div id="reading-text-box" class="text-box" style="display:none;"></div>
+            <div id="question-img-container"></div>
+            <div class="question-box" id="question-box">Savol yuklanmoqda...</div>
+            <div class="options" id="options-container"></div>
+            
+            <div class="btn-group">
                 <button type="button" class="secondary" onclick="prevQuestion()" id="prev-btn">Oldingi</button>
                 <button type="button" onclick="nextQuestion()" id="next-btn">Keyingi</button>
             </div>
         </div>
+
         <div class="result-box" id="result-box">
             <h2>Test yakunlandi!</h2>
             <div class="score-circle" id="score-circle">0 ball</div>
             <p id="score-text"></p>
-            <div id="answers-review"></div>
             <button type="button" style="margin-top: 15px;" onclick="switchTab('tests')">Testlar ro'yxatiga qaytish</button>
         </div>
     </div>
@@ -471,45 +230,32 @@
     <div class="nav-item" onclick="switchTab('tests')" id="nav-tests">
         <div>📝</div> Testlar
     </div>
-    <div class="nav-item" onclick="switchTab('rating')" id="nav-rating">
-        <div>🏆</div> Reyting
-    </div>
-    <div class="nav-item" onclick="switchTab('admin')" id="nav-admin" style="display: none; color: #e74c3c;">
-        <div>⚙️</div> Admin
-    </div>
 </div>
 
 <script>
-    const ADMIN_ID = 644092713;
     const SUPABASE_URL = 'https://pudegdogypbxytbdizow.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KOhS1ubVAnOu1PM8r2IP3Q_KF8t0Te1';
     var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    var tg = window.Telegram ? window.Telegram.WebApp : null;
-    var currentUserId = 644092713; 
-    window.currentTournamentTestKey = 'demo_8'; 
-    window.tournamentStartTime = localStorage.getItem('cached_tournament_start') || null;
     var testData = {};
-
-    if (tg) {
-        tg.expand();
-    }
+    var currentTestQuestions = [];
+    var currentQuestionIndex = 0;
+    var userAnswers = {};
+    var quizTimerInterval = null;
+    var timeLeftSeconds = 90 * 60;
 
     async function fetchTestData() {
         try {
             testData = {};
-            const { data, error } = await supabaseClient.from('questions').select('id, test_id, test_title');
-            
+            const { data, error } = await supabaseClient.from('questions').select('*');
             if (data && data.length > 0) {
                 data.forEach(q => {
                     const tId = q.test_id;
                     if (!tId) return;
                     if (!testData[tId]) {
-                        testData[tId] = { title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(), questionsCount: 0 };
-                    } else if (q.test_title) {
-                        testData[tId].title = q.test_title;
+                        testData[tId] = { title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(), questions: [] };
                     }
-                    testData[tId].questionsCount++;
+                    testData[tId].questions.push(q);
                 });
             }
         } catch (e) {
@@ -522,10 +268,7 @@
         var t = testData[id];
         var textToSearch = (t && t.title) ? t.title : id;
         var match = textToSearch.match(/\d+/);
-        if (match) {
-            return parseInt(match[0], 10);
-        }
-        return 0;
+        return match ? parseInt(match[0], 10) : 0;
     }
 
     function getSortedTestKeys() {
@@ -534,7 +277,6 @@
         });
     }
 
-    // ⭐ КАТЕГОРИЯЛАРГА БЎЛИБ ЧИҚАРИШ ФУНКЦИЯСИ
     function renderTestsList() {
         var sortedKeys = getSortedTestKeys();
         var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
@@ -542,11 +284,12 @@
         sortedKeys.forEach(function(id) {
             var t = testData[id];
             var titleLower = t.title.toLowerCase();
+            var qCount = t.questions.length;
 
             var cardHtml = '<div class="test-card">' +
                 '<div><strong>' + t.title + '</strong>' +
-                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questionsCount + ' ta savol • 90 daqiqa</p></div>' +
-                '<button type="button" onclick="alert(\'Test ishga tushmoqda: ' + t.title + '\')">Ishlash</button>' +
+                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + qCount + ' ta savol • 90 daqiqa</p></div>' +
+                '<button type="button" onclick="startQuiz(\'' + id + '\')">Ishlash</button>' +
                 '</div>';
 
             if (titleLower.includes('kuz') || titleLower.includes('куз')) {
@@ -559,34 +302,124 @@
         });
 
         var html = "";
-        if (kuzHtml) {
-            html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>🔽</span></div><div class="category-content">' + kuzHtml + '</div></div>';
-        }
-        if (bahorHtml) {
-            html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor 2027)</span><span>🔽</span></div><div class="category-content">' + bahorHtml + '</div></div>';
-        }
-        if (boshqaHtml) {
-            html += '<div class="category-section"><div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>🔽</span></div><div class="category-content">' + boshqaHtml + '</div></div>';
-        }
+        if (kuzHtml) html += '<div class="category-header"><span>🍁 Demo (Kuz 2026)</span></div><div class="category-content">' + kuzHtml + '</div>';
+        if (bahorHtml) html += '<div class="category-header"><span>🌱 Demo (Bahor 2027)</span></div><div class="category-content">' + bahorHtml + '</div>';
+        if (boshqaHtml) html += '<div class="category-header"><span>📁 Boshqa testlar</span></div><div class="category-content">' + boshqaHtml + '</div>';
 
         document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
     }
 
-    function toggleCategory(headerEl) {
-        var content = headerEl.nextElementSibling;
-        var arrowSpan = headerEl.lastElementChild;
-        if (content.style.display === "none") {
-            content.style.display = "block";
-            arrowSpan.innerText = "🔽";
+    function startQuiz(testId) {
+        if (!testData[testId] || testData[testId].questions.length === 0) {
+            alert("Bu тестда ҳали саволлар йўқ!");
+            return;
+        }
+        currentTestQuestions = testData[testId].questions;
+        currentQuestionIndex = 0;
+        userAnswers = {};
+        timeLeftSeconds = 90 * 60;
+
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+        document.getElementById('quiz-page').classList.add('active');
+        document.getElementById('quiz-container').style.display = 'block';
+        document.getElementById('result-box').style.display = 'none';
+        document.getElementById('quiz-title').innerText = testData[testId].title;
+
+        startTimer();
+        displayQuestion();
+    }
+
+    function startTimer() {
+        if (quizTimerInterval) clearInterval(quizTimerInterval);
+        quizTimerInterval = setInterval(() => {
+            if (timeLeftSeconds <= 0) {
+                clearInterval(quizTimerInterval);
+                finishQuiz();
+                return;
+            }
+            timeLeftSeconds--;
+            let m = Math.floor(timeLeftSeconds / 60);
+            let s = timeLeftSeconds % 60;
+            document.getElementById('timer').innerText = `Vaqt: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }, 1000);
+    }
+
+    function displayQuestion() {
+        let q = currentTestQuestions[currentQuestionIndex];
+        document.getElementById('question-box').innerText = `<b>${currentQuestionIndex + 1}.</b> ` + (q.question_text || q.question || "");
+        
+        // Rasm
+        let imgContainer = document.getElementById('question-img-container');
+        if (q.image_url) {
+            imgContainer.innerHTML = `<img src="${q.image_url}" class="question-img" alt="Rasm">`;
         } else {
-            content.style.display = "none";
-            arrowSpan.innerText = "▶️";
+            imgContainer.innerHTML = '';
+        }
+
+        // Matn
+        let textBox = document.getElementById('reading-text-box');
+        if (q.reading_text) {
+            textBox.style.display = 'block';
+            textBox.innerText = q.reading_text;
+        } else {
+            textBox.style.display = 'none';
+        }
+
+        // Variantlar
+        let opts = q.options || [q.opt_0, q.opt_1, q.opt_2, q.opt_3];
+        let optHtml = '';
+        opts.forEach((opt, idx) => {
+            if (!opt) return;
+            let checked = userAnswers[currentQuestionIndex] === idx ? 'checked' : '';
+            optHtml += `<label><div style="display:flex; align-items:center;"><input type="radio" name="q_opt" value="${idx}" ${checked} onclick="selectOption(${idx})"><span class="option-text">${opt}</span></div></label>`;
+        });
+        document.getElementById('options-container').innerHTML = optHtml;
+
+        document.getElementById('prev-btn').style.display = currentQuestionIndex === 0 ? 'none' : 'block';
+        document.getElementById('next-btn').innerText = currentQuestionIndex === currentTestQuestions.length - 1 ? 'Yakunлаш' : 'Кейинги';
+    }
+
+    function selectOption(idx) {
+        userAnswers[currentQuestionIndex] = idx;
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < currentTestQuestions.length - 1) {
+            currentQuestionIndex++;
+            displayQuestion();
+        } else {
+            finishQuiz();
         }
     }
 
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            displayQuestion();
+        }
+    }
+
+    function finishQuiz() {
+        if (quizTimerInterval) clearInterval(quizTimerInterval);
+        
+        let correctCount = 0;
+        currentTestQuestions.forEach((q, idx) => {
+            let correctIdx = q.correct_option !== undefined ? q.correct_option : q.correct;
+            if (userAnswers[idx] === correctIdx) {
+                correctCount++;
+            }
+        });
+
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('result-box').style.display = 'block';
+        document.getElementById('score-circle').innerText = `${correctCount} / ${currentTestQuestions.length}`;
+        document.getElementById('score-text').innerText = `Сиз ${currentTestQuestions.length} та саволдан ${correctCount} тасига тўғри жавоб бердингиз!`;
+    }
+
     function switchTab(tab) {
-        document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-        document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+        if (quizTimerInterval) clearInterval(quizTimerInterval);
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
         if (tab === 'home') {
             document.getElementById('home-page').classList.add('active');
@@ -595,9 +428,6 @@
             renderTestsList();
             document.getElementById('tests-page').classList.add('active');
             document.getElementById('nav-tests').classList.add('active');
-        } else if (tab === 'rating') {
-            document.getElementById('rating-page').classList.add('active');
-            document.getElementById('nav-rating').classList.add('active');
         }
     }
 
