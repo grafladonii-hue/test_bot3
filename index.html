@@ -594,7 +594,7 @@
             <select id="admin-tournament-test-select" style="width: 100%; padding: 10px; margin: 6px 0 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;"></select>
             
             <div class="tournament-datetime-box">
-                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soат):</b></label>
+                <label for="admin-tournament-time"><b>Turnir boshlanish vaqti (Sana va soat):</b></label>
                 <input type="text" id="admin-tournament-time" class="custom-datetime-input" placeholder="Sana va vaqtni tanlang...">
             </div>
 
@@ -953,6 +953,7 @@
 
         if (String(currentUserId) === String(ADMIN_ID)) {
             alert("Sizda allaqachon VIP obuna faol!");
+            localStorage.setItem('is_premium_user', 'true');
             renderTestsList();
             return;
         }
@@ -1067,10 +1068,11 @@
         renderTestsList();
     }
 
-    // ⭐ ТЎҒРИЛАНГАН ВА МУСТАҲКАМЛАНГАН RENDERTESTSLIST ФУНКЦИЯСИ
+    // ⭐ МУСТАҲКАМЛАНГАН ВА ТЎҒРИЛАНГАН RENDERTESTSLIST ФУНКЦИЯСИ
     async function renderTestsList() {
         var isUserApprovedInDb = false;
 
+        // ⭐ Агар фойдаланувчи Админ бўлса, даҳол локал хотирага ёзиб қўямиз
         if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
             localStorage.setItem('is_premium_user', 'true');
         }
@@ -1097,10 +1099,12 @@
             localStorage.setItem('is_premium_user', 'true');
         }
 
-        // ⭐ Агар локал хотирада премиум бўлса ёки базадан тасдиқланса
-        var isUserPremium = localStorage.getItem('is_premium_user') === 'true' || isUserApprovedInDb;
-        var sortedKeys = getSortedTestKeys();
+        // ⭐ МУҲИМ КАФОЛАТ: Агар Админ бўлса ёки локал хотирада ёки базада тасдиқланса — тестлар очилади!
+        var isUserPremium = (currentUserId && String(currentUserId) === String(ADMIN_ID)) || 
+                            localStorage.getItem('is_premium_user') === 'true' || 
+                            isUserApprovedInDb;
 
+        var sortedKeys = getSortedTestKeys();
         var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
 
         sortedKeys.forEach(function(id) {
