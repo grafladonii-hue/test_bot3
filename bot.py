@@ -14,6 +14,8 @@ from google import genai
 from PIL import Image
 import psycopg2
 import pypdf
+from pydantic import BaseModel
+from typing import List, Optional
 
 logging.basicConfig(level=logging.INFO)
 
@@ -172,6 +174,58 @@ def load_data():
 def get_tests():
     return load_data()
 
+class QuestionModel(BaseModel):
+    test_id: str
+    test_title: Optional[str] = "Demo test"
+    reading_text: Optional[str] = ""
+    image_url: Optional[str] = ""
+    question: str
+    options: List[str]
+    correct: int
+
+@app.post("/api/save")
+async def save_question(q: QuestionModel):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        options_json = json.dumps(q.options, ensure_ascii=False)
+        
+        cur.execute("""
+            INSERT INTO questions (test_id, reading_text, image_url, question, options, correct, test_title)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            q.test_id, 
+            q.reading_text, 
+            q.image_url, 
+            q.question, 
+            options_json, 
+            q.correct, 
+            q.test_title
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {"status": "success", "message": "Savol muvaffaqiyatli qo'shildi"}
+    except Exception as e:
+        logging.error(f"Savolni saqlash хатоси: {e}")
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+@app.delete("/api/delete/{question_id}")
+async def delete_question(question_id: int):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM questions WHERE id = %s", (question_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {"status": "success", "message": "Savol o'chirildi"}
+    except Exception as e:
+        logging.error(f"Savolni o'chirish хатоси: {e}")
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
 async def check_membership(user_id: int, bot: Bot) -> bool:
     try:
         member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
@@ -254,7 +308,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',  # Модель номи текширилди (flash тавсия этилади)
+            model='gemini-2.5-flash',
             contents=[image, prompt]
         )
         
@@ -398,11 +452,9 @@ if __name__ == "__main__":
         await bot.delete_webhook(drop_pending_updates=True)
         logging.info("Webhook ўчирилди. Long Polling ва FastAPI бошланяпти...")
         
-        # FastAPI serverini background task сифатида ишга туширамиз
         config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info")
         server = uvicorn.Server(config)
         
-        # Server va Polling ni birgalikda ishga tushiramiz
         await asyncio.gather(
             server.serve(),
             dp.start_polling(bot)
