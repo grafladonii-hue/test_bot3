@@ -24,6 +24,11 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000
 
 # ==========================================
+# GEMINI CLIENT СОЗЛАМАСИ (gemini-3.5-flash-lite)
+# ==========================================
+gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+# ==========================================
 # POSTGRESQL (VPS) СОЗЛАМАЛАРИ
 # ==========================================
 DB_HOST = "83.69.139.120"
@@ -41,13 +46,10 @@ def get_db_connection():
         port=DB_PORT
     )
 
-gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-
-DATA_FILE = BASE_DIR / "questions.json"
 
 # ==========================================
 # 1. ТРАНЗАКЦИЯ ID НИ ТОЗАЛАШ
@@ -124,31 +126,35 @@ def save_used_receipt(txn_id):
         logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
 
 # ==========================================
-# 3. FastAPI ВА АСОСИЙ ФУНКЦИЯЛАР
+# 3. FastAPI ВА БАЗАДАН ТЕСТЛАРНИ ЎҚИШ
 # ==========================================
 app = FastAPI()
 
 def load_data():
-    if DATA_FILE.exists():
-        try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            logging.error(f"Саволлар файлини ўқиш хатоси: {e}")
-    return {}
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT id, test_id, reading_text, image_url FROM questions")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        tests_dict = {}
+        for row in rows:
+            q_id, test_id, reading_text, image_url = row
+            tests_dict[str(q_id)] = {
+                "test_id": test_id,
+                "reading_text": reading_text,
+                "image_url": image_url
+            }
+        return tests_dict
+    except Exception as e:
+        logging.error(f"Базадан тестларни ўқиш хатоси: {e}")
+        return {}
 
 @app.get("/api/tests")
 def get_tests():
     return load_data()
-
-@app.post("/api/tests")
-def update_tests(data: dict):
-    try:
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logging.error(f"Саволларни ёзиш хатоси: {e}")
-    return {"status": "ok"}
 
 async def check_membership(user_id: int, bot: Bot) -> bool:
     try:
@@ -372,7 +378,7 @@ async def root():
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
 
 # ==========================================
-# 5. POLLING ВА UVICORN (ОПТИМИЗАЦИЯ ҚИЛИНГАН)
+# 5. POLLING ВА UVICORN
 # ==========================================
 if __name__ == "__main__":
     import uvicorn
@@ -382,10 +388,8 @@ if __name__ == "__main__":
         await bot.delete_webhook(drop_pending_updates=True)
         logging.info("Webhook ўчирилди. Long Polling бошланяпти...")
         
-        # Aiogram polling алоҳида фон задачасида ишлайди
         polling_task = asyncio.create_task(dp.start_polling(bot))
         
-        # Uvicorn serverni стандарт усулда ишга туширамиз
         config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info")
         server = uvicorn.Server(config)
         
