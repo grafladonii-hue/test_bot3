@@ -72,7 +72,7 @@ def save_approved_user(user_id: int):
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO approved_users (user_id) VALUES (%s) ON CONFLICT (user_id) DO NOTHING",
+            "INSERT INTO approved_users (user_id) VALUES (%s) ON CONFLICT DO NOTHING",
             (user_id,)
         )
         conn.commit()
@@ -105,7 +105,7 @@ def save_used_receipt(txn_id):
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO used_receipts (txn_id) VALUES (%s) ON CONFLICT (txn_id) DO NOTHING",
+            "INSERT INTO used_receipts (txn_id) VALUES (%s) ON CONFLICT DO NOTHING",
             (cleaned,)
         )
         conn.commit()
