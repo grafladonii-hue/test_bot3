@@ -3,7 +3,6 @@ import json
 import re
 import logging
 from pathlib import Path
-from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from aiogram import Bot, Dispatcher, types, F
@@ -20,7 +19,6 @@ logging.basicConfig(level=logging.INFO)
 TOKEN = "8788215308:AAHc0btjQsQj2MUYSbD1F5iyblTE_iKuDHs"
 GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
-WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма: 50 000 сўм
@@ -126,18 +124,15 @@ def save_used_receipt(txn_id):
         logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
 
 # ==========================================
-# 3. FASTAPI ВА WEBHOOK
+# 3. FASTAPI ВА WEBHOOK ЎРНИГА ПОЛЛИНГ
 # ==========================================
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    try:
-        await bot.set_webhook(WEBHOOK_URL)
-        logging.info(f"Webhook ўрнатилди: {WEBHOOK_URL}")
-    except Exception as e:
-        logging.error(f"Webhook хатоси: {e}")
-    yield
+app = FastAPI()
 
-app = FastAPI(lifespan=lifespan)
+@app.on_event("startup")
+async def on_startup():
+    # Telegram'даги эски Webhook'ни ўчириб ташлаймиз, шунда бот хабарларни бемалол қабул қила олади
+    await bot.delete_webhook(drop_pending_updates=True)
+    logging.info("Webhook ўчирилди. Бот хабарларни қабул қилишга тайёр!")
 
 def load_data():
     if DATA_FILE.exists():
@@ -375,18 +370,6 @@ async def process_gemini_response(text_response: str, user_id: int, chat_id: int
             message_id=message_id
         )
 
-@app.post("/api/webhook")
-@app.post("/webhook")
-@app.post("/")
-async def bot_webhook(request: Request):
-    try:
-        data = await request.json()
-        update = types.Update.model_validate(data, context={"bot": bot})
-        await dp.feed_update(bot, update)
-    except Exception as e:
-        logging.error(f"Webhook error: {e}")
-    return {"ok": True}
-
 @app.get("/")
 async def root():
     html_path = BASE_DIR / "index.html"
@@ -395,8 +378,23 @@ async def root():
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
 
 # ==========================================
-# 5. UVICORN ОРҚАЛИ СЕРВЕРНИ ИШГА ТУШИРИШ
+# 5. POLLING ВА UVICORN
 # ==========================================
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("bot:app", host="0.0.0.0", port=8000, reload=False)
+    import asyncio
+    
+    # Скрипт орқали polling'ни ҳам, uvicorn'ни ҳам параллел юргизамиз
+    async def main():
+        await bot.delete_webhook(drop_pending_updates=True)
+        # Бот хабарларни ўзи тортиб олиши учун polling бошлаймиз
+        polling_task = asyncio.create_task(dp.start_polling(bot))
+        
+        # FastAPI serverни ишга туширамиз
+        config = uvicorn.Config("bot:app", host="0.0.0.0", port=8000, reload=False)
+        server = uvicorn.Server(config)
+        
+        await server.serve()
+        polling_task.cancel()
+
+    asyncio.run(main())
