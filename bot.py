@@ -24,14 +24,8 @@ WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000
 
-# ==========================================
-# GEMINI CLIENT СОЗЛАМАСИ (gemini-3.5-flash-lite)
-# ==========================================
 gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
-# ==========================================
-# POSTGRESQL (VPS) СОЗЛАМАЛАРИ
-# ==========================================
 DB_HOST = "83.69.139.120"
 DB_NAME = "demotestlardb"
 DB_USER = "postgres"
@@ -52,9 +46,6 @@ BASE_DIR = Path(__file__).resolve().parent
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ==========================================
-# 1. ТРАНЗАКЦИЯ ID НИ ТОЗАЛАШ
-# ==========================================
 def clean_txn_id(txn_id) -> str:
     if not txn_id:
         return ""
@@ -63,9 +54,6 @@ def clean_txn_id(txn_id) -> str:
         return ""
     return cleaned
 
-# ==========================================
-# 2. POSTGRESQL БАЗАСИ БИЛАН ИШЛАШ
-# ==========================================
 def is_user_approved(user_id: int) -> bool:
     try:
         conn = get_db_connection()
@@ -126,12 +114,8 @@ def save_used_receipt(txn_id):
     except Exception as e:
         logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
 
-# ==========================================
-# 3. FastAPI, CORS ВА БАЗАДАН ТЕСТЛАРНИ ЎҚИШ
-# ==========================================
 app = FastAPI()
 
-# Vercel ва бошқа манбалардан сўровлар блокланмаслиги учун CORS қўшилди
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -144,19 +128,39 @@ def load_data():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, test_id, reading_text, image_url FROM questions")
+        cur.execute("""
+            SELECT id, test_id, reading_text, image_url, question, options, correct, test_title 
+            FROM questions
+        """)
         rows = cur.fetchall()
         cur.close()
         conn.close()
         
         tests_dict = {}
         for row in rows:
-            q_id, test_id, reading_text, image_url = row
-            tests_dict[str(q_id)] = {
-                "test_id": test_id,
+            q_id, test_id, reading_text, image_url, question_text, options, correct_opt, test_title = row
+            
+            if test_id not in tests_dict:
+                tests_dict[test_id] = {
+                    "title": test_title or test_id,
+                    "questions": []
+                }
+            
+            if isinstance(options, str):
+                try:
+                    options = json.loads(options)
+                except:
+                    options = []
+
+            tests_dict[test_id]["questions"].append({
+                "id": q_id,
                 "reading_text": reading_text,
-                "image_url": image_url
-            }
+                "image_url": image_url,
+                "question": question_text,
+                "options": options,
+                "correct": correct_opt
+            })
+            
         return tests_dict
     except Exception as e:
         logging.error(f"Базадан тестларни ўқиш хатоси: {e}")
@@ -185,9 +189,6 @@ async def check_and_auto_approve_group_member(user_id: int, bot: Bot) -> bool:
         logging.error(f"Гуруҳ аъзолигини текшириш ва авто-қўшиш хатоси: {e}")
     return False
 
-# ==========================================
-# 4. БОТ ХЭНДЛЕРЛАРИ
-# ==========================================
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, command: CommandObject = None):
     if message.chat.type != "private":
@@ -387,9 +388,6 @@ async def root():
         return FileResponse(html_path)
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
 
-# ==========================================
-# 5. POLLING ВА UVICORN
-# ==========================================
 if __name__ == "__main__":
     import uvicorn
     import asyncio
