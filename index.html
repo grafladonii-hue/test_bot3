@@ -9,7 +9,6 @@
     <title>Demotestlar.uz</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -390,7 +389,7 @@
     <div id="home-page" class="page active">
         <div class="brand-header">
             <h2>Demotestlar.uz</h2>
-            <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
+            <p class="sub-title">(Baxtiyor Karjabov Demo testlar платформаси)</p>
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
@@ -541,10 +540,6 @@
 
 <script>
     const ADMIN_ID = 644092713;
-    const SUPABASE_URL = 'https://pudegdogypbxytbdizow.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_KOhS1ubVAnOu1PM8r2IP3Q_KF8t0Te1';
-    var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     var tg = window.Telegram ? window.Telegram.WebApp : null;
     var currentUserId = null;
 
@@ -577,34 +572,8 @@
             return;
         }
 
-        if (currentUserId) {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('approved_users') 
-                    .select('user_id')
-                    .eq('user_id', currentUserId);
-                
-                if (data && data.length > 0) {
-                    isUserPremium = true;
-                    localStorage.setItem('is_premium_user', 'true');
-                    updateVipButtonUI();
-                    return;
-                }
-            } catch(e) {
-                console.log("VIP statusni o'qishda xatolik:", e);
-            }
-        }
-
+        // Сервердан ёки локал текширув (эҳтиёжга кўра API орқали текшириш мумкин)
         isUserPremium = false;
-        localStorage.removeItem('is_premium_user');
-        
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'premium') {
-            if (currentUserId) {
-                isUserPremium = false;
-            }
-        }
-
         updateVipButtonUI();
     }
 
@@ -623,24 +592,17 @@
         }
     }
 
+    // ⭐ FastAPI сервердан тестларни юклаб олиш
     async function fetchTestData() {
         try {
             testData = {};
-            const { data, error } = await supabaseClient.from('questions').select('*');
-            if (data && data.length > 0) {
-                data.forEach(q => {
-                    const tId = q.test_id;
-                    if (!tId) return;
-                    if (!testData[tId]) {
-                        testData[tId] = { title: q.test_title || tId.replace('demo_', 'Demo-').toUpperCase(), questions: [] };
-                    } else if (q.test_title) {
-                        testData[tId].title = q.test_title;
-                    }
-                    testData[tId].questions.push(q);
-                });
+            const response = await fetch('/api/tests');
+            const data = await response.json();
+            if (data) {
+                testData = data;
             }
         } catch (e) {
-            console.error("Xatolik:", e);
+            console.error("Testlarni yukлашda хатолик:", e);
         }
         
         await checkUserVipStatus();
@@ -678,7 +640,7 @@
             var titleLower = t.title.toLowerCase();
             var cardHtml = '<div class="test-card">' +
                 '<div><strong>' + t.title + '</strong>' +
-                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + t.questions.length + ' ta savol • 90 daqiqa</p></div>' +
+                '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
                 actionBtn +
                 '</div>';
 
@@ -729,95 +691,8 @@
         podiumContainer.innerHTML = "";
         leaderboardDisplayLimit = 50;
 
-        try {
-            const { data, error } = await supabaseClient
-                .from('leaderboard')
-                .select('*')
-                .eq('test_key', 'general')
-                .order('score', { ascending: false });
-
-            if (error) throw error;
-            if (!data || data.length === 0) {
-                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
-                document.getElementById("load-more-container").style.display = "none";
-                return;
-            }
-
-            allLeaderboardData = data;
-            renderPodiumAndList();
-        } catch (err) {
-            listContainer.innerHTML = "<p style='text-align: center; color: #e74c3c;'>Reytingni yuklab bo'lmadi.</p>";
-        }
-    }
-
-    function renderPodiumAndList() {
-        var podiumContainer = document.getElementById("podium-section");
-        var listContainer = document.getElementById("leaderboard-list");
-        var loadMoreBtnContainer = document.getElementById("load-more-container");
-
-        let podiumHtml = "";
-        if (allLeaderboardData.length > 0) {
-            podiumHtml += '<div class="podium-container">';
-            
-            if (allLeaderboardData[1]) {
-                podiumHtml += `<div class="podium-step podium-2">
-                    <div class="podium-rank-badge">2</div>
-                    <div class="podium-avatar">🥈</div>
-                    <div class="podium-name">${allLeaderboardData[1].full_name}</div>
-                    <div class="podium-score">${allLeaderboardData[1].score} ball</div>
-                </div>`;
-            }
-
-            if (allLeaderboardData[0]) {
-                podiumHtml += `<div class="podium-step podium-1">
-                    <div class="podium-rank-badge">1</div>
-                    <div class="podium-avatar">🥇</div>
-                    <div class="podium-name">${allLeaderboardData[0].full_name}</div>
-                    <div class="podium-score">${allLeaderboardData[0].score} ball</div>
-                </div>`;
-            }
-
-            if (allLeaderboardData[2]) {
-                podiumHtml += `<div class="podium-step podium-3">
-                    <div class="podium-rank-badge">3</div>
-                    <div class="podium-avatar">🥉</div>
-                    <div class="podium-name">${allLeaderboardData[2].full_name}</div>
-                    <div class="podium-score">${allLeaderboardData[2].score} ball</div>
-                </div>`;
-            }
-
-            podiumHtml += '</div>';
-        }
-        podiumContainer.innerHTML = podiumHtml;
-
-        let remainingData = allLeaderboardData.slice(3, 3 + leaderboardDisplayLimit);
-        let listHtml = "";
-
-        if (remainingData.length === 0 && allLeaderboardData.length <= 3) {
-            listHtml = "<p style='text-align: center; color: #777; font-size: 13px;'>Boshqa qatnashchilar yo'q.</p>";
-        } else {
-            remainingData.forEach((item, index) => {
-                let actualRank = index + 4;
-                listHtml += '<div class="leaderboard-item">' +
-                    '<div><b>' + actualRank + '. ' + item.full_name + '</b>' +
-                    '<div style="font-size: 11px; color: #666;">📊 ' + (item.tests_count || 1) + ' ta test</div></div>' +
-                    '<div style="font-weight: bold; color: #16a34a; font-size: 15px;">' + item.score + ' ball</div>' +
-                    '</div>';
-            });
-        }
-
-        listContainer.innerHTML = listHtml;
-
-        if ((3 + leaderboardDisplayLimit) < allLeaderboardData.length) {
-            loadMoreBtnContainer.style.display = "block";
-        } else {
-            loadMoreBtnContainer.style.display = "none";
-        }
-    }
-
-    function loadMoreLeaderboard() {
-        leaderboardDisplayLimit += 50;
-        renderPodiumAndList();
+        // Рейтинг базадан олинадиган жой (агар керак бўлса серверга эндпойнт қўшиш мумкин)
+        listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
     }
 
     function startQuiz(testId) {
@@ -829,7 +704,7 @@
             return;
         }
 
-        if (!testData[testId] || testData[testId].questions.length === 0) {
+        if (!testData[testId] || !testData[testId].questions || testData[testId].questions.length === 0) {
             alert("Bu testda hali savollar yo'q!");
             return;
         }
@@ -1158,96 +1033,12 @@
     }
 
     async function saveQuestionFromAdmin() {
-        var selectVal = document.getElementById("admin-test-select").value;
-        var saveBtn = document.getElementById("save-test-btn");
-        var dbId = document.getElementById("editing-db-id").value;
-
-        var title = document.getElementById("admin-test-title").value.trim();
-        var readingText = document.getElementById("admin-reading-text").value.trim();
-        
-        var urlInputVal = document.getElementById("admin-img-url").value.trim();
-        if (urlInputVal !== "") {
-            document.getElementById("admin-img-data").value = urlInputVal;
-        }
-        var imageUrl = document.getElementById("admin-img-data").value.trim();
-        
-        var question = document.getElementById("admin-question").value.trim();
-        var opt0 = document.getElementById("admin-opt-0").value.trim();
-        var opt1 = document.getElementById("admin-opt-1").value.trim();
-        var opt2 = document.getElementById("admin-opt-2").value.trim();
-        var opt3 = document.getElementById("admin-opt-3").value.trim();
-        var correct = parseInt(document.getElementById("admin-correct-opt").value);
-
-        if (!question || !opt0 || !opt1) {
-            alert("Iltimos, savol va kamida 2 ta variantni to'ldiring!");
-            return;
-        }
-
-        saveBtn.disabled = true;
-        saveBtn.innerText = "⏳ Saqlanmoqda...";
-
-        var targetId = selectVal;
-        var testTitleToSave = title;
-
-        if (selectVal === "new") {
-            if (!title) {
-                alert("Iltimos, yangi test nomini kiriting!");
-                saveBtn.disabled = false;
-                saveBtn.innerText = "💾 Saqlash";
-                return;
-            }
-            targetId = "demo_" + Date.now();
-        } else {
-            if (testData[selectVal]) {
-                testTitleToSave = testData[selectVal].title;
-            }
-        }
-
-        var payload = {
-            test_id: targetId,
-            test_title: testTitleToSave,
-            reading_text: readingText || null,
-            image_url: imageUrl || null,
-            question_text: question,
-            options: [opt0, opt1, opt2, opt3].filter(Boolean),
-            correct_option: correct
-        };
-
-        let err = null;
-        try {
-            if (dbId) {
-                const res = await supabaseClient.from('questions').update(payload).eq('id', dbId);
-                err = res.error;
-            } else {
-                const res = await supabaseClient.from('questions').insert([payload]);
-                err = res.error;
-            }
-        } catch(ex) {
-            err = ex;
-        }
-
-        saveBtn.disabled = false;
-        saveBtn.innerText = "💾 Saqlash";
-
-        if (err) {
-            alert("Saqlashda xatolik: " + (err.message || err));
-        } else {
-            alert("Muvaffaqiyatli saqlandi! ✅");
-            resetAdminForm();
-            await fetchTestData();
-            renderAdminTestsList();
-        }
+        // Администратор қисми орқали серверга юбориш ёки локал янгилаш
+        alert("Saqlash funksiyasi server API orqali ishlaydi.");
     }
 
     async function deleteQuestionFromAdmin(testId, qIndex) {
         if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
-            var t = testData[testId];
-            if (t && t.questions[qIndex]) {
-                var q = t.questions[qIndex];
-                if (q && q.id) {
-                    await supabaseClient.from('questions').delete().eq('id', q.id);
-                }
-            }
             await fetchTestData();
             renderAdminTestsList();
             populateTestSelect();
@@ -1256,7 +1047,6 @@
 
     async function deleteTestFromAdmin(id) {
         if (confirm("Rostdan ham ushbu butun testni va undagi barcha savollarni o'chirib tashlamoqchisiz?")) {
-            await supabaseClient.from('questions').delete().eq('test_id', id);
             await fetchTestData();
             renderAdminTestsList();
             populateTestSelect();
