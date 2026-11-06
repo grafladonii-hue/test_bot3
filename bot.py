@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command, CommandObject
@@ -126,9 +127,18 @@ def save_used_receipt(txn_id):
         logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
 
 # ==========================================
-# 3. FastAPI ВА БАЗАДАН ТЕСТЛАРНИ ЎҚИШ
+# 3. FastAPI, CORS ВА БАЗАДАН ТЕСТЛАРНИ ЎҚИШ
 # ==========================================
 app = FastAPI()
+
+# Vercel ва бошқа манбалардан сўровлар блокланмаслиги учун CORS қўшилди
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def load_data():
     try:
