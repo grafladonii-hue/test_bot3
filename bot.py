@@ -140,9 +140,11 @@ def load_data():
         for row in rows:
             q_id, test_id, reading_text, image_url, question_text, options, correct_opt, test_title = row
             
-            if test_id not in tests_dict:
-                tests_dict[test_id] = {
-                    "title": test_title or test_id,
+            t_key = str(test_id)
+            if t_key not in tests_dict:
+                title = test_title if test_title else f"Demo test ({t_key})"
+                tests_dict[t_key] = {
+                    "title": title,
                     "questions": []
                 }
             
@@ -152,7 +154,7 @@ def load_data():
                 except:
                     options = []
 
-            tests_dict[test_id]["questions"].append({
+            tests_dict[t_key]["questions"].append({
                 "id": q_id,
                 "reading_text": reading_text,
                 "image_url": image_url,
