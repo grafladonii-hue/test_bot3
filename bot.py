@@ -246,7 +246,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',
             contents=[image, prompt]
         )
         
@@ -297,7 +297,7 @@ async def handle_payment_document(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',
             contents=[prompt]
         )
         
@@ -393,3 +393,10 @@ async def root():
     if html_path.exists():
         return FileResponse(html_path)
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
+
+# ==========================================
+# 5. UVICORN ОРҚАЛИ СЕРВЕРНИ ИШГА ТУШИРИШ
+# ==========================================
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("bot:app", host="0.0.0.0", port=8000, reload=False)
