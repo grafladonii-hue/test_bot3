@@ -572,7 +572,6 @@
             return;
         }
 
-        // Сервердан ёки локал текширув (эҳтиёжга кўра API орқали текшириш мумкин)
         isUserPremium = false;
         updateVipButtonUI();
     }
@@ -592,17 +591,17 @@
         }
     }
 
-    // ⭐ FastAPI сервердан тестларни юклаб олиш
+    // ⭐ VPS IP манзили орқали FastAPI сервердан тестларни юклаб олиш
     async function fetchTestData() {
         try {
             testData = {};
-            const response = await fetch('/api/tests');
+            const response = await fetch('http://83.69.139.120:8000/api/tests'); // VPS IP манзили уланди
             const data = await response.json();
             if (data) {
                 testData = data;
             }
         } catch (e) {
-            console.error("Testlarni yukлашda хатолик:", e);
+            console.error("Testlarni yuklashda xatolik:", e);
         }
         
         await checkUserVipStatus();
@@ -691,7 +690,6 @@
         podiumContainer.innerHTML = "";
         leaderboardDisplayLimit = 50;
 
-        // Рейтинг базадан олинадиган жой (агар керак бўлса серверга эндпойнт қўшиш мумкин)
         listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
     }
 
@@ -1033,7 +1031,6 @@
     }
 
     async function saveQuestionFromAdmin() {
-        // Администратор қисми орқали серверга юбориш ёки локал янгилаш
         alert("Saqlash funksiyasi server API orqali ishlaydi.");
     }
 
@@ -1110,7 +1107,7 @@
 
     function removeImage() {
         document.getElementById("admin-img-data").value = "";
-        document.getElementById("admin-img-file").value = "";
+        document.getElementById("admin-img-file.value") = "";
         document.getElementById("admin-img-url").value = "";
         showImagePreview("");
     }
