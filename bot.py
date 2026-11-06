@@ -12,7 +12,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from google import genai
 from PIL import Image
-from supabase import create_client, Client
+import psycopg2  # PostgreSQL билан ишлаш учун
 import pypdf  # PDF чекларни ўқиш учун
 
 logging.basicConfig(level=logging.INFO)
@@ -25,14 +25,23 @@ WEBHOOK_URL = f"{WEB_APP_URL}/api/webhook"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма: 50 000 сўм
 
-# Supabase созламалари
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# ==========================================
+# POSTGRESQL (VPS) СОЗЛАМАЛАРИ
+# ==========================================
+DB_HOST = "83.69.139.120"
+DB_NAME = "demotestlardb"
+DB_USER = "postgres"
+DB_PASSWORD = "12345"  # Docker контейнерингиздаги ҳақиқий парол
+DB_PORT = 5432
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    logging.error("❌ SUPABASE_URL ёки SUPABASE_KEY Vercel Environment Variables'да топилмади!")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+def get_db_connection():
+    return psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=DB_PORT
+    )
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 BASE_DIR = Path(__file__).resolve().parent
@@ -54,45 +63,67 @@ def clean_txn_id(txn_id) -> str:
     return cleaned
 
 # ==========================================
-# 2. SUPABASE БАЗАСИ БИЛАН ИШЛАШ
+# 2. POSTGRESQL БАЗАСИ БИЛАН ИШЛАШ
 # ==========================================
 def is_user_approved(user_id: int) -> bool:
-    if not supabase:
-        return False
     try:
-        res = supabase.table("approved_users").select("user_id").eq("user_id", user_id).execute()
-        return len(res.data) > 0
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT user_id FROM approved_users WHERE user_id = %s", (user_id,))
+        res = cur.fetchone()
+        cur.close()
+        conn.close()
+        return res is not None
     except Exception as e:
-        logging.error(f"Supabase хатоси: {e}")
+        logging.error(f"PostgreSQL хатоси: {e}")
         return False
 
 def save_approved_user(user_id: int):
-    if not supabase:
-        return
     try:
-        supabase.table("approved_users").upsert({"user_id": user_id}).execute()
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO approved_users (user_id) VALUES (%s) ON CONFLICT (user_id) DO NOTHING",
+            (user_id,)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
     except Exception as e:
-        logging.error(f"Supabase сақлаш хатоси: {e}")
+        logging.error(f"PostgreSQL сақлаш хатоси: {e}")
 
 def is_receipt_used(txn_id) -> bool:
     cleaned = clean_txn_id(txn_id)
-    if not cleaned or not supabase:
+    if not cleaned:
         return False
     try:
-        res = supabase.table("used_receipts").select("txn_id").eq("txn_id", cleaned).execute()
-        return len(res.data) > 0
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT txn_id FROM used_receipts WHERE txn_id = %s", (cleaned,))
+        res = cur.fetchone()
+        cur.close()
+        conn.close()
+        return res is not None
     except Exception as e:
-        logging.error(f"Supabase чек текшириш хатоси: {e}")
+        logging.error(f"PostgreSQL чек текшириш хатоси: {e}")
         return False
 
 def save_used_receipt(txn_id):
     cleaned = clean_txn_id(txn_id)
-    if not cleaned or not supabase:
+    if not cleaned:
         return
     try:
-        supabase.table("used_receipts").insert({"txn_id": cleaned}).execute()
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO used_receipts (txn_id) VALUES (%s) ON CONFLICT (txn_id) DO NOTHING",
+            (cleaned,)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
     except Exception as e:
-        logging.error(f"Supabase чек сақлаш хатоси: {e}")
+        logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
 
 # ==========================================
 # 3. FASTAPI ВА WEBHOOK
@@ -139,14 +170,11 @@ async def check_membership(user_id: int, bot: Bot) -> bool:
         logging.error(f"Аъзоликни текшириш хатоси: {e}")
     return False
 
-# ⭐ Ёпиқ гуруҳ аъзосини текшириб автоматик базага қўшиш функцияси
 async def check_and_auto_approve_group_member(user_id: int, bot: Bot) -> bool:
-    if not supabase:
-        return False
     try:
         member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
         if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
-            supabase.table("approved_users").upsert({"user_id": user_id}).execute()
+            save_approved_user(user_id)
             return True
     except Exception as e:
         logging.error(f"Гуруҳ аъзолигини текшириш ва авто-қўшиш хатоси: {e}")
@@ -163,10 +191,8 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
     user_id = message.from_user.id
     app_url = WEB_APP_URL
 
-    # 1. Гуруҳ аъзоси эканлигини текшириб базага автоматик қўшиб қўямиз
     await check_and_auto_approve_group_member(user_id, bot)
     
-    # 2. Фойдаланувчи базада (VIP рўйхатда) борми ёки админми олдиндан текширамиз
     is_vip = is_user_approved(user_id) or str(user_id) == "644092713"
 
     keyboard = InlineKeyboardMarkup(
@@ -175,7 +201,6 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
         ]
     )
     
-    # 3. Дарҳол битта аниқ (ўз статусига мос) хабарни юборамиз
     if is_vip:
         await message.answer(
             "Ассалому алайкум! Сизда **VIP обуна фаол** ✅\n\n"
@@ -195,7 +220,6 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
             parse_mode="Markdown"
         )
 
-# Расм кўринишидаги чекларни қабул қилиш
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
     if message.chat.type != "private":
@@ -236,7 +260,6 @@ async def handle_payment_screenshot(message: types.Message):
             message_id=processing_msg.message_id
         )
 
-# PDF ёки файл кўринишидаги чекларни қабул қилиш
 @dp.message(F.document)
 async def handle_payment_document(message: types.Message):
     if message.chat.type != "private":
@@ -288,7 +311,6 @@ async def handle_payment_document(message: types.Message):
             message_id=processing_msg.message_id
         )
 
-# Умумий жавобни қайта ишлаш ва тасдиқлаш функцияси
 async def process_gemini_response(text_response: str, user_id: int, chat_id: int, message_id: int):
     try:
         text_response = text_response.strip()
@@ -325,7 +347,6 @@ async def process_gemini_response(text_response: str, user_id: int, chat_id: int
             save_used_receipt(txn_id)
             save_approved_user(user_id)
              
-            # ⭐ Алоҳида VIP obuna тугмасини яратиш
             vip_keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [InlineKeyboardButton(text="⭐ VIP obuna", web_app=WebAppInfo(url=WEB_APP_URL))]
