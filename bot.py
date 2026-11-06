@@ -254,7 +254,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',  # Модель номи текширилди (flash тавсия этилади)
             contents=[image, prompt]
         )
         
@@ -305,7 +305,7 @@ async def handle_payment_document(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-2.5-flash',
             contents=[prompt]
         )
         
@@ -396,15 +396,17 @@ if __name__ == "__main__":
 
     async def main():
         await bot.delete_webhook(drop_pending_updates=True)
-        logging.info("Webhook ўчирилди. Long Polling бошланяпти...")
+        logging.info("Webhook ўчирилди. Long Polling ва FastAPI бошланяпти...")
         
-        polling_task = asyncio.create_task(dp.start_polling(bot))
-        
+        # FastAPI serverini background task сифатида ишга туширамиз
         config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info")
         server = uvicorn.Server(config)
         
-        await server.serve()
-        polling_task.cancel()
+        # Server va Polling ni birgalikda ishga tushiramiz
+        await asyncio.gather(
+            server.serve(),
+            dp.start_polling(bot)
+        )
 
     try:
         asyncio.run(main())
