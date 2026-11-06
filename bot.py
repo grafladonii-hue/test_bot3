@@ -11,8 +11,8 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from google import genai
 from PIL import Image
-import psycopg2  # PostgreSQL билан ишлаш учун
-import pypdf  # PDF чекларни ўқиш учун
+import psycopg2
+import pypdf
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,7 +21,7 @@ GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма: 50 000 сўм
+REQUIRED_AMOUNT = 50000
 
 # ==========================================
 # POSTGRESQL (VPS) СОЗЛАМАЛАРИ
@@ -29,7 +29,7 @@ REQUIRED_AMOUNT = 50000  # Талаб қилинадиган сумма: 50 000 
 DB_HOST = "83.69.139.120"
 DB_NAME = "demotestlardb"
 DB_USER = "postgres"
-DB_PASSWORD = "12345"  # Docker контейнерингиздаги ҳақиқий парол
+DB_PASSWORD = "12345"
 DB_PORT = 5432
 
 def get_db_connection():
@@ -124,15 +124,9 @@ def save_used_receipt(txn_id):
         logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
 
 # ==========================================
-# 3. FASTAPI ВА WEBHOOK ЎРНИГА ПОЛЛИНГ
+# 3. FastAPI ВА АСОСИЙ ФУНКЦИЯЛАР
 # ==========================================
 app = FastAPI()
-
-@app.on_event("startup")
-async def on_startup():
-    # Telegram'даги эски Webhook'ни ўчириб ташлаймиз, шунда бот хабарларни бемалол қабул қила олади
-    await bot.delete_webhook(drop_pending_updates=True)
-    logging.info("Webhook ўчирилди. Бот хабарларни қабул қилишга тайёр!")
 
 def load_data():
     if DATA_FILE.exists():
@@ -378,23 +372,27 @@ async def root():
     return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
 
 # ==========================================
-# 5. POLLING ВА UVICORN
+# 5. POLLING ВА UVICORN (ОПТИМИЗАЦИЯ ҚИЛИНГАН)
 # ==========================================
 if __name__ == "__main__":
     import uvicorn
     import asyncio
-    
-    # Скрипт орқали polling'ни ҳам, uvicorn'ни ҳам параллел юргизамиз
+
     async def main():
         await bot.delete_webhook(drop_pending_updates=True)
-        # Бот хабарларни ўзи тортиб олиши учун polling бошлаймиз
+        logging.info("Webhook ўчирилди. Long Polling бошланяпти...")
+        
+        # Aiogram polling алоҳида фон задачасида ишлайди
         polling_task = asyncio.create_task(dp.start_polling(bot))
         
-        # FastAPI serverни ишга туширамиз
-        config = uvicorn.Config("bot:app", host="0.0.0.0", port=8000, reload=False)
+        # Uvicorn serverni стандарт усулда ишга туширамиз
+        config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info")
         server = uvicorn.Server(config)
         
         await server.serve()
         polling_task.cancel()
 
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logging.info("Сервер фойдаланувчи томонидан тўхтатилди.")
