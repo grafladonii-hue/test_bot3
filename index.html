@@ -595,7 +595,7 @@
     async function fetchTestData() {
         try {
             testData = {};
-            const response = await fetch('http://83.69.139.120:8000/api/tests'); // VPS IP манзили уланди
+            const response = await fetch('http://83.69.139.120:8000/api/tests');
             const data = await response.json();
             if (data) {
                 testData = data;
@@ -1107,7 +1107,7 @@
 
     function removeImage() {
         document.getElementById("admin-img-data").value = "";
-        document.getElementById("admin-img-file.value") = "";
+        document.getElementById("admin-img-file").value = ""; // ⭐ Xato tuzatildi
         document.getElementById("admin-img-url").value = "";
         showImagePreview("");
     }
