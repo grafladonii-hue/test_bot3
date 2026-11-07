@@ -28,7 +28,7 @@ REQUIRED_AMOUNT = 50000
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
-DB_HOST = "83.69.139.120"
+DB_HOST = "localhost"
 DB_NAME = "demotestlardb"
 DB_USER = "postgres"
 DB_PASSWORD = "12345"
