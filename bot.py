@@ -83,39 +83,6 @@ def save_approved_user(user_id: int):
     except Exception as e:
         logging.error(f"PostgreSQL сақлаш хатоси: {e}")
 
-def is_receipt_used(txn_id) -> bool:
-    cleaned = clean_txn_id(txn_id)
-    if not cleaned:
-        return False
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT txn_id FROM used_receipts WHERE txn_id = %s", (cleaned,))
-        res = cur.fetchone()
-        cur.close()
-        conn.close()
-        return res is not None
-    except Exception as e:
-        logging.error(f"PostgreSQL чек текшириш хатоси: {e}")
-        return False
-
-def save_used_receipt(txn_id):
-    cleaned = clean_txn_id(txn_id)
-    if not cleaned:
-        return
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO used_receipts (txn_id) VALUES (%s) ON CONFLICT DO NOTHING",
-            (cleaned,)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        logging.error(f"PostgreSQL чек сақлаш хатоси: {e}")
-
 app = FastAPI()
 
 app.add_middleware(
@@ -126,7 +93,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def load_data():
+# --- АСОСИЙ ТЕСТЛАРНИ БАЗАДАН МИНИ-АППГА ЮКЛАБ БЕРУВЧИ ENDPOINT ---
+@app.get("/api/tests")
+def get_tests():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -170,10 +139,6 @@ def load_data():
         logging.error(f"Базадан тестларни ўқиш хатоси: {e}")
         return {}
 
-@app.get("/api/tests")
-def get_tests():
-    return load_data()
-
 class QuestionModel(BaseModel):
     test_id: str
     test_title: Optional[str] = "Demo test"
@@ -188,22 +153,11 @@ async def save_question(q: QuestionModel):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        
         options_json = json.dumps(q.options, ensure_ascii=False)
-        
         cur.execute("""
             INSERT INTO questions (test_id, reading_text, image_url, question, options, correct, test_title)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            q.test_id, 
-            q.reading_text, 
-            q.image_url, 
-            q.question, 
-            options_json, 
-            q.correct, 
-            q.test_title
-        ))
-        
+        """, (q.test_id, q.reading_text, q.image_url, q.question, options_json, q.correct, q.test_title))
         conn.commit()
         cur.close()
         conn.close()
@@ -226,35 +180,13 @@ async def delete_question(question_id: int):
         logging.error(f"Savolni o'chirish хатоси: {e}")
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
-async def check_membership(user_id: int, bot: Bot) -> bool:
-    try:
-        member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
-        if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
-            return True
-    except Exception as e:
-        logging.error(f"Аъзоликни текшириш хатоси: {e}")
-    return False
-
-async def check_and_auto_approve_group_member(user_id: int, bot: Bot) -> bool:
-    try:
-        member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
-        if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
-            save_approved_user(user_id)
-            return True
-    except Exception as e:
-        logging.error(f"Гуруҳ аъзолигини текшириш ва авто-қўшиш хатоси: {e}")
-    return False
-
 @dp.message(Command("start"))
-async def cmd_start(message: types.Message, command: CommandObject = None):
+async def cmd_start(message: types.Message):
     if message.chat.type != "private":
         return
 
     user_id = message.from_user.id
     app_url = WEB_APP_URL
-
-    await check_and_auto_approve_group_member(user_id, bot)
-    
     is_vip = is_user_approved(user_id) or str(user_id) == "644092713"
 
     keyboard = InlineKeyboardMarkup(
@@ -276,172 +208,13 @@ async def cmd_start(message: types.Message, command: CommandObject = None):
             "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
             "🔒 Барча тестларни тўлиқ очиш учун ёпиқ гуруҳимиз аъзоси бўлинг ёки қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини шу ерга юборинг:\n\n"
             "💳 **Карта рақами:** `9860120155197128`\n"
-            "👤 **Қабул қилувчи:** Бахтиёр Каржабов\n\n"
-            "⚠️ Тўлов қилганингиздан сўнг чекни юборсангиз, бот автоматик равишда текшириб тестларни очиб беради.",
+            "👤 **Қабул қилувчи:** Бахтиёр Каржабов",
             reply_markup=keyboard,
             parse_mode="Markdown"
         )
 
-@dp.message(F.photo)
-async def handle_payment_screenshot(message: types.Message):
-    if message.chat.type != "private":
-        return
-
-    user_id = message.from_user.id
-     
-    if await check_membership(user_id, bot) or is_user_approved(user_id):
-        await message.answer("Сизда аллақачон фаол VIP обуна мавжуд!")
-        return
-
-    photo = message.photo[-1]
-    processing_msg = await message.answer("⏳ Чек расми текширилмоқда...")
-     
-    try:
-        file_info = await bot.get_file(photo.file_id)
-        downloaded_file = await bot.download_file(file_info.file_path)
-        image = Image.open(downloaded_file)
-
-        prompt = (
-            "Read this receipt. Extract amount (number) and transaction ID / check number (string or null). "
-            "Return ONLY raw JSON without markdown: "
-            '{"amount": 0, "transaction_id": "id_or_null"}'
-        )
-
-        response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[image, prompt]
-        )
-        
-        await process_gemini_response(response.text, user_id, message.chat.id, processing_msg.message_id)
-
-    except Exception as e:
-        logging.error(f"Расмни ўқиш хатоси: {e}")
-        await bot.edit_message_text(
-            text="❌ Чек расмини ўқишда хатолик. Қайта уриниб кўринг.",
-            chat_id=message.chat.id,
-            message_id=processing_msg.message_id
-        )
-
-@dp.message(F.document)
-async def handle_payment_document(message: types.Message):
-    if message.chat.type != "private":
-        return
-
-    user_id = message.from_user.id
-     
-    if await check_membership(user_id, bot) or is_user_approved(user_id):
-        await message.answer("Сизда аллақачон фаол VIP обуна мавжуд!")
-        return
-
-    doc = message.document
-    file_name = doc.file_name.lower() if doc.file_name else ""
-    
-    if not file_name.endswith('.pdf'):
-        await message.answer("❌ Илтимос, банк чекини **PDF** форматда ёки **расм** кўринишида юборинг.", parse_mode="Markdown")
-        return
-
-    processing_msg = await message.answer("⏳ PDF чек ҳужжати текширилмоқда...")
-     
-    try:
-        file_info = await bot.get_file(doc.file_id)
-        downloaded_file = await bot.download_file(file_info.file_path)
-
-        reader = pypdf.PdfReader(downloaded_file)
-        pdf_text = ""
-        for page in reader.pages:
-            pdf_text += page.extract_text() or ""
-
-        prompt = (
-            f"Бу банк ўтказмасининг PDF чеки матни:\n{pdf_text}\n\n"
-            "Шу матндан суммани (amount - рақам кўринишида) ва транзакция ID / чек рақамини (transaction_id - стринг ёки null) ажратиб олиб беринг. "
-            "Фақат ва фақат JSON форматда жавоб қайтаринг (markdownсиз): "
-            '{"amount": 0, "transaction_id": "id_or_null"}'
-        )
-
-        response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[prompt]
-        )
-        
-        await process_gemini_response(response.text, user_id, message.chat.id, processing_msg.message_id)
-
-    except Exception as e:
-        logging.error(f"PDF ҳужжатни ўқиш хатоси: {e}")
-        await bot.edit_message_text(
-            text="❌ PDF ҳужжатни ўқишда хатолик. Қайта уриниб кўринг.",
-            chat_id=message.chat.id,
-            message_id=processing_msg.message_id
-        )
-
-async def process_gemini_response(text_response: str, user_id: int, chat_id: int, message_id: int):
-    try:
-        text_response = text_response.strip()
-        if text_response.startswith("```json"):
-            text_response = text_response[7:-3].strip()
-        elif text_response.startswith("```"):
-            text_response = text_response[3:-3].strip()
-
-        data = json.loads(text_response)
-        extracted_amount = float(data.get("amount", 0))
-        raw_txn_id = data.get("transaction_id")
-        txn_id = clean_txn_id(raw_txn_id)
-
-        if not txn_id:
-            await bot.edit_message_text(
-                text="❌ **Тўлов қабул қилинмади!**\n\n"
-                     "Чекдан аниқ **Транзакция ID** топилмади. Илтимос, тўлов тафсилотлари тўлиқ кўринган чекни юборинг.",
-                chat_id=chat_id,
-                message_id=message_id,
-                parse_mode="Markdown"
-            )
-            return
-
-        if is_receipt_used(txn_id):
-            await bot.edit_message_text(
-                text=f"❌ **Тўлов рад этилди!**\n\n⚠️ Бу чек илгари ишлатилган (`{txn_id}`).",
-                chat_id=chat_id,
-                message_id=message_id,
-                parse_mode="Markdown"
-            )
-            return
-
-        if extracted_amount >= REQUIRED_AMOUNT:
-            save_used_receipt(txn_id)
-            save_approved_user(user_id)
-             
-            vip_keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text="⭐ VIP obuna", web_app=WebAppInfo(url=WEB_APP_URL))]
-                ]
-            )
-
-            await bot.edit_message_text(
-                text=f"✅ **Тўлов тасдиқланди!**\n\n💰 Сумма: `{int(extracted_amount)} сўм`\n🧾 Чек ID: `{txn_id}`\n\nБарча тестлар очилди!",
-                chat_id=chat_id,
-                message_id=message_id,
-                reply_markup=vip_keyboard,
-                parse_mode="Markdown"
-            )
-        else:
-            await bot.edit_message_text(
-                text=f"❌ **Сумма етарли эмас!**\n\nТопилган сумма: `{int(extracted_amount)} сўм`\nТалаб қилингани: `{REQUIRED_AMOUNT} сўм`",
-                chat_id=chat_id,
-                message_id=message_id,
-                parse_mode="Markdown"
-            )
-    except Exception as e:
-        logging.error(f"JSON таҳлил қилиш хатоси: {e}")
-        await bot.edit_message_text(
-            text="❌ Чек маълумотларини қайта ишлашда хатолик юз берди.",
-            chat_id=chat_id,
-            message_id=message_id
-        )
-
 @app.get("/")
 async def root():
-    html_path = BASE_DIR / "index.html"
-    if html_path.exists():
-        return FileResponse(html_path)
     return JSONResponse({"status": "Bot va API muvaffaqiyatli ishlamoqda"}, status_code=200)
 
 if __name__ == "__main__":
@@ -452,11 +225,9 @@ if __name__ == "__main__":
         await bot.delete_webhook(drop_pending_updates=True)
         logging.info("Webhook ўчирилди. Long Polling ва FastAPI бошланяпти...")
         
-        # Uvicorn serverini to'g'ri sozlash
         config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
         server = uvicorn.Server(config)
         
-        # Server va Polling ni birgalikda xavсиз юритиш
         await asyncio.gather(
             server.serve(),
             dp.start_polling(bot)
@@ -465,4 +236,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logging.info("Сервер фойдаланувчи томонидан тўхтатилди.")
+        logging.info("Сервер тўхтатилди.")
