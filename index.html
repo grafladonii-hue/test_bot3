@@ -591,7 +591,6 @@
         }
     }
 
-    // ⭐ Vercel Proxy орқали HTTPS орқали сервердан тестларни юклаб олиш (Mixed Content муаммосини олдини олади)
     async function fetchTestData() {
         try {
             testData = {};
@@ -946,7 +945,7 @@
                         '<span><b>' + (qIndex + 1) + '.</b> ' + imgIcon + qText.substring(0, 35) + '...</span>' +
                         '<div class="admin-btn-group">' +
                         '<button type="button" class="warning" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="editQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">✏️ Tahrirlash</button>' +
-                        '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + id + '\', ' + qIndex + ')">🗑 O\'chirish</button>' +
+                        '<button type="button" class="danger" style="padding: 3px 8px; font-size: 11px; width: auto;" onclick="deleteQuestionFromAdmin(\'' + (q.id || '') + '\')">🗑 O\'chirish</button>' +
                         '</div></div>';
                 });
             }
@@ -959,7 +958,6 @@
                 '<div class="admin-btn-group" onclick="event.stopPropagation()">' +
                 '<button type="button" class="' + visibilityBtnClass + '" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="toggleTestVisibility(\'' + id + '\')">' + visibilityBtnText + '</button>' +
                 '<button type="button" class="info" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="addNewQuestionToTest(\'' + id + '\')">➕ Savol qo\'shish</button>' +
-                '<button type="button" class="danger" style="padding: 4px 10px; font-size: 12px; width: auto;" onclick="deleteTestFromAdmin(\'' + id + '\')">🗑 O\'chirish</button>' +
                 '</div></div>' +
                 '<div class="admin-questions-list">' + (questionsHtml || "<p style='color:#999; font-size: 12px; margin: 5px 0;'>Hozircha savollar yo'q.</p>") + '</div>' +
                 '</div>';
@@ -1031,22 +1029,86 @@
     }
 
     async function saveQuestionFromAdmin() {
-        alert("Saqlash funksiyasi server API orqali ishlaydi.");
-    }
+        var testIdSelect = document.getElementById("admin-test-select").value;
+        var testTitle = document.getElementById("admin-test-title").value.trim();
+        var readingText = document.getElementById("admin-reading-text").value.trim();
+        var imageUrl = document.getElementById("admin-img-data").value.trim();
+        var question = document.getElementById("admin-question").value.trim();
+        
+        var opt0 = document.getElementById("admin-opt-0").value.trim();
+        var opt1 = document.getElementById("admin-opt-1").value.trim();
+        var opt2 = document.getElementById("admin-opt-2").value.trim();
+        var opt3 = document.getElementById("admin-opt-3").value.trim();
+        
+        var correct = parseInt(document.getElementById("admin-correct-opt").value);
 
-    async function deleteQuestionFromAdmin(testId, qIndex) {
-        if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
-            await fetchTestData();
-            renderAdminTestsList();
-            populateTestSelect();
+        if (!question || !opt0 || !opt1) {
+            alert("Илтимос, савол матни ва камида 2 та вариантни киритинг!");
+            return;
+        }
+
+        if (testIdSelect === "new" && !testTitle) {
+            alert("Илтимос, янги тест учун ном киритинг!");
+            return;
+        }
+
+        var finalTestId = testIdSelect === "new" ? "test_" + Date.now() : testIdSelect;
+        var finalTestTitle = testIdSelect === "new" ? testTitle : (testData[testIdSelect] ? testData[testIdSelect].title : "Demo test");
+
+        var payload = {
+            test_id: finalTestId,
+            test_title: finalTestTitle,
+            reading_text: readingText,
+            image_url: imageUrl,
+            question: question,
+            options: [opt0, opt1, opt2, opt3].filter(o => o !== ""),
+            correct: correct
+        };
+
+        try {
+            let response = await fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            let result = await response.json();
+            if (result.status === "success") {
+                alert("Савол муваффақиятли сақланди! ✅");
+                resetAdminForm();
+                await fetchTestData();
+                renderAdminTestsList();
+            } else {
+                alert("Хатолик: " + (result.message || "Сақлаб бўлмади"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Сервер билан алоқада хатолик юз берди!");
         }
     }
 
-    async function deleteTestFromAdmin(id) {
-        if (confirm("Rostdan ham ushbu butun testni va undagi barcha savollarni o'chirib tashlamoqchisiz?")) {
-            await fetchTestData();
-            renderAdminTestsList();
-            populateTestSelect();
+    async function deleteQuestionFromAdmin(questionDbId) {
+        if (!questionDbId) {
+            alert("Savol ID topilmadi!");
+            return;
+        }
+        if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
+            try {
+                let response = await fetch('/api/delete/' + questionDbId, {
+                    method: 'DELETE'
+                });
+                let result = await response.json();
+                if (result.status === "success") {
+                    alert("Savol o'chirildi! 🗑");
+                    await fetchTestData();
+                    renderAdminTestsList();
+                    populateTestSelect();
+                } else {
+                    alert("O'chirishda xatolik: " + result.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Server bilan aloqada xatolik!");
+            }
         }
     }
 
