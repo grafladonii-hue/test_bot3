@@ -442,7 +442,7 @@ async def root():
     html_path = BASE_DIR / "index.html"
     if html_path.exists():
         return FileResponse(html_path)
-    return JSONResponse({"status": "Bot ишламоқда"}, status_code=200)
+    return JSONResponse({"status": "Bot va API muvaffaqiyatli ishlamoqda"}, status_code=200)
 
 if __name__ == "__main__":
     import uvicorn
@@ -452,9 +452,11 @@ if __name__ == "__main__":
         await bot.delete_webhook(drop_pending_updates=True)
         logging.info("Webhook ўчирилди. Long Polling ва FastAPI бошланяпти...")
         
-        config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info")
+        # Uvicorn serverini to'g'ri sozlash
+        config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
         server = uvicorn.Server(config)
         
+        # Server va Polling ni birgalikda xavсиз юритиш
         await asyncio.gather(
             server.serve(),
             dp.start_polling(bot)
