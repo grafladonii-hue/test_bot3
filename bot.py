@@ -213,6 +213,38 @@ async def cmd_start(message: types.Message):
             parse_mode="Markdown"
         )
 
+# Gemini orqali cheklarni o'qish misoli (gemini-3.5-flash-lite ishlatildi)
+@dp.message(F.photo)
+async def handle_payment_screenshot(message: types.Message):
+    if message.chat.type != "private":
+        return
+    user_id = message.from_user.id
+    if is_user_approved(user_id):
+        await message.answer("Сизда аллақачон фаол VIP обуна мавжуд!")
+        return
+
+    photo = message.photo[-1]
+    processing_msg = await message.answer("⏳ Чек расми текширилмоқда...")
+    try:
+        file_info = await bot.get_file(photo.file_id)
+        downloaded_file = await bot.download_file(file_info.file_path)
+        image = Image.open(downloaded_file)
+
+        prompt = (
+            "Read this receipt. Extract amount (number) and transaction ID / check number (string or null). "
+            "Return ONLY raw JSON without markdown: "
+            '{"amount": 0, "transaction_id": "id_or_null"}'
+        )
+
+        if gemini_client:
+            response = gemini_client.models.generate_content(
+                model='gemini-3.5-flash-lite',
+                contents=[image, prompt]
+            )
+            # Bu yerda javobni qayta ishlash davom etadi...
+    except Exception as e:
+        logging.error(f"Gemini хатоси: {e}")
+
 @app.get("/")
 async def root():
     return JSONResponse({"status": "Bot va API muvaffaqiyatli ishlamoqda"}, status_code=200)
