@@ -128,10 +128,14 @@ def get_tests():
             tests_dict[t_key]["questions"].append({
                 "id": q_id,
                 "reading_text": reading_text,
+                "readingText": reading_text,
                 "image_url": image_url,
+                "imageUrl": image_url,
                 "question": question_text,
+                "question_text": question_text,
                 "options": options,
-                "correct": correct_opt
+                "correct": correct_opt,
+                "correct_option": correct_opt
             })
             
         return tests_dict
@@ -213,7 +217,7 @@ async def cmd_start(message: types.Message):
             parse_mode="Markdown"
         )
 
-# Gemini orqali cheklarni o'qish misoli (gemini-3.5-flash-lite ishlatildi)
+# Gemini 3.5 flash lite modeli bilan cheklarni o'qish qismi
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
     if message.chat.type != "private":
