@@ -1,0 +1,1 @@
+INSERT INTO public.tournaments (id, title, test_key, start_time, duration_minutes, status, current_question_index, question_started_at, created_at) VALUES (1, 'Жонли турнир', 'demo_1792746309835', '2026-10-26 12:00:00+00', 90, 'active', 0, '2026-10-22 16:19:58.184381+00', '2026-10-22 16:19:58.184381+00');
