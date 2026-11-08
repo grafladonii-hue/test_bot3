@@ -2,7 +2,7 @@ fastapi
 uvicorn
 aiogram
 google-genai
-pillow
-pydantic
-requests
+Pillow
+psycopg2-binary
 pypdf
+pydantic
