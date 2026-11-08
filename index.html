@@ -594,7 +594,8 @@
     async function fetchTestData() {
         try {
             testData = {};
-            const response = await fetch('/api/tests');
+            // Сервернинг тўлиқ IP манзили кўрсатилди:
+            const response = await fetch('http://83.69.139.120:8000/api/tests');
             const data = await response.json();
             if (data) {
                 testData = data;
@@ -1066,7 +1067,7 @@
         };
 
         try {
-            let response = await fetch('/api/save', {
+            let response = await fetch('http://83.69.139.120:8000/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -1093,7 +1094,7 @@
         }
         if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
             try {
-                let response = await fetch('/api/delete/' + questionDbId, {
+                let response = await fetch('http://83.69.139.120:8000/api/delete/' + questionDbId, {
                     method: 'DELETE'
                 });
                 let result = await response.json();
