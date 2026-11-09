@@ -20,7 +20,7 @@ from typing import List, Optional
 
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = 8788215308:AAHc0btjQsQj2MUYSbD1F5iyblTE_iKuDHs
 if not TOKEN:
     raise RuntimeError("BOT_TOKEN топилмади!")
 
