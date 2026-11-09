@@ -19,7 +19,7 @@ from typing import List, Optional
 
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = "8788215308:AAHc0btjQsQJ2MUYSbD1F5iyblTE_iKuDHs"
+TOKEN = "8788215308:AAFge-oUPtzNEvCR38C2kyxsOrR_GQZ6u6c"
 if not TOKEN:
     raise RuntimeError("BOT_TOKEN топилмади!")
 
@@ -38,7 +38,7 @@ gemini_client = (
 DB_HOST = "localhost"
 DB_NAME = "appdb"
 DB_USER = "appuser"
-DB_PASSWORD = "StrongPass2026"  # Тирноққа олинди
+DB_PASSWORD = "StrongPass2026"
 DB_PORT = 5433
 
 if not DB_PASSWORD:
@@ -332,7 +332,7 @@ async def handle_payment_screenshot(message: types.Message):
         )
 
         response = gemini_client.models.generate_content(
-            model="gemini-2.5-flash",  # модель номи мослаштирилди
+            model="gemini-2.5-flash",
             contents=[image, prompt]
         )
 
