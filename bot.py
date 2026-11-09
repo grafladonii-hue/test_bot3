@@ -1,38 +1,50 @@
+
 import os
 import json
 import re
 import logging
+import asyncio
 from pathlib import Path
-from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.enums import ChatMemberStatus
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from google import genai
 from PIL import Image
 import psycopg2
-import pypdf
+from psycopg2.extras import Json
 from pydantic import BaseModel
 from typing import List, Optional
 
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = "8788215308:AAHc0btjQsQj2MUYSbD1F5iyblTE_iKuDHs"
+TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    raise RuntimeError("BOT_TOKEN топилмади!")
+
 GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 REQUIRED_AMOUNT = 50000
 
-gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+gemini_client = (
+    genai.Client(api_key=GEMINI_API_KEY)
+    if GEMINI_API_KEY else None
+)
 
+# PostgreSQL VPS
 DB_HOST = "localhost"
-DB_NAME = "demotestlardb"
-DB_USER = "postgres"
-DB_PASSWORD = "12345"
-DB_PORT = 5432
+DB_NAME = "appdb"
+DB_USER = "appuser"
+DB_PASSWORD = StrongPass2026
+DB_PORT = 5433
+
+if not DB_PASSWORD:
+    raise RuntimeError("POSTGRES_PASSWORD топилмади!")
+
 
 def get_db_connection():
     return psycopg2.connect(
@@ -40,48 +52,15 @@ def get_db_connection():
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD,
-        port=DB_PORT
+        port=DB_PORT,
+        connect_timeout=10
     )
+
 
 BASE_DIR = Path(__file__).resolve().parent
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-
-def clean_txn_id(txn_id) -> str:
-    if not txn_id:
-        return ""
-    cleaned = re.sub(r'[^a-zA-Z0-9]', '', str(txn_id)).strip().lower()
-    if cleaned in ["null", "none", "undefined", "false", "true", ""]:
-        return ""
-    return cleaned
-
-def is_user_approved(user_id: int) -> bool:
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT user_id FROM approved_users WHERE user_id = %s", (user_id,))
-        res = cur.fetchone()
-        cur.close()
-        conn.close()
-        return res is not None
-    except Exception as e:
-        logging.error(f"PostgreSQL хатоси: {e}")
-        return False
-
-def save_approved_user(user_id: int):
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO approved_users (user_id) VALUES (%s) ON CONFLICT DO NOTHING",
-            (user_id,)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        logging.error(f"PostgreSQL сақлаш хатоси: {e}")
 
 app = FastAPI()
 
@@ -93,36 +72,91 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- АСОСИЙ ТЕСТЛАРНИ БАЗАДАН МИНИ-АППГА ЮКЛАБ БЕРУВЧИ ENDPOINT ---
+
+def clean_txn_id(txn_id) -> str:
+    if not txn_id:
+        return ""
+
+    cleaned = re.sub(
+        r'[^a-zA-Z0-9]', '', str(txn_id)
+    ).strip().lower()
+
+    if cleaned in [
+        "null", "none", "undefined",
+        "false", "true", ""
+    ]:
+        return ""
+
+    return cleaned
+
+
+def is_user_approved(user_id: int) -> bool:
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT user_id FROM approved_users WHERE user_id = %s",
+                    (user_id,)
+                )
+                return cur.fetchone() is not None
+
+    except Exception as e:
+        logging.error(f"PostgreSQL хатоси: {e}")
+        return False
+
+
+def save_approved_user(user_id: int):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO approved_users (user_id)
+                    VALUES (%s)
+                    ON CONFLICT DO NOTHING
+                    """,
+                    (user_id,)
+                )
+
+    except Exception as e:
+        logging.error(f"VIP сақлаш хатоси: {e}")
+
+
 @app.get("/api/tests")
 def get_tests():
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT id, test_id, reading_text, image_url, question, options, correct, test_title 
-            FROM questions
-        """)
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id, test_id, reading_text,
+                           image_url, question, options,
+                           correct, test_title
+                    FROM questions
+                    ORDER BY id
+                """)
+                rows = cur.fetchall()
+
         tests_dict = {}
+
         for row in rows:
-            q_id, test_id, reading_text, image_url, question_text, options, correct_opt, test_title = row
-            
+            (
+                q_id, test_id, reading_text,
+                image_url, question_text,
+                options, correct_opt, test_title
+            ) = row
+
             t_key = str(test_id)
+
             if t_key not in tests_dict:
-                title = test_title if test_title else f"Demo test ({t_key})"
                 tests_dict[t_key] = {
-                    "title": title,
+                    "title": test_title or f"Demo test ({t_key})",
                     "questions": []
                 }
-            
+
             if isinstance(options, str):
                 try:
                     options = json.loads(options)
-                except:
+                except Exception:
                     options = []
 
             tests_dict[t_key]["questions"].append({
@@ -137,11 +171,16 @@ def get_tests():
                 "correct": correct_opt,
                 "correct_option": correct_opt
             })
-            
+
         return tests_dict
+
     except Exception as e:
-        logging.error(f"Базадан тестларни ўқиш хатоси: {e}")
-        return {}
+        logging.error(f"Тестларни ўқиш хатоси: {e}")
+        return JSONResponse(
+            {"error": str(e)},
+            status_code=500
+        )
+
 
 class QuestionModel(BaseModel):
     test_id: str
@@ -152,37 +191,63 @@ class QuestionModel(BaseModel):
     options: List[str]
     correct: int
 
+
 @app.post("/api/save")
 async def save_question(q: QuestionModel):
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        options_json = json.dumps(q.options, ensure_ascii=False)
-        cur.execute("""
-            INSERT INTO questions (test_id, reading_text, image_url, question, options, correct, test_title)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (q.test_id, q.reading_text, q.image_url, q.question, options_json, q.correct, q.test_title))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return {"status": "success", "message": "Savol muvaffaqiyatli qo'shildi"}
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO questions (
+                        test_id, reading_text, image_url,
+                        question, options, correct, test_title
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    q.test_id,
+                    q.reading_text,
+                    q.image_url,
+                    q.question,
+                    Json(q.options),
+                    q.correct,
+                    q.test_title
+                ))
+
+        return {
+            "status": "success",
+            "message": "Savol muvaffaqiyatli qo'shildi"
+        }
+
     except Exception as e:
-        logging.error(f"Savolni saqlash хатоси: {e}")
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+        logging.error(f"Саволни сақлаш хатоси: {e}")
+        return JSONResponse(
+            {"status": "error", "message": str(e)},
+            status_code=500
+        )
+
 
 @app.delete("/api/delete/{question_id}")
 async def delete_question(question_id: int):
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("DELETE FROM questions WHERE id = %s", (question_id,))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return {"status": "success", "message": "Savol o'chirildi"}
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "DELETE FROM questions WHERE id = %s",
+                    (question_id,)
+                )
+
+        return {
+            "status": "success",
+            "message": "Savol o'chirildi"
+        }
+
     except Exception as e:
-        logging.error(f"Savolni o'chirish хатоси: {e}")
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+        logging.error(f"Саволни ўчириш хатоси: {e}")
+        return JSONResponse(
+            {"status": "error", "message": str(e)},
+            status_code=500
+        )
+
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -190,80 +255,128 @@ async def cmd_start(message: types.Message):
         return
 
     user_id = message.from_user.id
-    app_url = WEB_APP_URL
-    is_vip = is_user_approved(user_id) or str(user_id) == "644092713"
+    is_vip = (
+        is_user_approved(user_id)
+        or str(user_id) == "644092713"
+    )
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Иловани очиш (Mini App)", web_app=WebAppInfo(url=app_url))]
+            [
+                InlineKeyboardButton(
+                    text="🚀 Иловани очиш (Mini App)",
+                    web_app=WebAppInfo(url=WEB_APP_URL)
+                )
+            ]
         ]
     )
-    
+
     if is_vip:
         await message.answer(
             "Ассалому алайкум! Сизда **VIP обуна фаол** ✅\n\n"
-            "Барча тестлар ва имкониятлардан чеклаувларсиз фойдаланишингиз мумкин. Иловани очиш учун қуйидаги тугмани босинг:",
+            "Барча тестлар ва имкониятлардан "
+            "чекловларсиз фойдаланишингиз мумкин.",
             reply_markup=keyboard,
             parse_mode="Markdown"
         )
     else:
         await message.answer(
-            "Ассалому алайкум! Demotestlar.uz платформасига хуш келибсиз.\n\n"
+            "Ассалому алайкум! Demotestlar.uz платформасига "
+            "хуш келибсиз.\n\n"
             "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
-            "🔒 Барча тестларни тўлиқ очиш учун ёпиқ гуруҳимиз аъзоси бўлинг ёки қуйидаги картага **50 000 сўм** ўтказиб, тўлов чекини шу ерга юборинг:\n\n"
+            "🔒 Барча тестларни очиш учун ёпиқ гуруҳимиз "
+            "аъзоси бўлинг ёки 50 000 сўм тўлов қилинг.\n\n"
             "💳 **Карта рақами:** `9860120155197128`\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов",
             reply_markup=keyboard,
             parse_mode="Markdown"
         )
 
-# Gemini 3.5 flash lite modeli bilan cheklarni o'qish qismi
+
 @dp.message(F.photo)
 async def handle_payment_screenshot(message: types.Message):
     if message.chat.type != "private":
         return
+
     user_id = message.from_user.id
+
     if is_user_approved(user_id):
-        await message.answer("Сизда аллақачон фаол VIP обуна мавжуд!")
+        await message.answer(
+            "Сизда аллақачон фаол VIP обуна мавжуд!"
+        )
         return
 
     photo = message.photo[-1]
-    processing_msg = await message.answer("⏳ Чек расми текширилмоқда...")
+    processing_msg = await message.answer(
+        "⏳ Чек расми текширилмоқда..."
+    )
+
     try:
+        if not gemini_client:
+            await processing_msg.edit_text(
+                "Gemini API калити созланмаган."
+            )
+            return
+
         file_info = await bot.get_file(photo.file_id)
-        downloaded_file = await bot.download_file(file_info.file_path)
+        downloaded_file = await bot.download_file(
+            file_info.file_path
+        )
+
         image = Image.open(downloaded_file)
 
         prompt = (
-            "Read this receipt. Extract amount (number) and transaction ID / check number (string or null). "
+            "Read this receipt. Extract amount (number) "
+            "and transaction ID / check number (string or null). "
             "Return ONLY raw JSON without markdown: "
             '{"amount": 0, "transaction_id": "id_or_null"}'
         )
 
-        if gemini_client:
-            response = gemini_client.models.generate_content(
-                model='gemini-3.5-flash-lite',
-                contents=[image, prompt]
-            )
-            # Bu yerda javobni qayta ishlash davom etadi...
+        response = gemini_client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=[image, prompt]
+        )
+
+        logging.info("Gemini жавоби: %s", response.text)
+
+        await processing_msg.edit_text(
+            "Чек таҳлил қилинди. Автоматик тўлов тасдиғи "
+            "ҳозирча кодга уланмаган."
+        )
+
     except Exception as e:
         logging.error(f"Gemini хатоси: {e}")
+        await processing_msg.edit_text(
+            "Чекни текширишда хатолик юз берди."
+        )
+
 
 @app.get("/")
 async def root():
-    return JSONResponse({"status": "Bot va API muvaffaqiyatli ishlamoqda"}, status_code=200)
+    return JSONResponse({
+        "status": "Bot va API muvaffaqiyatli ishlamoqda"
+    })
+
 
 if __name__ == "__main__":
     import uvicorn
-    import asyncio
 
     async def main():
         await bot.delete_webhook(drop_pending_updates=True)
-        logging.info("Webhook ўчирилди. Long Polling ва FastAPI бошланяпти...")
-        
-        config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
+
+        logging.info(
+            "Webhook ўчирилди. Bot ва API ишга тушмоқда..."
+        )
+
+        config = uvicorn.Config(
+            app=app,
+            host="0.0.0.0",
+            port=8000,
+            log_level="info"
+        )
+
         server = uvicorn.Server(config)
-        
+
         await asyncio.gather(
             server.serve(),
             dp.start_polling(bot)
