@@ -39,7 +39,7 @@ DB_HOST = "localhost"
 DB_NAME = "appdb"
 DB_USER = "appuser"
 DB_PASSWORD = "StrongPass2026"
-DB_PORT = 5433
+DB_PORT = 5432
 
 if not DB_PASSWORD:
     raise RuntimeError("POSTGRES_PASSWORD топилмади!")
