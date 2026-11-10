@@ -260,6 +260,18 @@
         .category-header:hover { background: #e5f4ee; }
         .category-content { display: block; margin-top: 8px; transition: 0.3s; }
 
+        .leaderboard-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
         .admin-form input, .admin-form textarea, .admin-form select {
             width: 100%;
             padding: 10px;
@@ -640,7 +652,33 @@
 
         listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
         podiumContainer.innerHTML = "";
-        listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
+
+        try {
+            const response = await fetch('https://api.demotestlar.uz/api/leaderboard');
+            const data = await response.json();
+
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
+                return;
+            }
+
+            var listHtml = "";
+            data.forEach((item, index) => {
+                var rank = index + 1;
+                listHtml += `<div class="leaderboard-item">` +
+                    `<div style="display: flex; align-items: center; gap: 10px;">` +
+                    `<span style="font-weight: bold; width: 25px; text-align: center;">${rank}</span>` +
+                    `<span>${item.name || 'Foydalanuvchi'}</span>` +
+                    `</div>` +
+                    `<div style="font-weight: bold; color: #27ae60;">${item.score} ball (${item.percent}%)</div>` +
+                    `</div>`;
+            });
+
+            listContainer.innerHTML = listHtml;
+        } catch (e) {
+            console.error("Reytingni yuklashda xatolik:", e);
+            listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
+        }
     }
 
     function startQuiz(testId) {
