@@ -145,6 +145,17 @@ async def is_user_vip(user_id: int) -> bool:
     return False
 
 
+# Mini App uchun VIP statusni tekshiruvchi API qo'shildi
+@app.get("/api/check-vip/{user_id}")
+async def check_vip_status(user_id: int):
+    try:
+        is_vip = await is_user_vip(user_id)
+        return {"is_vip": is_vip}
+    except Exception as e:
+        logging.error(f"VIP tekshirish API хатоси: {e}")
+        return {"is_vip": False}
+
+
 @app.get("/api/tests")
 def get_tests():
     try:
@@ -388,7 +399,7 @@ async def handle_payment_screenshot(message: types.Message):
             '{"amount": 0, "transaction_id": "id_or_null"}'
         )
 
-        # Модел номи 'gemini-3.5-flash-lite' га ўзгартирилди
+        # Gemini qismi umuman o'zgartirilmadi, faqat siz bergan versiya qoldirildi
         response = gemini_client.models.generate_content(
             model="gemini-3.5-flash-lite",
             contents=[image, prompt]
