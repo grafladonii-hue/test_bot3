@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -256,63 +255,10 @@
             align-items: center;
             font-weight: bold;
             color: #2c3e50;
+            user-select: none;
         }
-        .category-content { display: block; margin-top: 8px; }
-
-        .podium-container {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            align-items: flex-end;
-            gap: 6px;
-            margin-bottom: 25px;
-            padding-top: 15px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .podium-step {
-            width: 100%;
-            border-radius: 8px 8px 0 0;
-            text-align: center;
-            padding: 10px 4px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-            position: relative;
-        }
-        .podium-1 { grid-column: 2; min-height: 145px; background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%); border: 2px solid #eab308; }
-        .podium-2 { grid-column: 1; min-height: 120px; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); border: 2px solid #94a3b8; }
-        .podium-3 { grid-column: 3; min-height: 100px; background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); border: 2px solid #f97316; }
-        
-        .podium-rank-badge {
-            font-size: 13px;
-            font-weight: 900;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-bottom: 4px;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .podium-1 .podium-rank-badge { background: #eab308; color: #ffffff; }
-        .podium-2 .podium-rank-badge { background: #64748b; color: #ffffff; }
-        .podium-3 .podium-rank-badge { background: #ea580c; color: #ffffff; }
-
-        .podium-avatar { font-size: 16px; margin-bottom: 2px; }
-        .podium-name { font-weight: bold; font-size: 11px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
-        .podium-score { font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 2px; }
-
-        .leaderboard-item {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 10px 12px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-sizing: border-box;
-        }
+        .category-header:hover { background: #e5f4ee; }
+        .category-content { display: block; margin-top: 8px; transition: 0.3s; }
 
         .admin-form input, .admin-form textarea, .admin-form select {
             width: 100%;
@@ -414,10 +360,6 @@
         <div id="podium-section"></div>
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
-        </div>
-        
-        <div id="load-more-container" style="text-align: center; margin-top: 15px; display: none;">
-            <button type="button" onclick="loadMoreLeaderboard()" style="background: #3498db; width: auto; padding: 10px 20px;">Yana 50 tani ko'rsatish</button>
         </div>
     </div>
 
@@ -561,8 +503,6 @@
     var quizTimerInterval = null;
     var timeLeftSeconds = 90 * 60;
 
-    var allLeaderboardData = [];
-    var leaderboardDisplayLimit = 50;
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
     var isUserPremium = false;
 
@@ -595,7 +535,6 @@
     async function fetchTestData() {
         try {
             testData = {};
-            // Сервернинг тўлиқ IP манзили кўрсатилди:
             const response = await fetch('https://api.demotestlar.uz/api/tests');
             const data = await response.json();
             if (data) {
@@ -654,11 +593,23 @@
         });
 
         var html = "";
-        if (kuzHtml) html += '<div class="category-header"><span>🍁 Demo (Kuz 2026)</span></div><div class="category-content">' + kuzHtml + '</div>';
-        if (bahorHtml) html += '<div class="category-header"><span>🌱 Demo (Bahor 2027)</span></div><div class="category-content">' + bahorHtml + '</div>';
-        if (boshqaHtml) html += '<div class="category-header"><span>📁 Boshqa testlar</span></div><div class="category-content">' + boshqaHtml + '</div>';
+        if (kuzHtml) html += '<div class="category-header" onclick="toggleCategory(this)"><span>🍁 Demo (Kuz 2026)</span><span>▼</span></div><div class="category-content">' + kuzHtml + '</div>';
+        if (bahorHtml) html += '<div class="category-header" onclick="toggleCategory(this)"><span>🌱 Demo (Bahor 2027)</span><span>▼</span></div><div class="category-content">' + bahorHtml + '</div>';
+        if (boshqaHtml) html += '<div class="category-header" onclick="toggleCategory(this)"><span>📁 Boshqa testlar</span><span>▼</span></div><div class="category-content">' + boshqaHtml + '</div>';
 
         document.getElementById("tests-list").innerHTML = html || "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
+    }
+
+    function toggleCategory(headerEl) {
+        var content = headerEl.nextElementSibling;
+        var arrowSpan = headerEl.querySelector('span:last-child');
+        if (content.style.display === "none") {
+            content.style.display = "block";
+            arrowSpan.innerText = "▼";
+        } else {
+            content.style.display = "none";
+            arrowSpan.innerText = "▶";
+        }
     }
 
     function toggleTestVisibility(testId) {
@@ -689,8 +640,6 @@
 
         listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
         podiumContainer.innerHTML = "";
-        leaderboardDisplayLimit = 50;
-
         listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
     }
 
