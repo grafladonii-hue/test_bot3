@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -595,7 +596,7 @@
         try {
             testData = {};
             // Сервернинг тўлиқ IP манзили кўрсатилди:
-            const response = await fetch('http://83.69.139.120:8000/api/tests');
+            const response = await fetch('https://api.demotestlar.uz/api/tests');
             const data = await response.json();
             if (data) {
                 testData = data;
@@ -1067,7 +1068,7 @@
         };
 
         try {
-            let response = await fetch('http://83.69.139.120:8000/api/save', {
+            let response = await fetch('https://api.demotestlar.uz/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -1092,9 +1093,9 @@
             alert("Savol ID topilmadi!");
             return;
         }
-        if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchisiz?")) {
+        if (confirm("Rostdan ham ushbu savolni o'chirib tashlamoqchimisiz?")) {
             try {
-                let response = await fetch('http://83.69.139.120:8000/api/delete/' + questionDbId, {
+                let response = await fetch('https://api.demotestlar.uz/api/delete/' + questionDbId, {
                     method: 'DELETE'
                 });
                 let result = await response.json();
