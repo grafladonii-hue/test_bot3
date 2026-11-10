@@ -518,14 +518,28 @@
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
     var isUserPremium = false;
 
+    // Serverdan VIP statusni tekshiruvchi янгиланган функция
     async function checkUserVipStatus() {
-        if (currentUserId && String(currentUserId) === String(ADMIN_ID)) {
-            isUserPremium = true;
+        if (!currentUserId) {
+            isUserPremium = false;
             updateVipButtonUI();
             return;
         }
 
-        isUserPremium = false;
+        try {
+            const response = await fetch(`https://api.demotestlar.uz/api/check-vip/${currentUserId}`);
+            const data = await response.json();
+            
+            if (data && data.is_vip) {
+                isUserPremium = true;
+            } else {
+                isUserPremium = false;
+            }
+        } catch (e) {
+            console.error("VIP statusni tekshirishda xatolik:", e);
+            isUserPremium = (String(currentUserId) === String(ADMIN_ID));
+        }
+
         updateVipButtonUI();
     }
 
