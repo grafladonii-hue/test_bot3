@@ -248,6 +248,43 @@ async def delete_question(question_id: int):
         )
 
 
+@app.get("/api/leaderboard")
+def get_leaderboard():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Агар results жадвали ҳали бўлмаса, қуйидаги сўров хато бермаслиги учун текширилади
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS results (
+                        id SERIAL PRIMARY KEY,
+                        user_name TEXT,
+                        score INT,
+                        percent INT
+                    )
+                """)
+                conn.commit()
+
+                cur.execute("""
+                    SELECT user_name, score, percent 
+                    FROM results 
+                    ORDER BY score DESC 
+                    LIMIT 50
+                """)
+                rows = cur.fetchall()
+        
+        result = []
+        for row in rows:
+            result.append({
+                "name": row[0],
+                "score": row[1],
+                "percent": row[2]
+            })
+        return result
+    except Exception as e:
+        logging.error(f"Reytingni olishda xatolik: {e}")
+        return []
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     if message.chat.type != "private":
