@@ -121,6 +121,30 @@ def save_approved_user(user_id: int):
         logging.error(f"VIP сақлаш хатоси: {e}")
 
 
+async def check_telegram_membership(user_id: int) -> bool:
+    try:
+        member = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
+        if member.status in ["creator", "administrator", "member"]:
+            return True
+    except Exception as e:
+        logging.error(f"Гуруҳ аъзолигини текшириш хатоси: {e}")
+    return False
+
+
+async def is_user_vip(user_id: int) -> bool:
+    if str(user_id) == "644092713":
+        return True
+    
+    if is_user_approved(user_id):
+        return True
+        
+    if await check_telegram_membership(user_id):
+        save_approved_user(user_id)
+        return True
+        
+    return False
+
+
 @app.get("/api/tests")
 def get_tests():
     try:
@@ -253,7 +277,6 @@ def get_leaderboard():
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                # Агар results жадвали ҳали бўлмаса, қуйидаги сўров хато бермаслиги учун текширилади
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS results (
                         id SERIAL PRIMARY KEY,
@@ -291,10 +314,7 @@ async def cmd_start(message: types.Message):
         return
 
     user_id = message.from_user.id
-    is_vip = (
-        is_user_approved(user_id)
-        or str(user_id) == "644092713"
-    )
+    is_vip = await is_user_vip(user_id)
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -336,7 +356,7 @@ async def handle_payment_screenshot(message: types.Message):
 
     user_id = message.from_user.id
 
-    if is_user_approved(user_id):
+    if await is_user_vip(user_id):
         await message.answer(
             "Сизда аллақачон фаол VIP обуна мавжуд!"
         )
@@ -368,8 +388,9 @@ async def handle_payment_screenshot(message: types.Message):
             '{"amount": 0, "transaction_id": "id_or_null"}'
         )
 
+        # Модел номи 'gemini-3.5-flash-lite' га ўзгартирилди
         response = gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
             contents=[image, prompt]
         )
 
