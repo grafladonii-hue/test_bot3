@@ -145,7 +145,6 @@ async def is_user_vip(user_id: int) -> bool:
     return False
 
 
-# Mini App uchun VIP statusni tekshiruvchi API qo'shildi
 @app.get("/api/check-vip/{user_id}")
 async def check_vip_status(user_id: int):
     try:
@@ -369,13 +368,13 @@ async def handle_payment_screenshot(message: types.Message):
 
     if await is_user_vip(user_id):
         await message.answer(
-            "Сизда аллақачон фаол VIP обуна мавжуд!"
+            "Сизда аллақачон фаол VIP обуна мавжуд! ✅"
         )
         return
 
     photo = message.photo[-1]
     processing_msg = await message.answer(
-        "⏳ Чек расми текширилмоқда..."
+        "⏳ Чек сунъий интеллект орқали текширилмоқда..."
     )
 
     try:
@@ -393,29 +392,41 @@ async def handle_payment_screenshot(message: types.Message):
         image = Image.open(downloaded_file)
 
         prompt = (
-            "Read this receipt. Extract amount (number) "
-            "and transaction ID / check number (string or null). "
-            "Return ONLY raw JSON without markdown: "
-            '{"amount": 0, "transaction_id": "id_or_null"}'
+            "Read this payment receipt. Extract the numeric amount paid "
+            "and return ONLY raw JSON without markdown: "
+            '{"amount": 0}'
         )
 
-        # Gemini qismi umuman o'zgartirilmadi, faqat siz bergan versiya qoldirildi
         response = gemini_client.models.generate_content(
             model="gemini-3.5-flash-lite",
             contents=[image, prompt]
         )
 
-        logging.info("Gemini жавоби: %s", response.text)
+        res_text = response.text.strip()
+        res_text = re.sub(r"```json|```", "", res_text).strip()
+        
+        data = json.loads(res_text)
+        amount = int(data.get("amount", 0))
 
-        await processing_msg.edit_text(
-            "Чек таҳлил қилинди. Автоматик тўлов тасдиғи "
-            "ҳозирча кодга уланмаган."
-        )
+        if amount >= REQUIRED_AMOUNT:
+            save_approved_user(user_id)
+            await processing_msg.edit_text(
+                "✅ **Тўлов муваффақиятли тасдиқланди!**\n\n"
+                "Сизга автоматик равишда **VIP обуна** берилди. "
+                "Энди иловани очиб, барча тестлардан чекловларсиз фойдаланишингиз мумкин! 🚀",
+                parse_mode="Markdown"
+            )
+        else:
+            await processing_msg.edit_text(
+                f"❌ Чекдаги сумма етарли эмас ёки тўловни аниқлаб бўлмади (Аниқланди: {amount} сўм).\n\n"
+                "Тўлов миқдори камида **50 000 сўм** бўлиши керак. "
+                "Агар хатолик деб ҳисобласангиз, админга мурожаат қилинг."
+            )
 
     except Exception as e:
-        logging.error(f"Gemini хатоси: {e}")
+        logging.error(f"Чекни таҳлил қилиш хатоси: {e}")
         await processing_msg.edit_text(
-            "Чекни текширишда хатолик юз берди."
+            "Чекни ўқишда хатолик юз берди. Илтимос, чекни янада аниқроқ қилиб қайта юборинг ёки админ билан боғланинг."
         )
 
 
