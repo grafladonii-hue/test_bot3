@@ -708,11 +708,9 @@
     function renderTestsList() {
         var sortedKeys = getSortedTestKeys();
 
-        var kuzDiv = document.createElement('div');
-        var bahorDiv = document.createElement('div');
-        var boshqaDiv = document.createElement('div');
-
-        var hasKuz = false, hasBahor = false, hasBoshqa = false;
+        var kuzHtml = "";
+        var bahorHtml = "";
+        var boshqaHtml = "";
 
         sortedKeys.forEach(function(id) {
             var t = testData[id];
@@ -723,6 +721,7 @@
             var titleLower = title.toLowerCase();
             var testNum = extractTestNum(id);
 
+            // 1, 2, 3-тестлар бепул, 4-чи ва ундан кейингилари VIP[cite: 4]
             var isLocked = !isUserPremium && testNum >= 4;
 
             var questionCount = Array.isArray(t.questions)
@@ -755,70 +754,72 @@
             if (isLocked) {
                 btn.className = 'vip-link-btn';
                 btn.innerHTML = '⭐ VIP obuna';
-                btn.onclick = function(e) { openVipBotDirect(e); };
+                btn.setAttribute('data-vip', '1');
             } else {
                 btn.className = '';
                 btn.innerText = 'Ishlash';
-                btn.onclick = function() {
-                    startQuiz(id);
-                };
+                btn.setAttribute('data-test-id', id);
             }
             cardDiv.appendChild(btn);
 
             if (titleLower.includes('kuz') || titleLower.includes('куз')) {
-                kuzDiv.appendChild(cardDiv);
-                hasKuz = true;
+                kuzHtml += cardDiv.outerHTML;
             } else if (
                 titleLower.includes('bahor') ||
                 titleLower.includes('баҳор')
             ) {
-                bahorDiv.appendChild(cardDiv);
-                hasBahor = true;
+                bahorHtml += cardDiv.outerHTML;
             } else {
-                boshqaDiv.appendChild(cardDiv);
-                hasBoshqa = true;
+                boshqaHtml += cardDiv.outerHTML;
             }
         });
 
+        var html = "";
+
+        if (kuzHtml) {
+            html +=
+                '<div class="category-header" onclick="toggleCategory(this)">' +
+                    '<span>🍁 Demo (Kuz 2026)</span>' +
+                    '<span>▼</span>' +
+                '</div>' +
+                '<div class="category-content">' + kuzHtml + '</div>';
+        }
+
+        if (bahorHtml) {
+            html +=
+                '<div class="category-header" onclick="toggleCategory(this)">' +
+                    '<span>🌱 Demo (Bahor 2027)</span>' +
+                    '<span>▼</span>' +
+                '</div>' +
+                '<div class="category-content">' + bahorHtml + '</div>';
+        }
+
+        if (boshqaHtml) {
+            html +=
+                '<div class="category-header" onclick="toggleCategory(this)">' +
+                    '<span>📁 Boshqa testlar</span>' +
+                    '<span>▼</span>' +
+                '</div>' +
+                '<div class="category-content">' + boshqaHtml + '</div>';
+        }
+
         var listEl = document.getElementById("tests-list");
-        if (!listEl) return;
-        listEl.innerHTML = "";
+        if (listEl) {
+            listEl.innerHTML = html || "<p style='text-align:center;color:#777;'>Testlar topilmadi.</p>";
 
-        if (hasKuz) {
-            var headerKuz = document.createElement('div');
-            headerKuz.className = 'category-header';
-            headerKuz.onclick = function() { toggleCategory(this); };
-            headerKuz.innerHTML = '<span>🍁 Demo (Kuz 2026)</span><span>▼</span>';
-            
-            kuzDiv.className = 'category-content';
-            listEl.appendChild(headerKuz);
-            listEl.appendChild(kuzDiv);
-        }
+            listEl.onclick = function(event) {
+                var button = event.target.closest('.test-card button');
 
-        if (hasBahor) {
-            var headerBahor = document.createElement('div');
-            headerBahor.className = 'category-header';
-            headerBahor.onclick = function() { toggleCategory(this); };
-            headerBahor.innerHTML = '<span>🌱 Demo (Bahor 2027)</span><span>▼</span>';
-            
-            bahorDiv.className = 'category-content';
-            listEl.appendChild(headerBahor);
-            listEl.appendChild(bahorDiv);
-        }
+                if (!button || !listEl.contains(button)) return;
 
-        if (hasBoshqa) {
-            var headerBoshqa = document.createElement('div');
-            headerBoshqa.className = 'category-header';
-            headerBoshqa.onclick = function() { toggleCategory(this); };
-            headerBoshqa.innerHTML = '<span>📁 Boshqa testlar</span><span>▼</span>';
-            
-            boshqaDiv.className = 'category-content';
-            listEl.appendChild(headerBoshqa);
-            listEl.appendChild(boshqaDiv);
-        }
+                var testId = button.getAttribute('data-test-id');
 
-        if (!hasKuz && !hasBahor && !hasBoshqa) {
-            listEl.innerHTML = "<p style='text-align:center;color:#777;'>Testlar topilmadi.</p>";
+                if (testId !== null) {
+                    startQuiz(testId);
+                } else if (button.getAttribute('data-vip') === '1') {
+                    openVipBotDirect(event);
+                }
+            };
         }
     }
 
