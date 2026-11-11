@@ -595,7 +595,6 @@
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
     var isUserPremium = false;
 
-    // Reyting uchun o'zgaruvchilar
     var globalLeaderboardData = [];
     var visibleLeaderboardCount = 50;
 
@@ -676,6 +675,7 @@
             if (!t || hiddenTests[id]) return;
 
             var testNum = extractTestNum(id);
+            // 1, 2, 3-тестлар очиқ, 4-чи ва ундан кейингилари VIP (ёпиқ)
             var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
 
             var actionBtn = isLocked 
@@ -761,7 +761,6 @@
             globalLeaderboardData = data;
             visibleLeaderboardCount = 50;
 
-            // 1, 2, 3-ўринлар учун подиум тайёрлаш
             let podiumHtml = "";
             let top3 = globalLeaderboardData.slice(0, 3);
             
@@ -810,7 +809,6 @@
         var listHtml = "";
         currentItems.forEach((item, index) => {
             var rank = index + 4;
-            // Уринишлар сонини олиш (item.attempts ёки item.tries ёки item.count орқали, мавжуд бўлмаса 0)
             let attemptsCount = item.attempts !== undefined ? item.attempts : (item.tries !== undefined ? item.tries : (item.count !== undefined ? item.count : ''));
             let attemptsText = attemptsCount !== '' ? `${attemptsCount} ta urinish` : '';
 
@@ -845,6 +843,7 @@
 
     function startQuiz(testId) {
         var testNum = extractTestNum(testId);
+        // 1, 2, 3-тестлардан бошқалари VIP obuna талаб қилади
         var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
         if (isLocked) {
             alert("Ushbu test VIP obunachilar uchun mo'ljallangan!");
