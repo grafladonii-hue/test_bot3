@@ -670,8 +670,10 @@
             return;
         }
 
-        await checkUserVipStatus();
         renderTestsList();
+        checkUserVipStatus().then(function() {
+            renderTestsList();
+        });
     }
 
     function extractTestNum(id) {
