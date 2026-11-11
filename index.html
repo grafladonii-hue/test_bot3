@@ -637,7 +637,6 @@
         }
     }
 
-    // Сиз берган янги fetchTestData функцияси
     async function fetchTestData() {
         var list = document.getElementById("tests-list");
 
@@ -675,7 +674,6 @@
         renderTestsList();
     }
 
-    // Сиз берган янги extractTestNum ва getSortedTestKeys функциялари
     function extractTestNum(id) {
         var t = testData[id];
         var title = (t && t.title) ? String(t.title) : String(id);
@@ -705,7 +703,6 @@
         });
     }
 
-    // Сиз берган янги renderTestsList ва toggleCategory функциялари
     function renderTestsList() {
         var sortedKeys = getSortedTestKeys();
 
@@ -722,12 +719,8 @@
             var titleLower = title.toLowerCase();
             var testNum = extractTestNum(id);
 
-            // 1, 2, 3-тестлар бепул, 4-чи ва ундан кейингилари VIP
+            // 1, 2, 3-тестлар бепул, 4-чи ва ундан кейингилари VIP[cite: 4]
             var isLocked = !isUserPremium && testNum >= 4;
-
-            var actionBtn = isLocked
-                ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)">⭐ VIP obuna</button>'
-                : '<button type="button" onclick="startQuiz(\'' + id + '\')">Ishlash</button>';
 
             var questionCount = Array.isArray(t.questions)
                 ? t.questions.length
@@ -743,28 +736,43 @@
                 }[char];
             });
 
-            var cardHtml =
-                '<div class="test-card">' +
-                    '<div style="flex:1; min-width:0; padding-right:10px;">' +
-                        '<strong>' + safeTitle + '</strong>' +
-                        '<p style="margin:5px 0 0; font-size:13px; color:#666;">' +
-                            questionCount + ' ta savol • 90 daqiqa' +
-                        '</p>' +
-                    '</div>' +
-                    actionBtn +
-                '</div>';
+            var cardDiv = document.createElement('div');
+            cardDiv.className = 'test-card';
+
+            var infoDiv = document.createElement('div');
+            infoDiv.style.cssText = 'flex:1; min-width:0; padding-right:10px;';
+            infoDiv.innerHTML = '<strong>' + safeTitle + '</strong>' +
+                '<p style="margin:5px 0 0; font-size:13px; color:#666;">' +
+                    questionCount + ' ta savol • 90 daqiqa' +
+                '</p>';
+            cardDiv.appendChild(infoDiv);
+
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            if (isLocked) {
+                btn.className = 'vip-link-btn';
+                btn.innerHTML = '⭐ VIP obuna';
+                btn.onclick = function(e) { openVipBotDirect(e); };
+            } else {
+                btn.className = '';
+                btn.innerText = 'Ishlash';
+                btn.onclick = (function(testId) {
+                    return function() {
+                        startQuiz(testId);
+                    };
+                })(id);
+            }
+            cardDiv.appendChild(btn);
 
             if (titleLower.includes('kuz') || titleLower.includes('куз')) {
-                kuzHtml += cardHtml;
-
+                kuzHtml += cardDiv.outerHTML;
             } else if (
                 titleLower.includes('bahor') ||
                 titleLower.includes('баҳор')
             ) {
-                bahorHtml += cardHtml;
-
+                bahorHtml += cardDiv.outerHTML;
             } else {
-                boshqaHtml += cardHtml;
+                boshqaHtml += cardDiv.outerHTML;
             }
         });
 
