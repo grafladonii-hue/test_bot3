@@ -670,6 +670,11 @@
         var sortedKeys = getSortedTestKeys();
         var kuzHtml = "", bahorHtml = "", boshqaHtml = "";
 
+        if (sortedKeys.length === 0) {
+            document.getElementById("tests-list").innerHTML = "<p style='text-align:center; color:#777;'>Testlar topilmadi.</p>";
+            return;
+        }
+
         sortedKeys.forEach(function(id) {
             var t = testData[id];
             if (!t || hiddenTests[id]) return;
@@ -682,9 +687,9 @@
                 ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna talab etiladi">⭐ VIP obuna</button>'
                 : '<button type="button" onclick="startQuiz(\'' + id + '\')">Ishlash</button>';
 
-            var titleLower = t.title.toLowerCase();
+            var titleLower = (t.title || "").toLowerCase();
             var cardHtml = '<div class="test-card">' +
-                '<div><strong>' + t.title + '</strong>' +
+                '<div><strong>' + (t.title || id) + '</strong>' +
                 '<p style="margin: 5px 0 0; font-size: 13px; color: #666;">' + (t.questions ? t.questions.length : 0) + ' ta savol • 90 daqiqa</p></div>' +
                 actionBtn +
                 '</div>';
