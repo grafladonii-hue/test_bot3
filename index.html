@@ -1285,7 +1285,7 @@
         if (e) { e.preventDefault(); e.stopPropagation(); }
         var botUrl = "https://t.me/Demotestlaruz_bot?start=pay_premium";
         
-        .if (window.Telegram && window.Telegram.WebApp) {
+        if (window.Telegram && window.Telegram.WebApp) {
             if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
                 window.Telegram.WebApp.openTelegramLink(botUrl);
                 return;
