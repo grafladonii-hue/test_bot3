@@ -675,8 +675,8 @@
             if (!t || hiddenTests[id]) return;
 
             var testNum = extractTestNum(id);
-            // 1, 2, 3-тестлар очиқ, 4-чи ва ундан кейингилари VIP (ёпиқ)
-            var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
+            // 1, 2, 3-тестлар бепул ва очиқ, 4-чи ва ундан кейингилари VIP obuna талаб қилади
+            var isLocked = !isUserPremium && testNum >= 4;
 
             var actionBtn = isLocked 
                 ? '<button type="button" class="vip-link-btn" onclick="openVipBotDirect(event)" title="VIP obuna talab etiladi">⭐ VIP obuna</button>'
@@ -843,8 +843,7 @@
 
     function startQuiz(testId) {
         var testNum = extractTestNum(testId);
-        // 1, 2, 3-тестлардан бошқалари VIP obuna талаб қилади
-        var isLocked = !isUserPremium && !(testNum >= 1 && testNum <= 3);
+        var isLocked = !isUserPremium && testNum >= 4;
         if (isLocked) {
             alert("Ushbu test VIP obunachilar uchun mo'ljallangan!");
             openVipBotDirect();
