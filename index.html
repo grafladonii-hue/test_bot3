@@ -260,6 +260,76 @@
         .category-header:hover { background: #e5f4ee; }
         .category-content { display: block; margin-top: 8px; transition: 0.3s; }
 
+        /* PODIUM STYLES */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
+            margin: 20px 0 25px 0;
+            padding-top: 15px;
+        }
+        .podium-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            max-width: 110px;
+        }
+        .podium-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 6px;
+            border: 2px solid #cbd5e0;
+        }
+        .podium-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+        .podium-score {
+            font-size: 11px;
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .podium-bar {
+            width: 100%;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .podium-1 { order: 2; }
+        .podium-1 .podium-bar { height: 95px; background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); background-color: #f1c40f; }
+        .podium-1 .podium-avatar { border-color: #f1c40f; background: #fef9e7; color: #d4ac0d; }
+
+        .podium-2 { order: 1; }
+        .podium-2 .podium-bar { height: 75px; background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); background-color: #bdc3c7; color: #2c3e50; }
+        .podium-2 .podium-avatar { border-color: #bdc3c7; background: #f2f3f4; color: #7f8c8d; }
+
+        .podium-3 { order: 3; }
+        .podium-3 .podium-bar { height: 55px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); background-color: #e67e22; }
+        .podium-3 .podium-avatar { border-color: #e67e22; background: #fef5e7; color: #d35400; }
+
         .leaderboard-item {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -348,7 +418,7 @@
     <div id="home-page" class="page active">
         <div class="brand-header">
             <h2>Demotestlar.uz</h2>
-            <p class="sub-title">(Baxtiyor Karjabov Demo testlar платформаси)</p>
+            <p class="sub-title">(Baxtiyor Karjabov Demo testlar platformasi)</p>
         </div>
 
         <p style="text-align: center; color: #555;">Bilimingizni sinovdan o'tkazish uchun Testlar bo'limiga o'ting.</p>
@@ -367,9 +437,11 @@
 
     <div id="rating-page" class="page">
         <h2>🏆 Eng yaxshi natijalar (Reyting)</h2>
-        <p style="color: #666; font-size: 13px;">Testlarni muvaffaqiyatli topshirgan barcha qatnashchilar natijalari:</p>
+        <p style="color: #666; font-size: 13px; margin-bottom: 5px;">Testlarni muvaffaqiyatli topshirgan eng ilg'or qatnashchilar:</p>
         
+        <!-- PODIUM SECTION -->
         <div id="podium-section"></div>
+        
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
@@ -518,7 +590,6 @@
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
     var isUserPremium = false;
 
-    // Serverdan VIP statusni tekshiruvchi янгиланган функция
     async function checkUserVipStatus() {
         if (!currentUserId) {
             isUserPremium = false;
@@ -676,12 +747,44 @@
                 return;
             }
 
+            // 1, 2, 3-ўринлар учун подиум тайёрлаш
+            let podiumHtml = "";
+            let top3 = data.slice(0, 3);
+            
+            if (top3.length > 0) {
+                let first = top3[0] ? `<div class="podium-step podium-1">
+                    <div class="podium-avatar">🥇</div>
+                    <div class="podium-name">${top3[0].name || 'Foydalanuvchi'}</div>
+                    <div class="podium-score">${top3[0].score} ball</div>
+                    <div class="podium-bar">1</div>
+                </div>` : '';
+
+                let second = top3[1] ? `<div class="podium-step podium-2">
+                    <div class="podium-avatar">🥈</div>
+                    <div class="podium-name">${top3[1].name || 'Foydalanuvchi'}</div>
+                    <div class="podium-score">${top3[1].score} ball</div>
+                    <div class="podium-bar">2</div>
+                </div>` : '';
+
+                let third = top3[2] ? `<div class="podium-step podium-3">
+                    <div class="podium-avatar">🥉</div>
+                    <div class="podium-name">${top3[2].name || 'Foydalanuvchi'}</div>
+                    <div class="podium-score">${top3[2].score} ball</div>
+                    <div class="podium-bar">3</div>
+                </div>` : '';
+
+                podiumHtml = `<div class="podium-container">${second}${first}${third}</div>`;
+            }
+            podiumContainer.innerHTML = podiumHtml;
+
+            // Қолган ёки умумий рўйхат
             var listHtml = "";
             data.forEach((item, index) => {
                 var rank = index + 1;
+                let medalIcon = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : `${rank}`));
                 listHtml += `<div class="leaderboard-item">` +
                     `<div style="display: flex; align-items: center; gap: 10px;">` +
-                    `<span style="font-weight: bold; width: 25px; text-align: center;">${rank}</span>` +
+                    `<span style="font-weight: bold; width: 25px; text-align: center;">${medalIcon}</span>` +
                     `<span>${item.name || 'Foydalanuvchi'}</span>` +
                     `</div>` +
                     `<div style="font-weight: bold; color: #27ae60;">${item.score} ball (${item.percent}%)</div>` +
