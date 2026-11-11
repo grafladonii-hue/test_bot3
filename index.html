@@ -814,8 +814,15 @@
 
                 var testId = button.getAttribute('data-test-id');
 
+                alert('TUGMA BOSILDI! testId=' + testId);
+
                 if (testId !== null) {
-                    startQuiz(testId);
+                    try {
+                        startQuiz(testId);
+                    } catch (error) {
+                        alert('startQuiz xatosi: ' + error.message);
+                        console.error(error);
+                    }
                 } else if (button.getAttribute('data-vip') === '1') {
                     openVipBotDirect(event);
                 }
