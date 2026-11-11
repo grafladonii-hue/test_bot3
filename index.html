@@ -445,6 +445,11 @@
         <div id="leaderboard-list" style="margin-top: 15px;">
             <p style="text-align: center; color: #888;">Yuklanmoqda...</p>
         </div>
+        
+        <!-- LOAD MORE BUTTON -->
+        <div id="load-more-container" style="margin-top: 15px; text-align: center; display: none;">
+            <button type="button" class="info" onclick="loadMoreLeaderboard()" id="load-more-btn">🔄 Яна 50 тани кўрсатиш</button>
+        </div>
     </div>
 
     <!-- ADMIN PANEL -->
@@ -590,6 +595,10 @@
     var hiddenTests = JSON.parse(localStorage.getItem('hidden_tests') || '{}');
     var isUserPremium = false;
 
+    // Reyting uchun o'zgaruvchilar
+    var globalLeaderboardData = [];
+    var visibleLeaderboardCount = 50;
+
     async function checkUserVipStatus() {
         if (!currentUserId) {
             isUserPremium = false;
@@ -733,10 +742,12 @@
     async function fetchLeaderboard() {
         var listContainer = document.getElementById("leaderboard-list");
         var podiumContainer = document.getElementById("podium-section");
+        var loadMoreContainer = document.getElementById("load-more-container");
         if (!listContainer) return;
 
         listContainer.innerHTML = "<p style='text-align: center; color: #888;'>Yuklanmoqda...</p>";
         podiumContainer.innerHTML = "";
+        loadMoreContainer.style.display = "none";
 
         try {
             const response = await fetch('https://api.demotestlar.uz/api/leaderboard');
@@ -747,9 +758,12 @@
                 return;
             }
 
+            globalLeaderboardData = data;
+            visibleLeaderboardCount = 50; // boshlang'ich 50 та
+
             // 1, 2, 3-ўринлар учун подиум тайёрлаш
             let podiumHtml = "";
-            let top3 = data.slice(0, 3);
+            let top3 = globalLeaderboardData.slice(0, 3);
             
             if (top3.length > 0) {
                 let first = top3[0] ? `<div class="podium-step podium-1">
@@ -777,26 +791,51 @@
             }
             podiumContainer.innerHTML = podiumHtml;
 
-            // 4-ўриндан бошлаб 50 тагача қатнашчиларни олиш
-            let remainingItems = data.slice(3, 53);
+            renderLeaderboardList();
 
-            var listHtml = "";
-            remainingItems.forEach((item, index) => {
-                var rank = index + 4; // 4-ўриндан бошланади
-                listHtml += `<div class="leaderboard-item">` +
-                    `<div style="display: flex; align-items: center; gap: 10px;">` +
-                    `<span style="font-weight: bold; width: 25px; text-align: center;">${rank}</span>` +
-                    `<span>${item.name || 'Foydalanuvchi'}</span>` +
-                    `</div>` +
-                    `<div style="font-weight: bold; color: #27ae60;">${item.score} ball (${item.percent}%)</div>` +
-                    `</div>`;
-            });
-
-            listContainer.innerHTML = listHtml || "<p style='text-align: center; color: #777;'>4-ўриндан кейинги натижалар йўқ.</p>";
         } catch (e) {
             console.error("Reytingni yuklashda xatolik:", e);
             listContainer.innerHTML = "<p style='text-align: center; color: #777;'>Hozircha reyting natijalari yo'q.</p>";
         }
+    }
+
+    function renderLeaderboardList() {
+        var listContainer = document.getElementById("leaderboard-list");
+        var loadMoreContainer = document.getElementById("load-more-container");
+        if (!listContainer) return;
+
+        // Top-3 ni tashlab, qolganlarini olamiz (index 3 dan boshlab)
+        let totalItems = globalLeaderboardData.slice(3);
+        let currentItems = totalItems.slice(0, visibleLeaderboardCount);
+
+        var listHtml = "";
+        currentItems.forEach((item, index) => {
+            var rank = index + 4; // 4-ўриндан бошланади
+            listHtml += `<div class="leaderboard-item">` +
+                `<div style="display: flex; align-items: center; gap: 10px;">` +
+                `<span style="font-weight: bold; width: 25px; text-align: center;">${rank}</span>` +
+                `<span>${item.name || 'Foydalanuvchi'}</span>` +
+                `</div>` +
+                `<div style="font-weight: bold; color: #27ae60;">${item.score} ball (${item.percent}%)</div>` +
+                `</div>`;
+        });
+
+        listContainer.innerHTML = listHtml || "<p style='text-align: center; color: #777;'>Boshqa qatnashchilar yo'q.</p>";
+
+        // Agar hali ham ko'rsatilmagan qatnashchilar qolgan bo'lsa, "Яна 50 тани кўрсатиш" тугмасини чиқарамиз
+        if (visibleLeaderboardCount < totalItems.length) {
+            loadMoreContainer.style.display = "block";
+            let remainingCount = totalItems.length - visibleLeaderboardCount;
+            let nextBatch = remainingCount > 50 ? 50 : remainingCount;
+            document.getElementById("load-more-btn").innerText = `🔄 Яна ${nextBatch} тани кўрсатиш (жами ${totalItems.length} tadan)`;
+        } else {
+            loadMoreContainer.style.display = "none";
+        }
+    }
+
+    function loadMoreLeaderboard() {
+        visibleLeaderboardCount += 50;
+        renderLeaderboardList();
     }
 
     function startQuiz(testId) {
