@@ -949,6 +949,18 @@
         renderLeaderboardList();
     }
 
+    function shuffleArray(array) {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
+    }
+
     function startQuiz(testId) {
         var testNum = extractTestNum(testId);
         var isLocked = !isUserPremium && testNum >= 4;
