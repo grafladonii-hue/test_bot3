@@ -759,7 +759,7 @@
             }
 
             globalLeaderboardData = data;
-            visibleLeaderboardCount = 50; // boshlang'ich 50 та
+            visibleLeaderboardCount = 50;
 
             // 1, 2, 3-ўринлар учун подиум тайёрлаш
             let podiumHtml = "";
@@ -804,25 +804,30 @@
         var loadMoreContainer = document.getElementById("load-more-container");
         if (!listContainer) return;
 
-        // Top-3 ni tashlab, qolganlarini olamiz (index 3 dan boshlab)
         let totalItems = globalLeaderboardData.slice(3);
         let currentItems = totalItems.slice(0, visibleLeaderboardCount);
 
         var listHtml = "";
         currentItems.forEach((item, index) => {
-            var rank = index + 4; // 4-ўриндан бошланади
+            var rank = index + 4;
+            // Уринишлар сонини олиш (item.attempts ёки item.tries ёки item.count орқали, мавжуд бўлмаса 0)
+            let attemptsCount = item.attempts !== undefined ? item.attempts : (item.tries !== undefined ? item.tries : (item.count !== undefined ? item.count : ''));
+            let attemptsText = attemptsCount !== '' ? `${attemptsCount} ta urinish` : '';
+
             listHtml += `<div class="leaderboard-item">` +
                 `<div style="display: flex; align-items: center; gap: 10px;">` +
                 `<span style="font-weight: bold; width: 25px; text-align: center;">${rank}</span>` +
                 `<span>${item.name || 'Foydalanuvchi'}</span>` +
                 `</div>` +
-                `<div style="font-weight: bold; color: #27ae60;">${item.score} ball (${item.percent}%)</div>` +
+                `<div style="text-align: right;">` +
+                `<div style="font-weight: bold; color: #27ae60;">${item.score} ball</div>` +
+                (attemptsText ? `<div style="font-size: 11px; color: #7f8c8d;">${attemptsText}</div>` : '') +
+                `</div>` +
                 `</div>`;
         });
 
         listContainer.innerHTML = listHtml || "<p style='text-align: center; color: #777;'>Boshqa qatnashchilar yo'q.</p>";
 
-        // Agar hali ham ko'rsatilmagan qatnashchilar qolgan bo'lsa, "Яна 50 тани кўрсатиш" тугмасини чиқарамиз
         if (visibleLeaderboardCount < totalItems.length) {
             loadMoreContainer.style.display = "block";
             let remainingCount = totalItems.length - visibleLeaderboardCount;
