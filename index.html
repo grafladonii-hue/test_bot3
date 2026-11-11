@@ -752,15 +752,11 @@
             if (isLocked) {
                 btn.className = 'vip-link-btn';
                 btn.innerHTML = '⭐ VIP obuna';
-                btn.onclick = function(e) { openVipBotDirect(e); };
+                btn.setAttribute('data-vip', '1');
             } else {
                 btn.className = '';
                 btn.innerText = 'Ishlash';
-                btn.onclick = (function(testId) {
-                    return function() {
-                        startQuiz(testId);
-                    };
-                })(id);
+                btn.setAttribute('data-test-id', id);
             }
             cardDiv.appendChild(btn);
 
@@ -808,6 +804,20 @@
         var listEl = document.getElementById("tests-list");
         if (listEl) {
             listEl.innerHTML = html || "<p style='text-align:center;color:#777;'>Testlar topilmadi.</p>";
+
+            listEl.querySelectorAll('.test-card button').forEach(function(button) {
+                var testId = button.getAttribute('data-test-id');
+
+                if (testId !== null) {
+                    button.addEventListener('click', function() {
+                        startQuiz(testId);
+                    });
+                } else if (button.getAttribute('data-vip') === '1') {
+                    button.addEventListener('click', function(e) {
+                        openVipBotDirect(e);
+                    });
+                }
+            });
         }
     }
 
