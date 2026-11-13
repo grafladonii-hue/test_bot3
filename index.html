@@ -639,12 +639,20 @@
 
     async function fetchTestData() {
         var list = document.getElementById("tests-list");
+        let testsLoaded = false;
+
+        if (list) {
+            list.innerHTML = "<p style='text-align:center;color:#888;'>Тестлар юкланмоқда...</p>";
+        }
+
+        // VIP tekshiruvi testlar yuklanishi bilan bir vaqtda boshlanadi
+        checkUserVipStatus().then(function() {
+            if (testsLoaded) {
+                renderTestsList();
+            }
+        });
 
         try {
-            if (list) {
-                list.innerHTML = "<p style='text-align:center;color:#888;'>Тестлар юкланмоқда...</p>";
-            }
-
             const response = await fetch(
                 'https://api.demotestlar.uz/api/tests',
                 { cache: 'no-store' }
@@ -661,19 +669,18 @@
             }
 
             testData = data;
+            testsLoaded = true;
+
+            // VIP javobini kutmasdan testlar darhol chiqariladi
+            renderTestsList();
 
         } catch (e) {
             console.error("Тестларни юклашда хатолик:", e);
+
             if (list) {
                 list.innerHTML = "<p style='text-align:center;color:red;'>Тестларни юклашда хатолик. Қайта уриниб кўринг.</p>";
             }
-            return;
         }
-
-        renderTestsList();
-        checkUserVipStatus().then(function() {
-            renderTestsList();
-        });
     }
 
     function extractTestNum(id) {
@@ -721,7 +728,7 @@
             var titleLower = title.toLowerCase();
             var testNum = extractTestNum(id);
 
-            // 1, 2, 3-тестлар бепул, 4-чи ва ундан кейингилари VIP[cite: 4]
+            // 1, 2, 3-тестлар бепул, 4-чи ва ундан кейингилари VIP
             var isLocked = !isUserPremium && testNum >= 4;
 
             var questionCount = Array.isArray(t.questions)
