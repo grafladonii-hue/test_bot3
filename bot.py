@@ -27,7 +27,7 @@ GROUP_ID = -1003919402335
 WEB_APP_URL = "https://test-mini-app-3.vercel.app"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUIRED_AMOUNT = 50000
+REQUIRED_AMOUNT = 100000
 
 gemini_client = (
     genai.Client(api_key=GEMINI_API_KEY)
@@ -351,7 +351,7 @@ async def cmd_start(message: types.Message):
             "хуш келибсиз.\n\n"
             "Дастлабки **3 та тест бепул** тақдим этилади.\n\n"
             "🔒 Барча тестларни очиш учун ёпиқ гуруҳимиз "
-            "аъзоси бўлинг ёки 50 000 сўм тўлов қилинг.\n\n"
+            "аъзоси бўлинг ёки 100 000 сўм тўлов қилинг.\n\n"
             "💳 **Карта рақами:** `9860120155197128`\n"
             "👤 **Қабул қилувчи:** Бахтиёр Каржабов",
             reply_markup=keyboard,
@@ -419,7 +419,7 @@ async def handle_payment_screenshot(message: types.Message):
         else:
             await processing_msg.edit_text(
                 f"❌ Чекдаги сумма етарли эмас ёки тўловни аниқлаб бўлмади (Аниқланди: {amount} сўм).\n\n"
-                "Тўлов миқдори камида **50 000 сўм** бўлиши керак. "
+                "Тўлов миқдори камида **100 000 сўм** бўлиши керак. "
                 "Агар хатолик деб ҳисобласангиз, админга мурожаат қилинг."
             )
 
