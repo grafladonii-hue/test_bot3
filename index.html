@@ -1245,6 +1245,19 @@
         listContainer.innerHTML = html || "<p style='color:#777;'>Hech qanday test mavjud emas.</p>";
     }
 
+    function toggleTestVisibility(testId) {
+        hiddenTests[testId] = !hiddenTests[testId];
+
+        if (!hiddenTests[testId]) {
+            delete hiddenTests[testId];
+        }
+
+        localStorage.setItem('hidden_tests', JSON.stringify(hiddenTests));
+
+        renderAdminTestsList();
+        renderTestsList();
+    }
+
     function addNewQuestionToTest(testId) {
         resetAdminForm();
         document.getElementById("admin-test-select").value = testId;
